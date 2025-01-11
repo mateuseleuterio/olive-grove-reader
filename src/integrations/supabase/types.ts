@@ -30,6 +30,42 @@ export type Database = {
         }
         Relationships: []
       }
+      sermons: {
+        Row: {
+          bible_text: string | null
+          conclusion: string | null
+          created_at: string
+          id: string
+          introduction: string | null
+          points: Json | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bible_text?: string | null
+          conclusion?: string | null
+          created_at?: string
+          id?: string
+          introduction?: string | null
+          points?: Json | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bible_text?: string | null
+          conclusion?: string | null
+          created_at?: string
+          id?: string
+          introduction?: string | null
+          points?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,35 +17,70 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sermonToDelete, setSermonToDelete] = useState<number | null>(null);
+  const [sermonToDelete, setSermonToDelete] = useState<string | null>(null);
+  const [sermons, setSermons] = useState<any[]>([]);
   const { toast } = useToast();
 
-  // Mock data - This should be replaced with real data from a backend
-  const sermons = [
-    { id: 1, title: "A Graça de Deus", type: "blank", createdAt: "2024-03-15" },
-    { id: 2, title: "O Amor ao Próximo", type: "structure", createdAt: "2024-03-14" },
-    { id: 3, title: "Fé e Obras", type: "ai", createdAt: "2024-03-13" },
-  ];
+  useEffect(() => {
+    fetchSermons();
+  }, []);
+
+  const fetchSermons = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("sermons")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setSermons(data || []);
+    } catch (error) {
+      console.error("Error fetching sermons:", error);
+      toast({
+        title: "Erro ao carregar sermões",
+        description: "Não foi possível carregar seus sermões. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleStart = (type: 'blank' | 'structure' | 'ai') => {
     navigate(`/sermon-editor/${type}`);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     setSermonToDelete(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (sermonToDelete) {
-      // Here you would typically make an API call to delete the sermon
-      toast({
-        title: "Sermão excluído",
-        description: "O sermão foi excluído com sucesso.",
-      });
+      try {
+        const { error } = await supabase
+          .from("sermons")
+          .delete()
+          .eq("id", sermonToDelete);
+
+        if (error) throw error;
+
+        toast({
+          title: "Sermão excluído",
+          description: "O sermão foi excluído com sucesso.",
+        });
+        
+        fetchSermons();
+      } catch (error) {
+        console.error("Error deleting sermon:", error);
+        toast({
+          title: "Erro ao excluir sermão",
+          description: "Não foi possível excluir o sermão. Por favor, tente novamente.",
+          variant: "destructive",
+        });
+      }
       setSermonToDelete(null);
     }
   };
@@ -53,6 +88,8 @@ const SermonBuilder = () => {
   const filteredSermons = sermons.filter(sermon => 
     sermon.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // ... keep existing code (Card components for sermon types)
 
   return (
     <div className="min-h-screen bg-bible-gray p-8">
@@ -164,7 +201,7 @@ const SermonBuilder = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
-                <TableHead>Tipo</TableHead>
+                <TableHead>Texto Bíblico</TableHead>
                 <TableHead>Data de Criação</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
@@ -172,19 +209,15 @@ const SermonBuilder = () => {
             <TableBody>
               {filteredSermons.map((sermon) => (
                 <TableRow key={sermon.id}>
-                  <TableCell>{sermon.title}</TableCell>
-                  <TableCell>
-                    {sermon.type === 'blank' && 'Sermão em Branco'}
-                    {sermon.type === 'structure' && 'Estrutura Comprovada'}
-                    {sermon.type === 'ai' && 'Sermão com IA'}
-                  </TableCell>
-                  <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell className="font-medium">{sermon.title}</TableCell>
+                  <TableCell>{sermon.bible_text}</TableCell>
+                  <TableCell>{new Date(sermon.created_at).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(`/sermon-editor/${sermon.type}?id=${sermon.id}`)}
+                        onClick={() => navigate(`/sermon-editor/${sermon.type || 'blank'}?id=${sermon.id}`)}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>

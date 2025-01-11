@@ -3,14 +3,19 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus, Trash } from "lucide-react";
+import { ArrowLeft, Plus, Trash, Save } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
   const { type } = useParams();
+  const [title, setTitle] = useState("");
+  const [bibleText, setBibleText] = useState("");
+  const [introduction, setIntroduction] = useState("");
   const [points, setPoints] = useState<string[]>([]);
+  const [conclusion, setConclusion] = useState("");
   const [apiKey, setApiKey] = useState("");
   const [prompt, setPrompt] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,6 +35,61 @@ const SermonEditor = () => {
   const handleDeletePoint = (index: number) => {
     const newPoints = points.filter((_, i) => i !== index);
     setPoints(newPoints);
+  };
+
+  const handleSaveSermon = async () => {
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        toast({
+          title: "Erro ao salvar sermão",
+          description: "Você precisa estar logado para salvar um sermão.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      let sermonData = {
+        user_id: user.id,
+        title: title || "Sermão sem título",
+        bible_text: bibleText,
+        introduction,
+        points: points.length > 0 ? points : null,
+        conclusion,
+      };
+
+      if (type === "ai" && aiResponse) {
+        // Parse AI response into sections
+        const sections = aiResponse.split("\n\n");
+        sermonData = {
+          ...sermonData,
+          introduction: sections[0],
+          points: sections.slice(1, -1),
+          conclusion: sections[sections.length - 1],
+        };
+      }
+
+      const { error } = await supabase.from("sermons").insert(sermonData);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sermão salvo com sucesso!",
+        description: "Seu sermão foi salvo e está disponível em 'Meus Sermões'.",
+      });
+
+      navigate("/sermon-builder");
+    } catch (error) {
+      console.error("Erro ao salvar sermão:", error);
+      toast({
+        title: "Erro ao salvar sermão",
+        description: "Houve um erro ao tentar salvar o sermão. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const generateSermon = async () => {
@@ -115,28 +175,50 @@ const SermonEditor = () => {
 
           <Card className="p-6 space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium mb-2 text-bible-navy">
                 1. Título - Texto Base
               </label>
-              <Input placeholder="Digite o título e o texto base do sermão (ex: A Criação - Gênesis 1:1)" />
+              <Input 
+                placeholder="Digite o título e o texto base do sermão (ex: A Criação - Gênesis 1:1)" 
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="font-serif"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                2. Introdução
+              <label className="block text-sm font-medium mb-2 text-bible-navy">
+                2. Texto Bíblico
               </label>
-              <Textarea placeholder="Digite a introdução do sermão" />
+              <Textarea 
+                placeholder="Digite o texto bíblico completo" 
+                value={bibleText}
+                onChange={(e) => setBibleText(e.target.value)}
+                className="font-serif"
+              />
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                3. Desenvolvimento
+              <label className="block text-sm font-medium mb-2 text-bible-navy">
+                3. Introdução
+              </label>
+              <Textarea 
+                placeholder="Digite a introdução do sermão" 
+                value={introduction}
+                onChange={(e) => setIntroduction(e.target.value)}
+                className="font-serif"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2 text-bible-navy">
+                4. Desenvolvimento
               </label>
               <div className="space-y-4">
                 {points.map((point, index) => (
                   <div key={index} className="flex gap-2">
                     <div className="flex-1">
-                      <label className="block text-sm font-medium mb-2">
+                      <label className="block text-sm font-medium mb-2 text-bible-navy">
                         Ponto {index + 1}
                       </label>
                       <div className="flex gap-2">
@@ -144,6 +226,7 @@ const SermonEditor = () => {
                           value={point}
                           onChange={(e) => handlePointChange(index, e.target.value)}
                           placeholder={`Digite o ponto ${index + 1}`}
+                          className="font-serif"
                         />
                         <Button
                           variant="ghost"
@@ -170,13 +253,22 @@ const SermonEditor = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium mb-2">
-                4. Conclusão
+              <label className="block text-sm font-medium mb-2 text-bible-navy">
+                5. Conclusão
               </label>
-              <Textarea placeholder="Digite a conclusão do sermão" />
+              <Textarea 
+                placeholder="Digite a conclusão do sermão" 
+                value={conclusion}
+                onChange={(e) => setConclusion(e.target.value)}
+                className="font-serif"
+              />
             </div>
 
-            <Button className="w-full">
+            <Button 
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+              onClick={handleSaveSermon}
+            >
+              <Save className="h-4 w-4 mr-2" />
               Salvar Sermão
             </Button>
           </Card>
@@ -198,22 +290,62 @@ const SermonEditor = () => {
         </Button>
 
         <Card className="p-6">
-          <h1 className="text-2xl font-serif mb-6">
+          <h1 className="text-2xl font-serif mb-6 text-bible-navy">
             {type === "blank" && "Sermão em Branco"}
             {type === "ai" && "Sermão com IA"}
           </h1>
 
           {type === "blank" && (
-            <Textarea
-              className="min-h-[500px]"
-              placeholder="Digite seu sermão aqui..."
-            />
+            <>
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-bible-navy">
+                    Título do Sermão
+                  </label>
+                  <Input
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Digite o título do sermão"
+                    className="font-serif"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-bible-navy">
+                    Texto Bíblico
+                  </label>
+                  <Textarea
+                    value={bibleText}
+                    onChange={(e) => setBibleText(e.target.value)}
+                    placeholder="Digite o texto bíblico"
+                    className="font-serif"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2 text-bible-navy">
+                    Conteúdo do Sermão
+                  </label>
+                  <Textarea
+                    className="min-h-[500px] font-serif"
+                    placeholder="Digite seu sermão aqui..."
+                    value={introduction}
+                    onChange={(e) => setIntroduction(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-bible-navy hover:bg-bible-accent"
+                  onClick={handleSaveSermon}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Sermão
+                </Button>
+              </div>
+            </>
           )}
 
           {type === "ai" && (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-bible-navy">
                   API Key da Perplexity
                 </label>
                 <Input
@@ -228,7 +360,7 @@ const SermonEditor = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-bible-navy">
                   Tema ou Texto Base
                 </label>
                 <Input
@@ -239,7 +371,7 @@ const SermonEditor = () => {
               </div>
 
               <Button 
-                className="w-full" 
+                className="w-full bg-bible-navy hover:bg-bible-accent" 
                 onClick={generateSermon}
                 disabled={loading}
               >
@@ -247,16 +379,26 @@ const SermonEditor = () => {
               </Button>
 
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium mb-2 text-bible-navy">
                   Sermão Gerado
                 </label>
                 <Textarea
-                  className="min-h-[400px]"
+                  className="min-h-[400px] font-serif"
                   placeholder="O sermão gerado aparecerá aqui..."
                   value={aiResponse}
                   onChange={(e) => setAiResponse(e.target.value)}
                 />
               </div>
+
+              {aiResponse && (
+                <Button 
+                  className="w-full bg-bible-navy hover:bg-bible-accent"
+                  onClick={handleSaveSermon}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Sermão
+                </Button>
+              )}
             </div>
           )}
         </Card>
