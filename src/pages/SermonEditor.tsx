@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, Trash } from "lucide-react";
 import { Card } from "@/components/ui/card";
 
 const SermonEditor = () => {
@@ -18,6 +18,11 @@ const SermonEditor = () => {
   const handlePointChange = (index: number, value: string) => {
     const newPoints = [...points];
     newPoints[index] = value;
+    setPoints(newPoints);
+  };
+
+  const handleDeletePoint = (index: number) => {
+    const newPoints = points.filter((_, i) => i !== index);
     setPoints(newPoints);
   };
 
@@ -37,47 +42,45 @@ const SermonEditor = () => {
           <Card className="p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium mb-2">
-                1. Título
+                1. Título - Texto Base
               </label>
-              <Input placeholder="Digite o título do sermão" />
+              <Input placeholder="Digite o título e o texto base do sermão (ex: A Criação - Gênesis 1:1)" />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                2. Texto Base
-              </label>
-              <Input placeholder="Digite o texto base (ex: Gênesis 1:1)" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                3. Proposição
-              </label>
-              <Textarea placeholder="Digite a proposição do sermão" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                4. Introdução
+                2. Introdução
               </label>
               <Textarea placeholder="Digite a introdução do sermão" />
             </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                5. Desenvolvimento
+                3. Desenvolvimento
               </label>
               <div className="space-y-4">
                 {points.map((point, index) => (
-                  <div key={index}>
-                    <label className="block text-sm font-medium mb-2">
-                      Ponto {index + 1}
-                    </label>
-                    <Textarea
-                      value={point}
-                      onChange={(e) => handlePointChange(index, e.target.value)}
-                      placeholder={`Digite o ponto ${index + 1}`}
-                    />
+                  <div key={index} className="flex gap-2">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium mb-2">
+                        Ponto {index + 1}
+                      </label>
+                      <div className="flex gap-2">
+                        <Textarea
+                          value={point}
+                          onChange={(e) => handlePointChange(index, e.target.value)}
+                          placeholder={`Digite o ponto ${index + 1}`}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleDeletePoint(index)}
+                          className="self-start"
+                        >
+                          <Trash className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 ))}
                 <Button
@@ -94,7 +97,7 @@ const SermonEditor = () => {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                6. Conclusão
+                4. Conclusão
               </label>
               <Textarea placeholder="Digite a conclusão do sermão" />
             </div>
