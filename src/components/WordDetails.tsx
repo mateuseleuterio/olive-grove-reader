@@ -44,13 +44,13 @@ const WordDetails = ({ word }: WordDetailsProps) => {
   const details = hebrewWords[word.toLowerCase()];
   
   if (!details) {
-    return <span>{word} </span>;
+    return <span className="mr-1">{word}</span>;
   }
 
   return (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <span className="cursor-pointer hover:text-bible-navy hover:underline">
+        <span className="cursor-pointer text-bible-accent hover:text-bible-navy hover:underline mr-1">
           {word}
         </span>
       </HoverCardTrigger>
