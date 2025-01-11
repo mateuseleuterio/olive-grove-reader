@@ -14,6 +14,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const BibleReader = () => {
   const [versions, setVersions] = useState([
@@ -22,6 +23,7 @@ const BibleReader = () => {
   const [book, setBook] = useState("genesis");
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
+  const isMobile = useIsMobile();
   
   const renderVerse = (text: string) => {
     return text.split(" ").map((word, index) => (
@@ -59,7 +61,6 @@ const BibleReader = () => {
     return versionMap[versionId] || versionId;
   };
 
-  // Sample data - in a real app this would come from an API
   const books = [
     { id: "genesis", name: "Gênesis" },
     { id: "exodus", name: "Êxodo" },
@@ -101,7 +102,7 @@ const BibleReader = () => {
     { id: "zechariah", name: "Zacarias" },
     { id: "malachi", name: "Malaquias" },
   ];
-
+  
   const chapters = Array.from({ length: 50 }, (_, i) => (i + 1).toString());
   
   return (
@@ -160,66 +161,119 @@ const BibleReader = () => {
         </div>
       </div>
       
-      <ResizablePanelGroup 
-        direction="horizontal" 
-        className="min-h-[400px] w-full rounded-lg border"
-      >
-        {versions.map((version, index) => (
-          <>
-            <ResizablePanel key={`panel-${index}`} defaultSize={100 / versions.length}>
-              <div className="flex flex-col h-full">
-                <div className="flex items-center justify-between p-4 border-b bg-white">
-                  <Select 
-                    value={version.id} 
-                    onValueChange={(value) => handleVersionChange(index, value)}
+      {isMobile ? (
+        <div className="flex flex-col gap-4">
+          {versions.map((version, index) => (
+            <div key={`mobile-panel-${index}`} className="border rounded-lg bg-white">
+              <div className="flex items-center justify-between p-4 border-b">
+                <Select 
+                  value={version.id} 
+                  onValueChange={(value) => handleVersionChange(index, value)}
+                >
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select version" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="almeida">Almeida</SelectItem>
+                    <SelectItem value="nvi">Nova Versão Internacional</SelectItem>
+                    <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
+                  </SelectContent>
+                </Select>
+                {versions.length > 1 && (
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeVersion(index)}
+                    className="ml-2"
                   >
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Select version" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="almeida">Almeida</SelectItem>
-                      <SelectItem value="nvi">Nova Versão Internacional</SelectItem>
-                      <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  {versions.length > 1 && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => removeVersion(index)}
-                      className="ml-2"
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-                <div className="bible-text space-y-6 bg-white p-4 md:p-8 flex-1 overflow-y-auto">
-                  <h2 className="text-xl md:text-2xl font-serif font-bold text-bible-navy mb-6 break-words">
-                    A criação dos céus e da terra e de tudo o que neles há
-                  </h2>
-                  <div className="space-y-4">
-                    <p className="break-words">
-                      <span className="verse-number">1</span>
-                      {renderVerse("No princípio criou Deus os céus e a terra")}
-                    </p>
-                    <p className="break-words">
-                      <span className="verse-number">2</span>
-                      {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
-                    </p>
-                    <p className="break-words">
-                      <span className="verse-number">3</span>
-                      {renderVerse("Disse Deus Haja luz E houve luz")}
-                    </p>
-                  </div>
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+              <div className="bible-text space-y-6 p-4 md:p-8">
+                <h2 className="text-xl md:text-2xl font-serif font-bold text-bible-navy mb-6 break-words">
+                  A criação dos céus e da terra e de tudo o que neles há
+                </h2>
+                <div className="space-y-4">
+                  <p className="break-words">
+                    <span className="verse-number">1</span>
+                    {renderVerse("No princípio criou Deus os céus e a terra")}
+                  </p>
+                  <p className="break-words">
+                    <span className="verse-number">2</span>
+                    {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
+                  </p>
+                  <p className="break-words">
+                    <span className="verse-number">3</span>
+                    {renderVerse("Disse Deus Haja luz E houve luz")}
+                  </p>
                 </div>
               </div>
-            </ResizablePanel>
-            {index < versions.length - 1 && (
-              <ResizableHandle withHandle />
-            )}
-          </>
-        ))}
-      </ResizablePanelGroup>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="min-h-[400px] w-full rounded-lg border"
+        >
+          {versions.map((version, index) => (
+            <>
+              <ResizablePanel key={`panel-${index}`} defaultSize={100 / versions.length}>
+                <div className="flex flex-col h-full">
+                  <div className="flex items-center justify-between p-4 border-b bg-white">
+                    <Select 
+                      value={version.id} 
+                      onValueChange={(value) => handleVersionChange(index, value)}
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Select version" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="almeida">Almeida</SelectItem>
+                        <SelectItem value="nvi">Nova Versão Internacional</SelectItem>
+                        <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {versions.length > 1 && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => removeVersion(index)}
+                        className="ml-2"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="bible-text space-y-6 bg-white p-4 md:p-8 flex-1 overflow-y-auto">
+                    <h2 className="text-xl md:text-2xl font-serif font-bold text-bible-navy mb-6 break-words">
+                      A criação dos céus e da terra e de tudo o que neles há
+                    </h2>
+                    <div className="space-y-4">
+                      <p className="break-words">
+                        <span className="verse-number">1</span>
+                        {renderVerse("No princípio criou Deus os céus e a terra")}
+                      </p>
+                      <p className="break-words">
+                        <span className="verse-number">2</span>
+                        {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
+                      </p>
+                      <p className="break-words">
+                        <span className="verse-number">3</span>
+                        {renderVerse("Disse Deus Haja luz E houve luz")}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </ResizablePanel>
+              {index < versions.length - 1 && (
+                <ResizableHandle withHandle />
+              )}
+            </>
+          ))}
+        </ResizablePanelGroup>
+      )}
 
       <div className="mt-8">
         <Pagination>
