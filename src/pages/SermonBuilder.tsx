@@ -2,14 +2,27 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, Sparkles, Search } from "lucide-react";
+import { FileText, BookOpen, Sparkles, Search, Trash2, Pencil } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [sermonToDelete, setSermonToDelete] = useState<number | null>(null);
+  const { toast } = useToast();
 
   // Mock data - This should be replaced with real data from a backend
   const sermons = [
@@ -20,6 +33,21 @@ const SermonBuilder = () => {
 
   const handleStart = (type: 'blank' | 'structure' | 'ai') => {
     navigate(`/sermon-editor/${type}`);
+  };
+
+  const handleDelete = (id: number) => {
+    setSermonToDelete(id);
+  };
+
+  const confirmDelete = () => {
+    if (sermonToDelete) {
+      // Here you would typically make an API call to delete the sermon
+      toast({
+        title: "Sermão excluído",
+        description: "O sermão foi excluído com sucesso.",
+      });
+      setSermonToDelete(null);
+    }
   };
 
   const filteredSermons = sermons.filter(sermon => 
@@ -110,10 +138,10 @@ const SermonBuilder = () => {
         </Card>
       </div>
 
-      {/* Sermões Salvos Section */}
+      {/* Meus Sermões Section */}
       <div className="max-w-6xl mx-auto mt-12">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-serif text-bible-navy">Sermões Salvos</h2>
+          <h2 className="text-2xl font-serif text-bible-navy">Meus Sermões</h2>
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="outline" size="icon">
@@ -152,13 +180,22 @@ const SermonBuilder = () => {
                   </TableCell>
                   <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => navigate(`/sermon-editor/${sermon.type}?id=${sermon.id}`)}
-                    >
-                      Abrir
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/sermon-editor/${sermon.type}?id=${sermon.id}`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(sermon.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -166,6 +203,21 @@ const SermonBuilder = () => {
           </Table>
         </Card>
       </div>
+
+      <AlertDialog open={!!sermonToDelete} onOpenChange={() => setSermonToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este sermão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
