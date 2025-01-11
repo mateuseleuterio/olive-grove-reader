@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { BookText, BookOpen, Pencil } from "lucide-react";
+import { BookText, Pencil, Brain, FileText } from "lucide-react";
 
 type Sermon = Database['public']['Tables']['sermons']['Row'];
 
@@ -63,39 +63,39 @@ const SermonBuilder = () => {
                 <Button
                   variant="outline"
                   className="flex items-center gap-2 p-6 hover:bg-bible-gray"
-                  onClick={() => handleOptionSelect("blank")}
+                  onClick={() => handleOptionSelect("simple")}
                 >
                   <Pencil className="h-5 w-5" />
                   <div className="text-left">
                     <h3 className="font-semibold">Começar do Zero</h3>
                     <p className="text-sm text-muted-foreground">
-                      Crie um sermão em branco
+                      Crie um sermão simples com título e texto
                     </p>
                   </div>
                 </Button>
                 <Button
                   variant="outline"
                   className="flex items-center gap-2 p-6 hover:bg-bible-gray"
-                  onClick={() => handleOptionSelect("bible")}
+                  onClick={() => handleOptionSelect("structured")}
                 >
-                  <BookOpen className="h-5 w-5" />
-                  <div className="text-left">
-                    <h3 className="font-semibold">A partir da Bíblia</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Selecione um texto bíblico para começar
-                    </p>
-                  </div>
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 p-6 hover:bg-bible-gray"
-                  onClick={() => handleOptionSelect("structure")}
-                >
-                  <BookText className="h-5 w-5" />
+                  <FileText className="h-5 w-5" />
                   <div className="text-left">
                     <h3 className="font-semibold">Estrutura Guiada</h3>
                     <p className="text-sm text-muted-foreground">
-                      Use um modelo pré-definido
+                      Use uma estrutura completa com introdução, pontos e conclusão
+                    </p>
+                  </div>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 p-6 hover:bg-bible-gray"
+                  onClick={() => handleOptionSelect("ai")}
+                >
+                  <Brain className="h-5 w-5" />
+                  <div className="text-left">
+                    <h3 className="font-semibold">Sermão com IA</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Crie um sermão com auxílio de inteligência artificial
                     </p>
                   </div>
                 </Button>
@@ -114,7 +114,7 @@ const SermonBuilder = () => {
               <h2 className="text-lg font-semibold">{sermon.title}</h2>
               <p>{sermon.introduction}</p>
               <Button
-                onClick={() => navigate(`/sermon-editor/structure?id=${sermon.id}`)}
+                onClick={() => navigate(`/sermon-editor/structured?id=${sermon.id}`)}
                 className="mt-2"
               >
                 Editar
