@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { ChevronLeft, ChevronRight, Book } from "lucide-react";
+import { ChevronLeft, ChevronRight, Book, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import WordDetails from "./WordDetails";
+import CommentaryDrawer from "./CommentaryDrawer";
 import {
   Pagination,
   PaginationContent,
@@ -17,6 +18,7 @@ const BibleReader = () => {
   const [version, setVersion] = useState("almeida");
   const [book, setBook] = useState("genesis");
   const [chapter, setChapter] = useState("1");
+  const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   
   const renderVerse = (text: string) => {
     return text.split(" ").map((word, index) => (
@@ -115,8 +117,13 @@ const BibleReader = () => {
               <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
-            <Book className="h-4 w-4" />
+          <Button 
+            variant="outline" 
+            size="icon"
+            onClick={() => setIsCommentaryOpen(true)}
+            className="relative"
+          >
+            <BookOpen className="h-4 w-4" />
           </Button>
         </div>
       </div>
@@ -162,6 +169,12 @@ const BibleReader = () => {
           </PaginationContent>
         </Pagination>
       </div>
+
+      <CommentaryDrawer 
+        isOpen={isCommentaryOpen}
+        onClose={() => setIsCommentaryOpen(false)}
+        currentPassage={{ book, chapter }}
+      />
     </div>
   );
 };
