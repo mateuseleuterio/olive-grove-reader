@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Bold, Italic, List, Quote, Type, ArrowLeft } from "lucide-react";
+import { Bold, Italic, List, Quote, Type, ArrowLeft, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
@@ -111,6 +111,14 @@ const SermonEditor = () => {
     setContent(newContent);
   };
 
+  const handleSave = () => {
+    // Mock save functionality - should be replaced with actual save logic
+    toast({
+      title: "Sucesso",
+      description: "Sermão salvo com sucesso!",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-bible-gray p-8">
       <Card className="max-w-4xl mx-auto bg-white p-6">
@@ -164,6 +172,16 @@ const SermonEditor = () => {
           >
             <List className="h-4 w-4" />
           </Button>
+          <div className="ml-auto">
+            <Button
+              variant="default"
+              onClick={handleSave}
+              className="bg-bible-navy hover:bg-bible-accent"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Salvar
+            </Button>
+          </div>
         </div>
 
         <Textarea
