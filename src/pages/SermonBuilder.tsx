@@ -1,9 +1,16 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileText, BookOpen, Sparkles } from "lucide-react";
 
 const SermonBuilder = () => {
+  const navigate = useNavigate();
+
+  const handleStart = (type: 'blank' | 'structure' | 'ai') => {
+    navigate(`/sermon-editor/${type}`);
+  };
+
   return (
     <div className="min-h-screen bg-bible-gray p-8">
       <h1 className="text-3xl font-serif text-bible-navy mb-8 text-center">Construtor de Sermão</h1>
@@ -24,7 +31,10 @@ const SermonBuilder = () => {
             <p className="text-bible-text mb-4">
               Ideal para quando você já tem uma ideia clara do que quer pregar e deseja total liberdade na construção
             </p>
-            <Button className="w-full bg-bible-navy hover:bg-bible-accent">
+            <Button 
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+              onClick={() => handleStart('blank')}
+            >
               Começar
             </Button>
           </CardContent>
@@ -45,7 +55,10 @@ const SermonBuilder = () => {
             <p className="text-bible-text mb-4">
               Perfeito para quando você quer seguir um modelo que já demonstrou resultados positivos
             </p>
-            <Button className="w-full bg-bible-navy hover:bg-bible-accent">
+            <Button 
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+              onClick={() => handleStart('structure')}
+            >
               Começar
             </Button>
           </CardContent>
@@ -66,7 +79,10 @@ const SermonBuilder = () => {
             <p className="text-bible-text mb-4">
               Utilize o poder da IA para receber sugestões, insights e estruturação do seu sermão
             </p>
-            <Button className="w-full bg-bible-navy hover:bg-bible-accent">
+            <Button 
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+              onClick={() => handleStart('ai')}
+            >
               Começar
             </Button>
           </CardContent>

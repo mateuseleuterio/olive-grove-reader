@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import SermonBuilder from "./pages/SermonBuilder";
+import SermonEditor from "./pages/SermonEditor";
 
 const queryClient = new QueryClient();
 
@@ -14,7 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/sermon-builder" element={<SermonBuilder />} />
-            {/* Other routes will be added here later */}
+            <Route path="/sermon-editor/:type" element={<SermonEditor />} />
           </Routes>
         </TooltipProvider>
       </QueryClientProvider>
