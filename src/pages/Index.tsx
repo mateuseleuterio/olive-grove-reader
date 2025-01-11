@@ -21,13 +21,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
 import { UserCircle, Settings, LogOut } from "lucide-react";
+import { Database } from "@/integrations/supabase/types";
 
-interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  updated_at: string;
-}
+type Profile = Database['public']['Tables']['profiles']['Row'];
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -61,7 +57,7 @@ const Index = () => {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('*')
+        .select()
         .eq('id', userId)
         .single();
 
