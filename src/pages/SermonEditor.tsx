@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,6 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 const SermonEditor = () => {
   const navigate = useNavigate();
   const { type } = useParams();
+  const [searchParams] = useSearchParams();
+  const sermonId = searchParams.get('id');
+  
   const [title, setTitle] = useState("");
   const [bibleText, setBibleText] = useState("");
   const [introduction, setIntroduction] = useState("");
@@ -21,6 +24,39 @@ const SermonEditor = () => {
   const [loading, setLoading] = useState(false);
   const [aiResponse, setAiResponse] = useState("");
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (sermonId) {
+      loadSermon(sermonId);
+    }
+  }, [sermonId]);
+
+  const loadSermon = async (id: string) => {
+    try {
+      const { data: sermon, error } = await supabase
+        .from("sermons")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (sermon) {
+        setTitle(sermon.title || "");
+        setBibleText(sermon.bible_text || "");
+        setIntroduction(sermon.introduction || "");
+        setPoints(sermon.points || []);
+        setConclusion(sermon.conclusion || "");
+      }
+    } catch (error) {
+      console.error("Error loading sermon:", error);
+      toast({
+        title: "Erro ao carregar sermão",
+        description: "Houve um erro ao tentar carregar o sermão. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const handleAddPoint = () => {
     setPoints([...points, ""]);
@@ -72,7 +108,17 @@ const SermonEditor = () => {
         };
       }
 
-      const { error } = await supabase.from("sermons").insert(sermonData);
+      let error;
+      if (sermonId) {
+        // Update existing sermon
+        ({ error } = await supabase
+          .from("sermons")
+          .update(sermonData)
+          .eq("id", sermonId));
+      } else {
+        // Insert new sermon
+        ({ error } = await supabase.from("sermons").insert(sermonData));
+      }
 
       if (error) throw error;
 
