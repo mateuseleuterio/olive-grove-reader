@@ -1,15 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { FileText, BookOpen, Sparkles, Search, Trash2, Pencil } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,191 +15,209 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { FileText, Pencil, Brain, Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-
-type Sermon = Database['public']['Tables']['sermons']['Row'];
+import { useToast } from "@/hooks/use-toast";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
-  const [sermons, setSermons] = useState<Sermon[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [open, setOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sermonToDelete, setSermonToDelete] = useState<number | null>(null);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchSermons = async () => {
-      setLoading(true);
-      const { data, error } = await supabase.from("sermons").select("*");
-      if (error) {
-        console.error("Error fetching sermons:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro ao carregar sermões",
-          description: "Não foi possível carregar seus sermões. Tente novamente mais tarde.",
-        });
-      } else {
-        setSermons(data);
-      }
-      setLoading(false);
-    };
+  // Mock data - This should be replaced with real data from a backend
+  const sermons = [
+    { id: 1, title: "A Graça de Deus", type: "blank", createdAt: "2024-03-15" },
+    { id: 2, title: "O Amor ao Próximo", type: "structure", createdAt: "2024-03-14" },
+    { id: 3, title: "Fé e Obras", type: "ai", createdAt: "2024-03-13" },
+  ];
 
-    fetchSermons();
-  }, [toast]);
-
-  const handleOptionSelect = (type: string) => {
-    setOpen(false);
+  const handleStart = (type: 'blank' | 'structure' | 'ai') => {
     navigate(`/sermon-editor/${type}`);
   };
 
-  const handleDeleteSermon = async (id: string) => {
-    const { error } = await supabase
-      .from("sermons")
-      .delete()
-      .eq("id", id);
+  const handleDelete = (id: number) => {
+    setSermonToDelete(id);
+  };
 
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Erro ao excluir sermão",
-        description: "Não foi possível excluir o sermão. Tente novamente mais tarde.",
-      });
-    } else {
-      setSermons(sermons.filter(sermon => sermon.id !== id));
+  const confirmDelete = () => {
+    if (sermonToDelete) {
+      // Here you would typically make an API call to delete the sermon
       toast({
         title: "Sermão excluído",
         description: "O sermão foi excluído com sucesso.",
       });
+      setSermonToDelete(null);
     }
   };
 
+  const filteredSermons = sermons.filter(sermon => 
+    sermon.title.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-2xl font-serif font-bold text-bible-navy">
-          Meus Sermões
-        </h1>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-bible-navy hover:bg-bible-accent">
-              Novo Sermão
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="text-center text-xl font-serif text-bible-navy mb-6">
-                Como você quer criar seu sermão?
-              </DialogTitle>
-            </DialogHeader>
-            <div className="grid grid-cols-1 gap-4">
-              <Card 
-                className="cursor-pointer hover:bg-bible-gray/50 transition-colors"
-                onClick={() => handleOptionSelect("simple")}
-              >
-                <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <Pencil className="h-6 w-6 text-bible-navy" />
-                  <div>
-                    <CardTitle className="text-lg">Começar do Zero</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Crie um sermão simples com título e texto
-                    </p>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <Card 
-                className="cursor-pointer hover:bg-bible-gray/50 transition-colors"
-                onClick={() => handleOptionSelect("structured")}
-              >
-                <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <FileText className="h-6 w-6 text-bible-navy" />
-                  <div>
-                    <CardTitle className="text-lg">Estrutura Guiada</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Use uma estrutura completa com introdução, pontos e conclusão
-                    </p>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              <Card 
-                className="cursor-pointer hover:bg-bible-gray/50 transition-colors"
-                onClick={() => handleOptionSelect("ai")}
-              >
-                <CardHeader className="flex flex-row items-center gap-4 p-4">
-                  <Brain className="h-6 w-6 text-bible-navy" />
-                  <div>
-                    <CardTitle className="text-lg">Sermão com IA</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Crie um sermão com auxílio de inteligência artificial
-                    </p>
-                  </div>
-                </CardHeader>
-              </Card>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="min-h-screen bg-bible-gray p-8">
+      <h1 className="text-3xl font-serif text-bible-navy mb-8 text-center">Construtor de Sermão</h1>
       
-      {loading ? (
-        <div className="flex justify-center items-center h-32">
-          <p className="text-bible-navy">Carregando...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {sermons.map((sermon) => (
-            <Card key={sermon.id} className="relative group">
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="absolute left-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                  >
-                    <Trash2 className="h-4 w-4 text-destructive" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Excluir sermão?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Esta ação não pode ser desfeita. Isso excluirá permanentemente seu sermão.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => handleDeleteSermon(sermon.id)}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Excluir
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              
-              <CardHeader 
-                className="cursor-pointer"
-                onClick={() => navigate(`/sermon-editor/structured?id=${sermon.id}`)}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+        {/* Card 1: Sermão em Branco */}
+        <Card className="bg-white hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-6 w-6 text-bible-navy" />
+              Sermão em Branco
+            </CardTitle>
+            <CardDescription>
+              Comece seu sermão do zero com total liberdade criativa
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-bible-text mb-4">
+              Ideal para quando você já tem uma ideia clara do que quer pregar e deseja total liberdade na construção
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1 bg-bible-navy hover:bg-bible-accent"
+                onClick={() => handleStart('blank')}
               >
-                <CardTitle className="text-lg font-medium text-bible-navy">
-                  {sermon.title}
-                </CardTitle>
-                {sermon.introduction && (
-                  <CardContent className="pt-2 px-0">
-                    <p className="text-sm text-muted-foreground line-clamp-2">
-                      {sermon.introduction}
-                    </p>
-                  </CardContent>
-                )}
-              </CardHeader>
-            </Card>
-          ))}
+                Começar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 2: A partir de uma estrutura comprovada */}
+        <Card className="bg-white hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-6 w-6 text-bible-navy" />
+              Estrutura Comprovada
+            </CardTitle>
+            <CardDescription>
+              Use uma estrutura testada e aprovada por pregadores experientes
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-bible-text mb-4">
+              Perfeito para quando você quer seguir um modelo que já demonstrou resultados positivos
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1 bg-bible-navy hover:bg-bible-accent"
+                onClick={() => handleStart('structure')}
+              >
+                Começar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Card 3: Sermão com IA */}
+        <Card className="bg-white hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="h-6 w-6 text-bible-navy" />
+              Sermão com IA
+            </CardTitle>
+            <CardDescription>
+              Construa seu sermão com ajuda da Inteligência Artificial
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p className="text-bible-text mb-4">
+              Utilize o poder da IA para receber sugestões, insights e estruturação do seu sermão
+            </p>
+            <div className="flex gap-2">
+              <Button 
+                className="flex-1 bg-bible-navy hover:bg-bible-accent"
+                onClick={() => handleStart('ai')}
+              >
+                Começar
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Meus Sermões Section */}
+      <div className="max-w-6xl mx-auto mt-12">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-serif text-bible-navy">Meus Sermões</h2>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Search className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+              <Input
+                placeholder="Buscar sermão..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="mb-2"
+              />
+            </PopoverContent>
+          </Popover>
         </div>
-      )}
+
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Título</TableHead>
+                <TableHead>Tipo</TableHead>
+                <TableHead>Data de Criação</TableHead>
+                <TableHead>Ações</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredSermons.map((sermon) => (
+                <TableRow key={sermon.id}>
+                  <TableCell>{sermon.title}</TableCell>
+                  <TableCell>
+                    {sermon.type === 'blank' && 'Sermão em Branco'}
+                    {sermon.type === 'structure' && 'Estrutura Comprovada'}
+                    {sermon.type === 'ai' && 'Sermão com IA'}
+                  </TableCell>
+                  <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => navigate(`/sermon-editor/${sermon.type}?id=${sermon.id}`)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(sermon.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
+
+      <AlertDialog open={!!sermonToDelete} onOpenChange={() => setSermonToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este sermão? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
