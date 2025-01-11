@@ -1,196 +1,152 @@
-import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Bold, Italic, List, Quote, Type, ArrowLeft, Save } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { ArrowLeft, Plus } from "lucide-react";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-
-const fetchBibleVerse = async (reference: string) => {
-  try {
-    // Remove parentheses from reference
-    const cleanReference = reference.replace(/[()]/g, '').trim();
-    
-    // Split reference into book, chapter, and verse
-    const [book, chapterVerse] = cleanReference.split(' ');
-    const [chapter, verse] = chapterVerse.split(':');
-
-    // Make API call to fetch verse
-    const response = await fetch(`https://www.abibliadigital.com.br/api/verses/nvi/${book}/${chapter}/${verse}`);
-    
-    if (!response.ok) {
-      throw new Error('Falha ao buscar o versículo');
-    }
-
-    const data = await response.json();
-    return data.text;
-  } catch (error) {
-    console.error('Erro ao buscar versículo:', error);
-    throw new Error('Não foi possível carregar o versículo');
-  }
-};
 
 const SermonEditor = () => {
-  const { type } = useParams();
   const navigate = useNavigate();
-  const [content, setContent] = useState("");
-  const [verseReference, setVerseReference] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { type } = useParams();
+  const [points, setPoints] = useState<string[]>([]);
 
-  // Monitor content for Bible references
-  useEffect(() => {
-    const bibleReferenceRegex = /\(([\w\s]+\s\d+:\d+)\)/g;
-    const match = content.match(bibleReferenceRegex);
-    
-    if (match) {
-      const reference = match[0].slice(1, -1); // Remove parentheses
-      setVerseReference(reference);
-    }
-  }, [content]);
-
-  // Fetch verse when reference is found
-  const { data: verseText, isError } = useQuery({
-    queryKey: ['bibleVerse', verseReference],
-    queryFn: () => fetchBibleVerse(verseReference || ''),
-    enabled: !!verseReference,
-    retry: 1,
-    meta: {
-      onError: () => {
-        toast({
-          title: "Erro",
-          description: "Não foi possível carregar o versículo. Verifique se a referência está correta.",
-          variant: "destructive"
-        });
-      }
-    }
-  });
-
-  // Insert verse text when available
-  useEffect(() => {
-    if (verseText && verseReference) {
-      const updatedContent = content.replace(
-        `(${verseReference})`,
-        `\n"${verseText}"\n(${verseReference})\n`
-      );
-      setContent(updatedContent);
-      setVerseReference(null);
-    }
-  }, [verseText]);
-
-  const applyFormat = (format: string) => {
-    const textarea = document.querySelector('textarea');
-    if (!textarea) return;
-
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const selectedText = content.substring(start, end);
-    let formattedText = '';
-
-    switch (format) {
-      case 'bold':
-        formattedText = `**${selectedText}**`;
-        break;
-      case 'italic':
-        formattedText = `*${selectedText}*`;
-        break;
-      case 'heading':
-        formattedText = `# ${selectedText}`;
-        break;
-      case 'quote':
-        formattedText = `> ${selectedText}`;
-        break;
-      case 'list':
-        formattedText = `- ${selectedText}`;
-        break;
-      default:
-        return;
-    }
-
-    const newContent = content.substring(0, start) + formattedText + content.substring(end);
-    setContent(newContent);
+  const handleAddPoint = () => {
+    setPoints([...points, ""]);
   };
 
-  const handleSave = () => {
-    // Mock save functionality - should be replaced with actual save logic
-    toast({
-      title: "Sucesso",
-      description: "Sermão salvo com sucesso!",
-    });
+  const handlePointChange = (index: number, value: string) => {
+    const newPoints = [...points];
+    newPoints[index] = value;
+    setPoints(newPoints);
   };
+
+  if (type === "structure") {
+    return (
+      <div className="min-h-screen bg-bible-gray p-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <Button
+            variant="ghost"
+            className="mb-6"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+
+          <Card className="p-6 space-y-6">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                1. Título
+              </label>
+              <Input placeholder="Digite o título do sermão" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                2. Texto Base
+              </label>
+              <Input placeholder="Digite o texto base (ex: Gênesis 1:1)" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                3. Proposição
+              </label>
+              <Textarea placeholder="Digite a proposição do sermão" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                4. Introdução
+              </label>
+              <Textarea placeholder="Digite a introdução do sermão" />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                5. Desenvolvimento
+              </label>
+              <div className="space-y-4">
+                {points.map((point, index) => (
+                  <div key={index}>
+                    <label className="block text-sm font-medium mb-2">
+                      Ponto {index + 1}
+                    </label>
+                    <Textarea
+                      value={point}
+                      onChange={(e) => handlePointChange(index, e.target.value)}
+                      placeholder={`Digite o ponto ${index + 1}`}
+                    />
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleAddPoint}
+                  className="w-full"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Adicionar Ponto
+                </Button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                6. Conclusão
+              </label>
+              <Textarea placeholder="Digite a conclusão do sermão" />
+            </div>
+
+            <Button className="w-full">
+              Salvar Sermão
+            </Button>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bible-gray p-8">
-      <Card className="max-w-4xl mx-auto bg-white p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => navigate('/sermon-builder')}
-            className="mr-2"
-            title="Voltar"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => applyFormat('bold')}
-            title="Negrito"
-          >
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => applyFormat('italic')}
-            title="Itálico"
-          >
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => applyFormat('heading')}
-            title="Título"
-          >
-            <Type className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => applyFormat('quote')}
-            title="Citação"
-          >
-            <Quote className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => applyFormat('list')}
-            title="Lista"
-          >
-            <List className="h-4 w-4" />
-          </Button>
-          <div className="ml-auto">
-            <Button
-              variant="default"
-              onClick={handleSave}
-              className="bg-bible-navy hover:bg-bible-accent"
-            >
-              <Save className="h-4 w-4 mr-2" />
-              Salvar
-            </Button>
-          </div>
-        </div>
+      <div className="max-w-4xl mx-auto">
+        <Button
+          variant="ghost"
+          className="mb-6"
+          onClick={() => navigate(-1)}
+        >
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Voltar
+        </Button>
 
-        <Textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          className="min-h-[500px] font-serif text-bible-text"
-          placeholder="Digite seu sermão aqui... Para adicionar um versículo bíblico, use o formato: (Gênesis 1:1)"
-        />
-      </Card>
+        <Card className="p-6">
+          <h1 className="text-2xl font-serif mb-6">
+            {type === 'blank' && 'Sermão em Branco'}
+            {type === 'ai' && 'Sermão com IA'}
+          </h1>
+
+          {type === 'blank' && (
+            <Textarea
+              className="min-h-[500px]"
+              placeholder="Digite seu sermão aqui..."
+            />
+          )}
+
+          {type === 'ai' && (
+            <div className="space-y-4">
+              <Input placeholder="Digite o tema ou texto base do seu sermão" />
+              <Button className="w-full">
+                Gerar Sugestões
+              </Button>
+              <Textarea
+                className="min-h-[400px]"
+                placeholder="As sugestões da IA aparecerão aqui..."
+              />
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 };
