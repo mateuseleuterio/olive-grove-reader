@@ -2,9 +2,16 @@ import { useState } from "react";
 import { ChevronLeft, ChevronRight, Book } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import WordDetails from "./WordDetails";
 
 const BibleReader = () => {
   const [version, setVersion] = useState("almeida");
+  
+  const renderVerse = (text: string) => {
+    return text.split(" ").map((word, index) => (
+      <WordDetails key={index} word={word} />
+    ));
+  };
   
   return (
     <div className="max-w-4xl mx-auto px-4 py-8">
@@ -41,15 +48,15 @@ const BibleReader = () => {
         </h2>
         <p>
           <span className="verse-number">1</span>
-          No princípio, criou Deus os céus e a terra.
+          {renderVerse("No princípio criou Deus os céus e a terra")}
         </p>
         <p>
           <span className="verse-number">2</span>
-          A terra, porém, estava sem forma e vazia; havia trevas sobre a face do abismo, e o Espírito de Deus pairava por sobre as águas.
+          {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
         </p>
         <p>
           <span className="verse-number">3</span>
-          Disse Deus: Haja luz. E houve luz.
+          {renderVerse("Disse Deus Haja luz E houve luz")}
         </p>
       </div>
     </div>
