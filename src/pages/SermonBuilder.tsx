@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, PenLine } from "lucide-react";
+import { FileText, BookOpen, Sparkles } from "lucide-react";
 
 const SermonBuilder = () => {
   return (
@@ -9,12 +9,12 @@ const SermonBuilder = () => {
       <h1 className="text-3xl font-serif text-bible-navy mb-8 text-center">Construtor de Sermão</h1>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-        {/* Card 1: Página em Branco */}
+        {/* Card 1: Sermão em Branco */}
         <Card className="bg-white hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-6 w-6 text-bible-navy" />
-              Página em Branco
+              Sermão em Branco
             </CardTitle>
             <CardDescription>
               Comece seu sermão do zero com total liberdade criativa
@@ -22,7 +22,7 @@ const SermonBuilder = () => {
           </CardHeader>
           <CardContent>
             <p className="text-bible-text mb-4">
-              Ideal para quando você já tem uma ideia clara do que quer pregar
+              Ideal para quando você já tem uma ideia clara do que quer pregar e deseja total liberdade na construção
             </p>
             <Button className="w-full bg-bible-navy hover:bg-bible-accent">
               Começar
@@ -30,20 +30,20 @@ const SermonBuilder = () => {
           </CardContent>
         </Card>
 
-        {/* Card 2: Sermão Guiado */}
+        {/* Card 2: A partir de uma estrutura comprovada */}
         <Card className="bg-white hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <BookOpen className="h-6 w-6 text-bible-navy" />
-              Sermão Guiado
+              Estrutura Comprovada
             </CardTitle>
             <CardDescription>
-              Construa seu sermão com ajuda passo a passo
+              Use uma estrutura testada e aprovada por pregadores experientes
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-bible-text mb-4">
-              Perfeito para iniciantes ou quando precisar de orientação estruturada
+              Perfeito para quando você quer seguir um modelo que já demonstrou resultados positivos
             </p>
             <Button className="w-full bg-bible-navy hover:bg-bible-accent">
               Começar
@@ -51,20 +51,20 @@ const SermonBuilder = () => {
           </CardContent>
         </Card>
 
-        {/* Card 3: A partir de Modelo */}
+        {/* Card 3: Sermão com IA */}
         <Card className="bg-white hover:shadow-lg transition-shadow">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <PenLine className="h-6 w-6 text-bible-navy" />
-              A partir de Modelo
+              <Sparkles className="h-6 w-6 text-bible-navy" />
+              Sermão com IA
             </CardTitle>
             <CardDescription>
-              Use um modelo pré-definido como ponto de partida
+              Construa seu sermão com ajuda da Inteligência Artificial
             </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-bible-text mb-4">
-              Útil quando você quer seguir uma estrutura comprovada
+              Utilize o poder da IA para receber sugestões, insights e estruturação do seu sermão
             </p>
             <Button className="w-full bg-bible-navy hover:bg-bible-accent">
               Começar
