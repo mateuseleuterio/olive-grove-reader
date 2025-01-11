@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Bold, Italic, List, Quote, Type } from "lucide-react";
+import { Bold, Italic, List, Quote, Type, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 const fetchBibleVerse = async (reference: string) => {
   try {
@@ -33,6 +33,7 @@ const fetchBibleVerse = async (reference: string) => {
 
 const SermonEditor = () => {
   const { type } = useParams();
+  const navigate = useNavigate();
   const [content, setContent] = useState("");
   const [verseReference, setVerseReference] = useState<string | null>(null);
   const { toast } = useToast();
@@ -54,12 +55,14 @@ const SermonEditor = () => {
     queryFn: () => fetchBibleVerse(verseReference || ''),
     enabled: !!verseReference,
     retry: 1,
-    onError: () => {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar o versículo. Verifique se a referência está correta.",
-        variant: "destructive"
-      });
+    meta: {
+      onError: () => {
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar o versículo. Verifique se a referência está correta.",
+          variant: "destructive"
+        });
+      }
     }
   });
 
@@ -111,7 +114,16 @@ const SermonEditor = () => {
   return (
     <div className="min-h-screen bg-bible-gray p-8">
       <Card className="max-w-4xl mx-auto bg-white p-6">
-        <div className="flex gap-2 mb-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => navigate('/sermon-builder')}
+            className="mr-2"
+            title="Voltar"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
           <Button
             variant="outline"
             size="icon"
