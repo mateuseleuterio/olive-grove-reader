@@ -5,17 +5,37 @@ import { Bold, Italic, List, Quote, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/components/ui/use-toast";
 
 const fetchBibleVerse = async (reference: string) => {
-  // This is a mock function - in a real app, you would call your Bible API
-  // Format: "Genesis 1:1" -> returns the verse text
-  return "No princípio criou Deus o céu e a terra.";
+  try {
+    // Remove parentheses from reference
+    const cleanReference = reference.replace(/[()]/g, '').trim();
+    
+    // Split reference into book, chapter, and verse
+    const [book, chapterVerse] = cleanReference.split(' ');
+    const [chapter, verse] = chapterVerse.split(':');
+
+    // Make API call to fetch verse
+    const response = await fetch(`https://www.abibliadigital.com.br/api/verses/nvi/${book}/${chapter}/${verse}`);
+    
+    if (!response.ok) {
+      throw new Error('Falha ao buscar o versículo');
+    }
+
+    const data = await response.json();
+    return data.text;
+  } catch (error) {
+    console.error('Erro ao buscar versículo:', error);
+    throw new Error('Não foi possível carregar o versículo');
+  }
 };
 
 const SermonEditor = () => {
   const { type } = useParams();
   const [content, setContent] = useState("");
   const [verseReference, setVerseReference] = useState<string | null>(null);
+  const { toast } = useToast();
 
   // Monitor content for Bible references
   useEffect(() => {
@@ -29,10 +49,18 @@ const SermonEditor = () => {
   }, [content]);
 
   // Fetch verse when reference is found
-  const { data: verseText } = useQuery({
+  const { data: verseText, isError } = useQuery({
     queryKey: ['bibleVerse', verseReference],
     queryFn: () => fetchBibleVerse(verseReference || ''),
     enabled: !!verseReference,
+    retry: 1,
+    onError: () => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível carregar o versículo. Verifique se a referência está correta.",
+        variant: "destructive"
+      });
+    }
   });
 
   // Insert verse text when available
