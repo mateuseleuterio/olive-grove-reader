@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import Layout from "./components/Layout";
 import Index from "./pages/Index";
 import SermonBuilder from "./pages/SermonBuilder";
 import SermonEditor from "./pages/SermonEditor";
@@ -13,12 +14,14 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/sermon-builder" element={<SermonBuilder />} />
-            <Route path="/sermon-editor/:type" element={<SermonEditor />} />
-            <Route path="/timeline" element={<Timeline />} />
-          </Routes>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/sermon-builder" element={<SermonBuilder />} />
+              <Route path="/sermon-editor/:type" element={<SermonEditor />} />
+              <Route path="/timeline" element={<Timeline />} />
+            </Routes>
+          </Layout>
         </TooltipProvider>
       </QueryClientProvider>
     </Router>

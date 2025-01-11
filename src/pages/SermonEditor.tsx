@@ -113,34 +113,33 @@ const SermonEditor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bible-gray p-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-serif text-bible-navy">
-            {type === "blank" && "Novo Sermão"}
-            {type === "structure" && "Sermão Estruturado"}
-            {type === "ai" && "Sermão com IA"}
-          </h1>
-          <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/")}
-              className="flex items-center gap-2"
-            >
-              <BookOpen className="h-4 w-4" />
-              Voltar para a Bíblia
-            </Button>
-            <Button
-              onClick={handleSaveSermon}
-              disabled={isLoading}
-              className="flex items-center gap-2 bg-bible-navy hover:bg-bible-accent"
-            >
-              <Save className="h-4 w-4" />
-              Salvar Sermão
-            </Button>
-          </div>
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-serif font-bold text-bible-navy">
+          {type === "blank" && "Novo Sermão"}
+          {type === "structure" && "Sermão Estruturado"}
+          {type === "ai" && "Sermão com IA"}
+        </h1>
+        <div className="flex gap-4">
+          <Button
+            variant="outline"
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2"
+          >
+            <BookOpen className="h-4 w-4" />
+            Voltar para a Bíblia
+          </Button>
+          <Button
+            onClick={handleSaveSermon}
+            disabled={isLoading}
+            className="flex items-center gap-2 bg-bible-navy hover:bg-bible-accent"
+          >
+            <Save className="h-4 w-4" />
+            Salvar Sermão
+          </Button>
         </div>
-
+      </div>
+      
         <div>
           <Input
             placeholder="Título do Sermão"
@@ -186,7 +185,6 @@ const SermonEditor = () => {
             className="mb-4"
           />
         </div>
-      </div>
     </div>
   );
 };

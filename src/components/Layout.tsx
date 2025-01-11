@@ -1,0 +1,161 @@
+import { ReactNode } from "react";
+import { Link } from "react-router-dom";
+import {
+  NavigationMenu,
+  NavigationMenuItem,
+  NavigationMenuList,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { UserCircle, Settings, LogOut, BookOpen, Calendar, PenSquare } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { User } from "@supabase/supabase-js";
+import { Database } from "@/integrations/supabase/types";
+import AuthModal from "@/components/Auth";
+
+type Profile = Database['public']['Tables']['profiles']['Row'];
+
+interface LayoutProps {
+  children: ReactNode;
+}
+
+const Layout = ({ children }: LayoutProps) => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        getProfile(session.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+      if (session?.user) {
+        getProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const getProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select()
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+        return;
+      }
+
+      setProfile(data);
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  return (
+    <div className="min-h-screen bg-bible-gray">
+      <nav className="bg-bible-navy text-white py-4 sticky top-0 z-50 shadow-md">
+        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
+          <Link to="/" className="text-xl font-serif font-bold hover:text-bible-gray transition-colors">
+            Bible App
+          </Link>
+          <NavigationMenu>
+            <NavigationMenuList className="space-x-2">
+              <NavigationMenuItem>
+                <Link to="/" className={`${navigationMenuTriggerStyle()} bg-transparent hover:bg-bible-accent flex items-center gap-2`}>
+                  <BookOpen className="w-4 h-4" />
+                  <span>Bíblia</span>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/sermon-builder" className={`${navigationMenuTriggerStyle()} bg-transparent hover:bg-bible-accent flex items-center gap-2`}>
+                  <PenSquare className="w-4 h-4" />
+                  <span>Sermões</span>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <Link to="/timeline" className={`${navigationMenuTriggerStyle()} bg-transparent hover:bg-bible-accent flex items-center gap-2`}>
+                  <Calendar className="w-4 h-4" />
+                  <span>Linha do Tempo</span>
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full hover:bg-bible-accent">
+                      <UserCircle className="h-6 w-6" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {user ? (
+                      <>
+                        <DropdownMenuLabel>Minha Conta</DropdownMenuLabel>
+                        {profile?.full_name && (
+                          <DropdownMenuItem className="font-medium">
+                            {profile.full_name}
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem className="text-sm text-muted-foreground">
+                          {user.email}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>Configurações</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={handleLogout}>
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>Sair</span>
+                        </DropdownMenuItem>
+                      </>
+                    ) : (
+                      <DropdownMenuItem onClick={() => setIsAuthModalOpen(true)}>
+                        Entrar / Cadastrar
+                      </DropdownMenuItem>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
+        </div>
+      </nav>
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        {children}
+      </main>
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
+    </div>
+  );
+};
+
+export default Layout;

@@ -2,15 +2,11 @@ import BibleTimeline from "@/components/BibleTimeline";
 
 const Timeline = () => {
   return (
-    <div className="min-h-screen bg-bible-gray">
-      <nav className="bg-bible-navy text-white py-4">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-xl font-bold">Linha do Tempo Bíblica</h1>
-        </div>
-      </nav>
-      <main>
-        <BibleTimeline />
-      </main>
+    <div className="bg-white rounded-lg shadow-sm p-6">
+      <h1 className="text-2xl font-serif font-bold text-bible-navy mb-8">
+        Linha do Tempo Bíblica
+      </h1>
+      <BibleTimeline />
     </div>
   );
 };
