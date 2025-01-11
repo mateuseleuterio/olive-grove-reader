@@ -25,11 +25,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         bible: {
-          navy: "#1B2559",
-          gray: "#F8FAFC",
-          accent: "#3B82F6",
-          text: "#2D3748",
-          verse: "#718096",
+          navy: "#556B2F", // Changed to olive green
+          gray: "#FFFDF0", // Changed to warm off-white
+          accent: "#8B8B2B", // Changed to darker olive
+          text: "#4A4A24", // Changed to darker olive text
+          verse: "#8E9196", // Kept neutral for readability
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
