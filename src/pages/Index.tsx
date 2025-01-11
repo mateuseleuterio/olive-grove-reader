@@ -95,6 +95,11 @@ const Index = () => {
                 </Link>
               </NavigationMenuItem>
               <NavigationMenuItem>
+                <Link to="/timeline" className={`${navigationMenuTriggerStyle()} bg-transparent hover:bg-bible-accent`}>
+                  Linha do Tempo
+                </Link>
+              </NavigationMenuItem>
+              <NavigationMenuItem>
                 <Link to="/store" className={`${navigationMenuTriggerStyle()} bg-transparent hover:bg-bible-accent`}>
                   Loja
                 </Link>
