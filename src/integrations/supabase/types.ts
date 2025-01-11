@@ -9,6 +9,97 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      bible_books: {
+        Row: {
+          abbreviation: string | null
+          created_at: string
+          id: number
+          name: string
+          position: number
+          testament: string
+        }
+        Insert: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: number
+          name: string
+          position: number
+          testament: string
+        }
+        Update: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: number
+          name?: string
+          position?: number
+          testament?: string
+        }
+        Relationships: []
+      }
+      bible_chapters: {
+        Row: {
+          book_id: number | null
+          chapter_number: number
+          created_at: string
+          id: number
+        }
+        Insert: {
+          book_id?: number | null
+          chapter_number: number
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          book_id?: number | null
+          chapter_number?: number
+          created_at?: string
+          id?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_chapters_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "bible_books"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bible_verses: {
+        Row: {
+          chapter_id: number | null
+          created_at: string
+          id: number
+          text: string
+          verse_number: number
+          version: string
+        }
+        Insert: {
+          chapter_id?: number | null
+          created_at?: string
+          id?: number
+          text: string
+          verse_number: number
+          version: string
+        }
+        Update: {
+          chapter_id?: number | null
+          created_at?: string
+          id?: number
+          text?: string
+          verse_number?: number
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_verses_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "bible_chapters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
