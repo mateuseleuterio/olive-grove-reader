@@ -57,6 +57,10 @@ const SermonBuilder = () => {
     setSermonToDelete(id);
   };
 
+  const handleOpenSermon = (sermon: any) => {
+    navigate(`/sermon-editor/${sermon.type || 'blank'}?id=${sermon.id}`);
+  };
+
   const confirmDelete = async () => {
     if (sermonToDelete) {
       try {
@@ -208,7 +212,11 @@ const SermonBuilder = () => {
             </TableHeader>
             <TableBody>
               {filteredSermons.map((sermon) => (
-                <TableRow key={sermon.id}>
+                <TableRow 
+                  key={sermon.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleOpenSermon(sermon)}
+                >
                   <TableCell className="font-medium">{sermon.title}</TableCell>
                   <TableCell>{sermon.bible_text}</TableCell>
                   <TableCell>{new Date(sermon.created_at).toLocaleDateString('pt-BR')}</TableCell>
@@ -217,14 +225,20 @@ const SermonBuilder = () => {
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => navigate(`/sermon-editor/${sermon.type || 'blank'}?id=${sermon.id}`)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenSermon(sermon);
+                        }}
                       >
                         <Pencil className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDelete(sermon.id)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(sermon.id);
+                        }}
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
