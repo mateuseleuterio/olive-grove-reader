@@ -16,6 +16,24 @@ serve(async (req) => {
   try {
     const { topic, style } = await req.json();
 
+    console.log(`Generating sermon about ${topic} in ${style} style`);
+
+    const systemPrompt = `You are a helpful assistant that generates sermon outlines. Create a well-structured sermon with the following format:
+    {
+      "title": "An engaging title for the sermon",
+      "introduction": "A compelling introduction that sets up the main message",
+      "points": ["Main point 1", "Main point 2", "Main point 3"],
+      "conclusion": "A powerful conclusion that ties everything together"
+    }
+    
+    Make the sermon ${style} in style and focused on ${topic}.
+    For expository style, focus on explaining the biblical text.
+    For topical style, organize around the main theme.
+    For narrative style, use storytelling elements.
+    For practical style, emphasize application to daily life.
+    
+    Keep the response concise but meaningful.`;
+
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
       headers: {
@@ -27,11 +45,11 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are a helpful assistant that generates sermon outlines. Create structured sermons with an introduction, main points, and conclusion.'
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: `Create a sermon outline about ${topic}. Style: ${style}`
+            content: `Create a ${style} sermon about ${topic}`
           }
         ],
         temperature: 0.7,
@@ -40,6 +58,8 @@ serve(async (req) => {
     });
 
     const data = await response.json();
+    console.log('Sermon generated successfully');
+    
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

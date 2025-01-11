@@ -5,7 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { BookOpen, Save, Plus, Trash } from "lucide-react";
+import { BookOpen, Save, Plus, Trash, Wand2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Card } from "@/components/ui/card";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
@@ -19,39 +27,55 @@ const SermonEditor = () => {
   const [points, setPoints] = useState<string[]>([]);
   const [conclusion, setConclusion] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [aiResponse, setAiResponse] = useState("");
+  const [topic, setTopic] = useState("");
+  const [style, setStyle] = useState("expository");
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (sermonId) {
-      loadSermon(sermonId);
+  const handleGenerateSermon = async () => {
+    if (!topic) {
+      toast({
+        title: "Tópico necessário",
+        description: "Por favor, insira um tópico para o sermão.",
+        variant: "destructive",
+      });
+      return;
     }
-  }, [sermonId]);
 
-  const loadSermon = async (id: string) => {
     try {
-      const { data: sermon, error } = await supabase
-        .from("sermons")
-        .select("*")
-        .eq("id", id)
-        .single();
+      setIsLoading(true);
+      const { data, error } = await supabase.functions.invoke('generate-sermon', {
+        body: { topic, style },
+      });
 
       if (error) throw error;
 
-      if (sermon) {
-        setTitle(sermon.title || "");
-        setBibleText(sermon.bible_text || "");
-        setIntroduction(sermon.introduction || "");
-        setPoints(sermon.points as string[] || []);
-        setConclusion(sermon.conclusion || "");
+      const sermon = data.choices[0].message.content;
+      
+      // Parse the AI response and update the form fields
+      try {
+        const parsedSermon = JSON.parse(sermon);
+        setTitle(parsedSermon.title || "");
+        setIntroduction(parsedSermon.introduction || "");
+        setPoints(parsedSermon.points || []);
+        setConclusion(parsedSermon.conclusion || "");
+      } catch (e) {
+        // If parsing fails, use the raw text
+        setIntroduction(sermon);
       }
-    } catch (error) {
-      console.error("Error loading sermon:", error);
+
       toast({
-        title: "Erro ao carregar sermão",
-        description: "Houve um erro ao tentar carregar o sermão. Por favor, tente novamente.",
+        title: "Sermão gerado",
+        description: "O sermão foi gerado com sucesso!",
+      });
+    } catch (error) {
+      console.error("Error generating sermon:", error);
+      toast({
+        title: "Erro ao gerar sermão",
+        description: "Houve um erro ao gerar o sermão. Por favor, tente novamente.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -112,12 +136,149 @@ const SermonEditor = () => {
     }
   };
 
+  if (type === "ai") {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-serif font-bold text-bible-navy">
+            Criar Sermão com IA
+          </h1>
+          <Button
+            onClick={handleSaveSermon}
+            disabled={isLoading}
+            size="sm"
+            className="bg-bible-navy hover:bg-bible-accent"
+          >
+            <Save className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <Card className="p-6 space-y-4">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Sobre qual tópico você quer pregar?
+              </label>
+              <Input
+                placeholder="Ex: O amor de Deus, A oração, O perdão..."
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Estilo do sermão
+              </label>
+              <Select value={style} onValueChange={setStyle}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="expository">Expositivo</SelectItem>
+                  <SelectItem value="topical">Temático</SelectItem>
+                  <SelectItem value="narrative">Narrativo</SelectItem>
+                  <SelectItem value="practical">Prático</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button 
+              onClick={handleGenerateSermon} 
+              disabled={isLoading}
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+            >
+              <Wand2 className="mr-2 h-4 w-4" />
+              Gerar Sermão
+            </Button>
+          </div>
+        </Card>
+
+        {(title || introduction || points.length > 0 || conclusion) && (
+          <Card className="p-6 space-y-4">
+            <Input
+              placeholder="Título do Sermão"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mb-4"
+            />
+            <Textarea
+              placeholder="Introdução"
+              value={introduction}
+              onChange={(e) => setIntroduction(e.target.value)}
+              className="mb-4"
+            />
+            {points.map((point, index) => (
+              <div key={index} className="flex items-center mb-2">
+                <Input
+                  placeholder={`Ponto ${index + 1}`}
+                  value={point}
+                  onChange={(e) => handlePointChange(index, e.target.value)}
+                  className="mr-2"
+                />
+                <Button
+                  variant="outline"
+                  onClick={() => handleRemovePoint(index)}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+            <Button onClick={handleAddPoint} className="mb-4">
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar Ponto
+            </Button>
+            <Textarea
+              placeholder="Conclusão"
+              value={conclusion}
+              onChange={(e) => setConclusion(e.target.value)}
+              className="mb-4"
+            />
+          </Card>
+        )}
+      </div>
+    );
+  }
+
+  const loadSermon = async (id: string) => {
+    try {
+      const { data: sermon, error } = await supabase
+        .from("sermons")
+        .select("*")
+        .eq("id", id)
+        .single();
+
+      if (error) throw error;
+
+      if (sermon) {
+        setTitle(sermon.title || "");
+        setBibleText(sermon.bible_text || "");
+        setIntroduction(sermon.introduction || "");
+        setPoints(sermon.points as string[] || []);
+        setConclusion(sermon.conclusion || "");
+      }
+    } catch (error) {
+      console.error("Error loading sermon:", error);
+      toast({
+        title: "Erro ao carregar sermão",
+        description: "Houve um erro ao tentar carregar o sermão. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (sermonId) {
+      loadSermon(sermonId);
+    }
+  }, [sermonId]);
+
   return (
     <div className="bg-white rounded-lg shadow-sm p-6">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-2xl font-serif font-bold text-bible-navy">
           {type === "blank" && "Novo Sermão"}
-          {type === "structure" && "Sermão Estruturado"}
+          {type === "structured" && "Sermão Estruturado"}
           {type === "ai" && "Sermão com IA"}
         </h1>
         <div className="flex gap-4">
@@ -140,51 +301,49 @@ const SermonEditor = () => {
         </div>
       </div>
       
-        <div>
+      <Input
+        placeholder="Título do Sermão"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="mb-4"
+      />
+      <Textarea
+        placeholder="Texto Bíblico"
+        value={bibleText}
+        onChange={(e) => setBibleText(e.target.value)}
+        className="mb-4"
+      />
+      <Textarea
+        placeholder="Introdução"
+        value={introduction}
+        onChange={(e) => setIntroduction(e.target.value)}
+        className="mb-4"
+      />
+      {points.map((point, index) => (
+        <div key={index} className="flex items-center mb-2">
           <Input
-            placeholder="Título do Sermão"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="mb-4"
+            placeholder={`Ponto ${index + 1}`}
+            value={point}
+            onChange={(e) => handlePointChange(index, e.target.value)}
+            className="mr-2"
           />
-          <Textarea
-            placeholder="Texto Bíblico"
-            value={bibleText}
-            onChange={(e) => setBibleText(e.target.value)}
-            className="mb-4"
-          />
-          <Textarea
-            placeholder="Introdução"
-            value={introduction}
-            onChange={(e) => setIntroduction(e.target.value)}
-            className="mb-4"
-          />
-          {points.map((point, index) => (
-            <div key={index} className="flex items-center mb-2">
-              <Input
-                placeholder={`Ponto ${index + 1}`}
-                value={point}
-                onChange={(e) => handlePointChange(index, e.target.value)}
-                className="mr-2"
-              />
-              <Button
-                variant="outline"
-                onClick={() => handleRemovePoint(index)}
-              >
-                <Trash className="h-4 w-4" />
-              </Button>
-            </div>
-          ))}
-          <Button onClick={handleAddPoint} className="mb-4">
-            Adicionar Ponto
+          <Button
+            variant="outline"
+            onClick={() => handleRemovePoint(index)}
+          >
+            <Trash className="h-4 w-4" />
           </Button>
-          <Textarea
-            placeholder="Conclusão"
-            value={conclusion}
-            onChange={(e) => setConclusion(e.target.value)}
-            className="mb-4"
-          />
         </div>
+      ))}
+      <Button onClick={handleAddPoint} className="mb-4">
+        Adicionar Ponto
+      </Button>
+      <Textarea
+        placeholder="Conclusão"
+        value={conclusion}
+        onChange={(e) => setConclusion(e.target.value)}
+        className="mb-4"
+      />
     </div>
   );
 };
