@@ -23,7 +23,7 @@ const SermonEditor = () => {
   // State for structured sermon
   const [structuredTitle, setStructuredTitle] = useState("");
   const [introduction, setIntroduction] = useState("");
-  const [points, setPoints] = useState<SermonType['points']>([
+  const [points, setPoints] = useState<NonNullable<SermonType['points']>>([
     { title: "", content: "", illustrations: [] }
   ]);
   const [conclusion, setConclusion] = useState("");
@@ -34,11 +34,15 @@ const SermonEditor = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Only fetch if id is a valid UUID
+  const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
   // Fetch existing sermon if in edit mode
   const { data: existingSermon } = useQuery({
     queryKey: ["sermon", id],
     queryFn: async () => {
-      if (!id) return null;
+      if (!isValidUUID) return null;
+      
       const { data, error } = await supabase
         .from("sermons")
         .select("*")
@@ -48,7 +52,7 @@ const SermonEditor = () => {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: isValidUUID,
   });
 
   // Load existing sermon data
@@ -81,7 +85,7 @@ const SermonEditor = () => {
         return;
       }
 
-      let sermonData: Partial<SermonType> = {
+      let sermonData: Partial<SermonType> & { title: string; user_id: string } = {
         user_id: user.id,
         title: "",
         bible_text: null,
@@ -113,7 +117,7 @@ const SermonEditor = () => {
       }
 
       let result;
-      if (id) {
+      if (isValidUUID) {
         const { data, error } = await supabase
           .from("sermons")
           .update(sermonData)
@@ -369,7 +373,7 @@ const SermonEditor = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif text-bible-navy">
-            {id ? "Editar Sermão" : (
+            {isValidUUID ? "Editar Sermão" : (
               <>
                 {type === "blank" && "Começar do Zero"}
                 {type === "structure" && "Estrutura Comprovada"}
