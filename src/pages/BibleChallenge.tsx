@@ -1,93 +1,48 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trophy, Users, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
-interface DailyChallenge {
-  id: string;
-  title: string;
-  date: string;
-}
+// Sample data for presentation
+const SAMPLE_CHALLENGE = {
+  id: "1",
+  title: "Conhecimentos sobre o Livro de Gênesis",
+  date: new Date().toISOString(),
+  questions: [
+    {
+      id: "q1",
+      question: "Quem construiu a arca?",
+      correctAnswer: "Noé",
+      wrongAnswers: ["Moisés", "Abraão", "Davi"]
+    },
+    {
+      id: "q2",
+      question: "Quantos dias e noites choveu durante o dilúvio?",
+      correctAnswer: "40",
+      wrongAnswers: ["7", "30", "100"]
+    }
+  ]
+};
 
-interface UserScore {
-  id: string;
-  user_id: string;
-  score: number;
-  completed_at: string;
-  profiles: {
-    full_name: string | null;
-  };
-}
+const SAMPLE_SCORES = [
+  { id: "1", userName: "João Silva", score: 95, completedAt: new Date().toISOString() },
+  { id: "2", userName: "Maria Santos", score: 85, completedAt: new Date().toISOString() },
+  { id: "3", userName: "Pedro Oliveira", score: 75, completedAt: new Date().toISOString() },
+  { id: "4", userName: "Ana Souza", score: 70, completedAt: new Date().toISOString() },
+  { id: "5", userName: "Lucas Ferreira", score: 65, completedAt: new Date().toISOString() }
+];
 
 const BibleChallenge = () => {
   const { toast } = useToast();
   const [isStarted, setIsStarted] = useState(false);
 
-  // Otimizando a query do desafio diário com staleTime e cacheTime
-  const { data: dailyChallenge, isLoading: isChallengeLoading } = useQuery({
-    queryKey: ["dailyChallenge"],
-    queryFn: async () => {
-      const today = new Date().toISOString().split("T")[0];
-      const { data, error } = await supabase
-        .from("daily_challenges")
-        .select("*")
-        .eq("date", today)
-        .maybeSingle();
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar o desafio diário.",
-        });
-        throw error;
-      }
-
-      return data as DailyChallenge | null;
-    },
-    staleTime: 5 * 60 * 1000, // 5 minutos
-    cacheTime: 30 * 60 * 1000, // 30 minutos
-  });
-
-  // Otimizando a query do ranking com staleTime e cacheTime
-  const { data: topScores } = useQuery({
-    queryKey: ["topScores"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("user_scores")
-        .select(`
-          id,
-          user_id,
-          score,
-          completed_at,
-          profiles (
-            full_name
-          )
-        `)
-        .order("score", { ascending: false })
-        .limit(5);
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar o ranking.",
-        });
-        throw error;
-      }
-
-      return data as UserScore[];
-    },
-    staleTime: 60 * 1000, // 1 minuto
-    cacheTime: 5 * 60 * 1000, // 5 minutos
-  });
-
   const handleStartChallenge = () => {
     setIsStarted(true);
-    // Implementação do início do desafio será adicionada aqui
+    toast({
+      title: "Desafio iniciado!",
+      description: "Boa sorte em seu desafio bíblico.",
+    });
   };
 
   const handleCreateGroupChallenge = () => {
@@ -96,14 +51,6 @@ const BibleChallenge = () => {
       description: "A funcionalidade de desafios em grupo estará disponível em breve.",
     });
   };
-
-  if (isChallengeLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-4rem)]">
-        <div className="animate-pulse">Carregando...</div>
-      </div>
-    );
-  }
 
   return (
     <div className="container mx-auto py-8">
@@ -120,21 +67,20 @@ const BibleChallenge = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {dailyChallenge ? (
-              <>
-                <h3 className="text-xl font-semibold mb-4">{dailyChallenge.title}</h3>
-                <Button
-                  onClick={handleStartChallenge}
-                  className="w-full bg-bible-navy hover:bg-bible-accent"
-                >
-                  Começar Desafio
-                </Button>
-              </>
-            ) : (
-              <p className="text-muted-foreground">
-                Nenhum desafio disponível para hoje. Volte amanhã!
+            <h3 className="text-xl font-semibold mb-4">{SAMPLE_CHALLENGE.title}</h3>
+            <div className="space-y-4 mb-6">
+              <p className="text-bible-text">
+                Este desafio contém {SAMPLE_CHALLENGE.questions.length} questões sobre o Livro de Gênesis.
+                Teste seu conhecimento e compare sua pontuação com outros participantes!
               </p>
-            )}
+            </div>
+            <Button
+              onClick={handleStartChallenge}
+              className="w-full bg-bible-navy hover:bg-bible-accent"
+              disabled={isStarted}
+            >
+              {isStarted ? "Desafio em Andamento" : "Começar Desafio"}
+            </Button>
           </CardContent>
         </Card>
 
@@ -149,24 +95,18 @@ const BibleChallenge = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topScores?.length ? (
-                topScores.map((score, index) => (
-                  <div
-                    key={score.id}
-                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <span className="font-bold text-bible-navy">{index + 1}º</span>
-                      <span>{score.profiles?.full_name || "Anônimo"}</span>
-                    </div>
-                    <span className="font-semibold">{score.score} pts</span>
+              {SAMPLE_SCORES.map((score, index) => (
+                <div
+                  key={score.id}
+                  className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="font-bold text-bible-navy">{index + 1}º</span>
+                    <span>{score.userName}</span>
                   </div>
-                ))
-              ) : (
-                <p className="text-muted-foreground text-center">
-                  Nenhuma pontuação registrada ainda.
-                </p>
-              )}
+                  <span className="font-semibold">{score.score} pts</span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
