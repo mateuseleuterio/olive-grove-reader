@@ -7,6 +7,8 @@ import BibleReader from "./components/BibleReader";
 import SermonBuilder from "./pages/SermonBuilder";
 import SermonEditor from "./pages/SermonEditor";
 import BibleChallenge from "./pages/BibleChallenge";
+import ArticleView from "./pages/ArticleView";
+import ArticleEditor from "./pages/ArticleEditor";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +26,8 @@ function App() {
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor/:type" element={<SermonEditor />} />
                 <Route path="/bible-challenge" element={<BibleChallenge />} />
+                <Route path="/article/:id" element={<ArticleView />} />
+                <Route path="/new-article" element={<ArticleEditor />} />
               </Routes>
             </div>
           </div>
