@@ -1,15 +1,19 @@
 export interface SermonType {
   id: string;
   title: string;
-  bible_text?: string;
-  introduction?: string;
+  bible_text?: string | null;
+  introduction?: string | null;
   points?: Array<{
     title: string;
     content: string;
-    illustrations?: Array<{
+    illustrations: Array<{
       content: string;
       type: string;
     }>;
-  }>;
-  conclusion?: string;
+  }> | null;
+  conclusion?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  user_id: string;
 }

@@ -7,6 +7,7 @@ import { Save, ImagePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import type { SermonType } from "@/types/sermon";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
@@ -22,7 +23,9 @@ const SermonEditor = () => {
   // State for structured sermon
   const [structuredTitle, setStructuredTitle] = useState("");
   const [introduction, setIntroduction] = useState("");
-  const [points, setPoints] = useState([{ title: "", content: "", illustrations: [] }]);
+  const [points, setPoints] = useState<SermonType['points']>([
+    { title: "", content: "", illustrations: [] }
+  ]);
   const [conclusion, setConclusion] = useState("");
 
   // State for AI sermon
@@ -78,13 +81,13 @@ const SermonEditor = () => {
         return;
       }
 
-      let sermonData = {
+      let sermonData: Partial<SermonType> = {
         user_id: user.id,
         title: "",
-        bible_text: "",
-        introduction: "",
+        bible_text: null,
+        introduction: null,
         points: null,
-        conclusion: "",
+        conclusion: null,
       };
 
       if (type === "blank" || (existingSermon && existingSermon.bible_text)) {
@@ -138,6 +141,7 @@ const SermonEditor = () => {
 
       navigate(`/preaching-mode/${result.id}`);
     } catch (error) {
+      console.error('Error saving sermon:', error);
       toast({
         title: "Erro",
         description: "Erro ao salvar o sermão",
