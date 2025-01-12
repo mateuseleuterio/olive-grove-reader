@@ -124,40 +124,58 @@ const Timeline = () => {
         </button>
 
         <ScrollArea className="w-full overflow-hidden">
-          <div className="flex items-center justify-start gap-4 py-8 px-12">
+          <div className="flex items-center justify-start gap-4 py-8 px-12 relative">
+            {/* Connecting line */}
+            <div className="absolute top-1/2 left-0 right-0 h-0.5 bg-bible-accent" />
+            
             {timelineEvents.map((event, index) => (
               <div
                 key={event.year}
                 className={cn(
-                  "flex flex-col items-center transition-all duration-300",
+                  "flex flex-col items-center transition-all duration-300 group",
                   Math.abs(index - centerIndex) <= 2 ? "opacity-100" : "opacity-40"
                 )}
                 style={{
                   transform: `scale(${1 - Math.abs(index - centerIndex) * 0.1})`,
                 }}
               >
-                <div 
-                  className={cn(
-                    "w-4 h-4 rounded-full cursor-pointer transition-colors",
-                    event.type === "biblical" ? "bg-bible-navy" : "bg-bible-accent",
-                    selectedEvent?.year === event.year ? "ring-4 ring-bible-accent ring-opacity-50" : ""
-                  )}
-                  onClick={() => setSelectedEvent(event)}
-                />
-                <div className="h-20 w-px bg-bible-accent" />
-                <div className="rotate-45 whitespace-nowrap">
-                  <span className="inline-block rotate-[-45deg] font-medium">
-                    {event.year < 0 ? `${Math.abs(event.year)} AC` : `${event.year} DC`}
-                  </span>
+                {/* Event dot and preview card */}
+                <div className="relative mb-4">
+                  <div 
+                    className={cn(
+                      "w-4 h-4 rounded-full cursor-pointer transition-colors z-10 relative",
+                      event.type === "biblical" ? "bg-bible-navy" : "bg-bible-accent",
+                      selectedEvent?.year === event.year ? "ring-4 ring-bible-accent ring-opacity-50" : ""
+                    )}
+                    onClick={() => setSelectedEvent(event)}
+                  />
+                  
+                  {/* Preview card */}
+                  <div className="absolute bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                    <Card className="w-48 transform -translate-x-1/2 left-1/2 relative">
+                      <CardContent className="p-3">
+                        <p className="text-sm font-medium mb-1">{event.title}</p>
+                        <span className="text-xs text-bible-verse">
+                          {event.year < 0 ? `${Math.abs(event.year)} AC` : `${event.year} DC`}
+                        </span>
+                      </CardContent>
+                    </Card>
+                  </div>
                 </div>
+
+                {/* Year label */}
+                <span className="text-sm font-medium -rotate-45 whitespace-nowrap mt-2">
+                  {event.year < 0 ? `${Math.abs(event.year)} AC` : `${event.year} DC`}
+                </span>
               </div>
             ))}
           </div>
         </ScrollArea>
       </div>
 
+      {/* Detailed event card */}
       {selectedEvent && (
-        <Card className="mt-8 animate-fade-in">
+        <Card className="mt-8 max-w-2xl mx-auto animate-fade-in">
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-2">
               <Calendar className="h-5 w-5 text-bible-accent" />
