@@ -75,7 +75,7 @@ const SermonEditor = () => {
         };
       }
 
-      const { error } = await supabase.from("sermons").insert(sermonData);
+      const { data, error } = await supabase.from("sermons").insert(sermonData).select().single();
 
       if (error) throw error;
 
@@ -84,7 +84,7 @@ const SermonEditor = () => {
         description: "Sermão salvo com sucesso!",
       });
 
-      navigate("/sermon-builder");
+      navigate(`/preaching-mode/${data.id}`);
     } catch (error) {
       toast({
         title: "Erro",
