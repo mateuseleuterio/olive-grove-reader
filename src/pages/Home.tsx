@@ -1,4 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const FEATURED_POSTS = [
   {
@@ -40,7 +42,13 @@ const FAQ_ITEMS = [
 const Home = () => {
   return (
     <div className="container mx-auto py-8 px-4">
-      <h1 className="text-4xl font-bold text-bible-navy mb-8">Blog Cristão</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl font-bold text-bible-navy">A Corça Blog</h1>
+        <Button className="flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Novo Artigo
+        </Button>
+      </div>
       
       {/* Featured Posts Section */}
       <section className="mb-12">

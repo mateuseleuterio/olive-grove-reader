@@ -106,7 +106,7 @@ const NavigationBar = () => {
             <NavigationMenuItem>
               <Link to="/">
                 <Button variant="ghost" className="text-white hover:bg-bible-accent">
-                  Home
+                  Blog
                 </Button>
               </Link>
             </NavigationMenuItem>
