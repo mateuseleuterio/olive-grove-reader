@@ -9,6 +9,7 @@ import SermonEditor from "./pages/SermonEditor";
 import BibleChallenge from "./pages/BibleChallenge";
 import ArticleView from "./pages/ArticleView";
 import ArticleEditor from "./pages/ArticleEditor";
+import Study from "./pages/Study";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ function App() {
                 <Route path="/bible-challenge" element={<BibleChallenge />} />
                 <Route path="/article/:id" element={<ArticleView />} />
                 <Route path="/new-article" element={<ArticleEditor />} />
+                <Route path="/study" element={<Study />} />
               </Routes>
             </div>
           </div>

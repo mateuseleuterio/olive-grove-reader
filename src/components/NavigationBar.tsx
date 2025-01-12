@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Settings, User, Puzzle } from "lucide-react";
+import { Menu, Search, Settings, User, Puzzle, BookOpen } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,6 +122,14 @@ const NavigationBar = () => {
                 <Button variant="ghost" className="text-white hover:bg-bible-accent flex items-center gap-2">
                   <Puzzle className="h-4 w-4" />
                   Desafio Bíblico
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              <Link to="/study">
+                <Button variant="ghost" className="text-white hover:bg-bible-accent flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Estudos
                 </Button>
               </Link>
             </NavigationMenuItem>
