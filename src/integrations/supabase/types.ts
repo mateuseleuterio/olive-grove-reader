@@ -100,6 +100,89 @@ export type Database = {
           },
         ]
       }
+      challenge_questions: {
+        Row: {
+          correct_answer: string
+          created_at: string
+          daily_challenge_id: string | null
+          group_challenge_id: string | null
+          id: string
+          question: string
+          wrong_answers: string[]
+        }
+        Insert: {
+          correct_answer: string
+          created_at?: string
+          daily_challenge_id?: string | null
+          group_challenge_id?: string | null
+          id?: string
+          question: string
+          wrong_answers: string[]
+        }
+        Update: {
+          correct_answer?: string
+          created_at?: string
+          daily_challenge_id?: string | null
+          group_challenge_id?: string | null
+          id?: string
+          question?: string
+          wrong_answers?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "challenge_questions_daily_challenge_id_fkey"
+            columns: ["daily_challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      daily_challenges: {
+        Row: {
+          created_at: string
+          date: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          date?: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
+      group_challenges: {
+        Row: {
+          created_at: string
+          creator_id: string
+          expires_at: string
+          id: string
+          title: string
+        }
+        Insert: {
+          created_at?: string
+          creator_id: string
+          expires_at: string
+          id?: string
+          title: string
+        }
+        Update: {
+          created_at?: string
+          creator_id?: string
+          expires_at?: string
+          id?: string
+          title?: string
+        }
+        Relationships: []
+      }
       historical_events: {
         Row: {
           category: string
@@ -183,6 +266,48 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_scores: {
+        Row: {
+          completed_at: string
+          daily_challenge_id: string | null
+          group_challenge_id: string | null
+          id: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          daily_challenge_id?: string | null
+          group_challenge_id?: string | null
+          id?: string
+          score?: number
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          daily_challenge_id?: string | null
+          group_challenge_id?: string | null
+          id?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_scores_daily_challenge_id_fkey"
+            columns: ["daily_challenge_id"]
+            isOneToOne: false
+            referencedRelation: "daily_challenges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_scores_group_challenge_id_fkey"
+            columns: ["group_challenge_id"]
+            isOneToOne: false
+            referencedRelation: "group_challenges"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
