@@ -1,8 +1,7 @@
-import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { supabase } from "@/integrations/supabase/client";
 import { BookOpen, Globe, ScrollText, Users } from "lucide-react";
+import Timeline from "@/components/Timeline";
 
 const Study = () => {
   const navigate = useNavigate();
@@ -66,6 +65,10 @@ const Study = () => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-16">
+        <Timeline />
       </div>
     </div>
   );
