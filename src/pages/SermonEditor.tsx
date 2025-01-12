@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Save, ImagePlus, Wand2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import FormattedSermon from "@/components/FormattedSermon";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
@@ -74,8 +73,12 @@ const SermonEditor = () => {
 
       if (error) throw error;
 
-      setFormattedSermon(data.choices[0].message.content);
-      setIsFormattedSermonOpen(true);
+      navigate("/preaching-mode", {
+        state: {
+          content: data.choices[0].message.content,
+          returnPath: location.pathname
+        }
+      });
     } catch (error) {
       console.error('Error:', error);
       toast({
@@ -399,11 +402,6 @@ const SermonEditor = () => {
           {type === "ai" && renderAISermon()}
         </div>
       </div>
-      <FormattedSermon
-        isOpen={isFormattedSermonOpen}
-        onClose={() => setIsFormattedSermonOpen(false)}
-        content={formattedSermon}
-      />
     </div>
   );
 };

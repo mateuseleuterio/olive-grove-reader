@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import BibleReader from "./components/BibleReader";
 import SermonBuilder from "./pages/SermonBuilder";
 import SermonEditor from "./pages/SermonEditor";
+import PreachingMode from "./pages/PreachingMode";
 import BibleChallenge from "./pages/BibleChallenge";
 import ArticleView from "./pages/ArticleView";
 import ArticleEditor from "./pages/ArticleEditor";
@@ -27,6 +28,7 @@ function App() {
                 <Route path="/bible" element={<BibleReader />} />
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor/:type" element={<SermonEditor />} />
+                <Route path="/preaching-mode" element={<PreachingMode />} />
                 <Route path="/bible-challenge" element={<BibleChallenge />} />
                 <Route path="/article/:id" element={<ArticleView />} />
                 <Route path="/new-article" element={<ArticleEditor />} />
