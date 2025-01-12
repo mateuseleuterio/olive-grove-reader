@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, Sparkles, Search, Trash2, Pencil, Plus } from "lucide-react";
+import { FileText, BookOpen, Sparkles, Search, Trash2, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -57,6 +57,10 @@ const SermonBuilder = () => {
     }
   };
 
+  const handleRowClick = (id: number, type: string) => {
+    navigate(`/sermon-editor/${type}?id=${id}`);
+  };
+
   const filteredSermons = sermons.filter(sermon => 
     sermon.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -65,7 +69,7 @@ const SermonBuilder = () => {
     <div className="min-h-screen bg-bible-gray p-8">
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-serif text-bible-navy">Construtor de Sermão</h1>
+          <h1 className="text-3xl font-serif text-bible-navy">Meus Sermões</h1>
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-bible-navy hover:bg-bible-accent">
@@ -155,7 +159,11 @@ const SermonBuilder = () => {
             </TableHeader>
             <TableBody>
               {filteredSermons.map((sermon) => (
-                <TableRow key={sermon.id}>
+                <TableRow 
+                  key={sermon.id}
+                  className="cursor-pointer hover:bg-gray-50"
+                  onClick={() => handleRowClick(sermon.id, sermon.type)}
+                >
                   <TableCell>{sermon.title}</TableCell>
                   <TableCell>
                     {sermon.type === 'blank' && 'Sermão em Branco'}
@@ -163,23 +171,18 @@ const SermonBuilder = () => {
                     {sermon.type === 'ai' && 'Sermão com IA'}
                   </TableCell>
                   <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => navigate(`/sermon-editor/${sermon.type}?id=${sermon.id}`)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDelete(sermon.id)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                  <TableCell onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(sermon.id);
+                      }}
+                      className="text-bible-accent hover:text-bible-navy hover:bg-bible-gray/10"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
