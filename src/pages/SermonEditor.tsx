@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Save, ImagePlus, Wand2 } from "lucide-react";
+import { Save, ImagePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -28,68 +28,6 @@ const SermonEditor = () => {
   const [generatedSermon, setGeneratedSermon] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  // New state for formatted sermon
-  const [formattedSermon, setFormattedSermon] = useState("");
-  const [isFormattedSermonOpen, setIsFormattedSermonOpen] = useState(false);
-  const [isGeneratingFormat, setIsGeneratingFormat] = useState(false);
-
-  const handleGenerateFormattedSermon = async () => {
-    let content = "";
-    
-    if (type === "blank") {
-      content = blankContent;
-    } else if (type === "structure") {
-      content = `
-        ${introduction}
-        
-        Points:
-        ${points.map(point => `
-          ${point.title}
-          ${point.content}
-          ${point.illustrations.map(ill => ill.content).join('\n')}
-        `).join('\n')}
-        
-        ${conclusion}
-      `;
-    } else if (type === "ai") {
-      content = generatedSermon;
-    }
-
-    if (!content.trim()) {
-      toast({
-        title: "Erro",
-        description: "Por favor, adicione conteúdo ao sermão antes de formatá-lo",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsGeneratingFormat(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-formatted-sermon', {
-        body: { content }
-      });
-
-      if (error) throw error;
-
-      navigate("/preaching-mode", {
-        state: {
-          content: data.choices[0].message.content,
-          returnPath: location.pathname
-        }
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao formatar o sermão",
-        variant: "destructive",
-      });
-    } finally {
-      setIsGeneratingFormat(false);
-    }
-  };
 
   const handleSaveSermon = async () => {
     try {
@@ -192,14 +130,6 @@ const SermonEditor = () => {
           onChange={(e) => setBlankContent(e.target.value)}
         />
       </div>
-      <Button
-        onClick={handleGenerateFormattedSermon}
-        disabled={isGeneratingFormat}
-        className="w-full bg-bible-navy hover:bg-bible-accent"
-      >
-        <Wand2 className="w-4 h-4 mr-2" />
-        {isGeneratingFormat ? "Gerando..." : "Gerar Sermão Formatado"}
-      </Button>
     </div>
   );
 
@@ -379,10 +309,10 @@ const SermonEditor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bible-gray p-4 md:p-8">
+    <div className="min-h-screen bg-bible-gray p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl md:text-3xl font-serif text-bible-navy">
+          <h1 className="text-3xl font-serif text-bible-navy">
             {type === "blank" && "Começar do Zero"}
             {type === "structure" && "Estrutura Comprovada"}
             {type === "ai" && "Sermão com IA"}
@@ -396,7 +326,7 @@ const SermonEditor = () => {
             <Save className="h-5 w-5" />
           </Button>
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-4 md:p-6">
+        <div className="bg-white rounded-lg shadow-sm p-6">
           {type === "blank" && renderBlankSermon()}
           {type === "structure" && renderStructuredSermon()}
           {type === "ai" && renderAISermon()}
