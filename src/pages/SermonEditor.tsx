@@ -64,7 +64,11 @@ const SermonEditor = () => {
       } else {
         setStructuredTitle(existingSermon.title);
         setIntroduction(existingSermon.introduction || "");
-        setPoints(existingSermon.points || [{ title: "", content: "", illustrations: [] }]);
+        // Ensure points is an array with the correct structure
+        const existingPoints = existingSermon.points as NonNullable<SermonType['points']> || [
+          { title: "", content: "", illustrations: [] }
+        ];
+        setPoints(existingPoints);
         setConclusion(existingSermon.conclusion || "");
       }
     }
