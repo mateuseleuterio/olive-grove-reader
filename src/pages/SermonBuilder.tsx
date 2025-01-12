@@ -25,43 +25,75 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const [sermonToDelete, setSermonToDelete] = useState<number | null>(null);
+  const [sermonToDelete, setSermonToDelete] = useState<string | null>(null);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Mock data - This should be replaced with real data from a backend
-  const sermons = [
-    { id: 1, title: "A Graça de Deus", type: "blank", createdAt: "2024-03-15" },
-    { id: 2, title: "O Amor ao Próximo", type: "structure", createdAt: "2024-03-14" },
-    { id: 3, title: "Fé e Obras", type: "ai", createdAt: "2024-03-13" },
-  ];
+  const { data: sermons = [], isLoading } = useQuery({
+    queryKey: ['sermons'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('sermons')
+        .select('*')
+        .is('deleted_at', null)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        toast({
+          title: "Erro ao carregar sermões",
+          description: error.message,
+          variant: "destructive",
+        });
+        return [];
+      }
+
+      return data;
+    },
+  });
 
   const handleStart = (type: 'blank' | 'structure' | 'ai') => {
     navigate(`/sermon-editor/${type}`);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: string) => {
     setSermonToDelete(id);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (sermonToDelete) {
-      toast({
-        title: "Sermão excluído",
-        description: "O sermão foi excluído com sucesso.",
-      });
+      const { error } = await supabase
+        .from('sermons')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', sermonToDelete);
+
+      if (error) {
+        toast({
+          title: "Erro ao excluir sermão",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Sermão excluído",
+          description: "O sermão foi excluído com sucesso.",
+        });
+        queryClient.invalidateQueries({ queryKey: ['sermons'] });
+      }
       setSermonToDelete(null);
     }
   };
 
-  const handleRowClick = (id: number) => {
+  const handleRowClick = (id: string) => {
     navigate(`/preaching-mode/${id}`);
   };
 
-  const handleEdit = (e: React.MouseEvent, id: number, type: string) => {
+  const handleEdit = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
     navigate(`/sermon-editor/${id}`);
   };
@@ -157,50 +189,58 @@ const SermonBuilder = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Título</TableHead>
-                <TableHead>Tipo</TableHead>
                 <TableHead>Data de Criação</TableHead>
                 <TableHead>Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSermons.map((sermon) => (
-                <TableRow 
-                  key={sermon.id}
-                  className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleRowClick(sermon.id)}
-                >
-                  <TableCell>{sermon.title}</TableCell>
-                  <TableCell>
-                    {sermon.type === 'blank' && 'Sermão em Branco'}
-                    {sermon.type === 'structure' && 'Estrutura Comprovada'}
-                    {sermon.type === 'ai' && 'Sermão com IA'}
-                  </TableCell>
-                  <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => handleEdit(e, sermon.id, sermon.type)}
-                        className="text-bible-navy hover:bg-bible-gray/10"
-                      >
-                        <FileText className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(sermon.id);
-                        }}
-                        className="text-bible-accent hover:text-bible-navy hover:bg-bible-gray/10"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-4">
+                    Carregando sermões...
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : filteredSermons.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={3} className="text-center py-4">
+                    Nenhum sermão encontrado
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredSermons.map((sermon) => (
+                  <TableRow 
+                    key={sermon.id}
+                    className="cursor-pointer hover:bg-gray-50"
+                    onClick={() => handleRowClick(sermon.id)}
+                  >
+                    <TableCell>{sermon.title}</TableCell>
+                    <TableCell>{new Date(sermon.created_at).toLocaleDateString('pt-BR')}</TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleEdit(e, sermon.id)}
+                          className="text-bible-navy hover:bg-bible-gray/10"
+                        >
+                          <FileText className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(sermon.id);
+                          }}
+                          className="text-bible-accent hover:text-bible-navy hover:bg-bible-gray/10"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </Card>
