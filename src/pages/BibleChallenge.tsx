@@ -26,13 +26,15 @@ const BibleChallenge = () => {
   const { toast } = useToast();
   const [isStarted, setIsStarted] = useState(false);
 
+  // Otimizando a query do desafio diário com staleTime e cacheTime
   const { data: dailyChallenge, isLoading: isChallengeLoading } = useQuery({
     queryKey: ["dailyChallenge"],
     queryFn: async () => {
+      const today = new Date().toISOString().split("T")[0];
       const { data, error } = await supabase
         .from("daily_challenges")
         .select("*")
-        .eq("date", new Date().toISOString().split("T")[0])
+        .eq("date", today)
         .maybeSingle();
 
       if (error) {
@@ -46,8 +48,11 @@ const BibleChallenge = () => {
 
       return data as DailyChallenge | null;
     },
+    staleTime: 5 * 60 * 1000, // 5 minutos
+    cacheTime: 30 * 60 * 1000, // 30 minutos
   });
 
+  // Otimizando a query do ranking com staleTime e cacheTime
   const { data: topScores } = useQuery({
     queryKey: ["topScores"],
     queryFn: async () => {
@@ -74,12 +79,15 @@ const BibleChallenge = () => {
         throw error;
       }
 
-      return data as unknown as UserScore[];
+      return data as UserScore[];
     },
+    staleTime: 60 * 1000, // 1 minuto
+    cacheTime: 5 * 60 * 1000, // 5 minutos
   });
 
   const handleStartChallenge = () => {
     setIsStarted(true);
+    // Implementação do início do desafio será adicionada aqui
   };
 
   const handleCreateGroupChallenge = () => {
