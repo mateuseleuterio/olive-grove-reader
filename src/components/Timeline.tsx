@@ -93,12 +93,14 @@ const Timeline = () => {
   const handlePrevious = () => {
     if (centerIndex > 0) {
       setCenterIndex(centerIndex - 1);
+      setSelectedEvent(timelineEvents[centerIndex - 1]);
     }
   };
 
   const handleNext = () => {
     if (centerIndex < timelineEvents.length - 1) {
       setCenterIndex(centerIndex + 1);
+      setSelectedEvent(timelineEvents[centerIndex + 1]);
     }
   };
 
@@ -140,7 +142,7 @@ const Timeline = () => {
                 }}
               >
                 {/* Event dot and preview card */}
-                <div className="relative mb-4">
+                <div className="relative">
                   <div 
                     className={cn(
                       "w-4 h-4 rounded-full cursor-pointer transition-colors z-10 relative",
@@ -163,8 +165,8 @@ const Timeline = () => {
                   </div>
                 </div>
 
-                {/* Year label */}
-                <span className="text-sm font-medium -rotate-45 whitespace-nowrap mt-2">
+                {/* Year label - Moved below the line */}
+                <span className="text-sm font-medium -rotate-45 whitespace-nowrap mt-8">
                   {event.year < 0 ? `${Math.abs(event.year)} AC` : `${event.year} DC`}
                 </span>
               </div>
