@@ -69,6 +69,7 @@ const Home = () => {
           {isFeaturedLoading ? (
             Array(3).fill(null).map((_, index) => (
               <Card key={index} className="animate-pulse">
+                <div className="h-48 bg-gray-200 rounded-t-lg"></div>
                 <CardHeader>
                   <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
                   <div className="h-4 bg-gray-200 rounded w-1/2"></div>
@@ -77,7 +78,16 @@ const Home = () => {
             ))
           ) : (
             featuredArticles?.map((article) => (
-              <Card key={article.id} className="hover:shadow-lg transition-shadow">
+              <Card key={article.id} className="hover:shadow-lg transition-shadow overflow-hidden">
+                {article.image_url && (
+                  <div className="h-48 w-full overflow-hidden">
+                    <img
+                      src={article.image_url}
+                      alt={article.title}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    />
+                  </div>
+                )}
                 <CardHeader>
                   <div className="text-sm text-muted-foreground mb-2">
                     {article.category} • {new Date(article.created_at).toLocaleDateString("pt-BR")}
@@ -106,9 +116,12 @@ const Home = () => {
           {isLatestLoading ? (
             Array(5).fill(null).map((_, index) => (
               <Card key={index} className="animate-pulse">
-                <CardHeader>
-                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                <CardHeader className="flex flex-row items-start space-y-0 gap-4">
+                  <div className="w-24 h-24 bg-gray-200 rounded"></div>
+                  <div className="flex-1">
+                    <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
                 </CardHeader>
               </Card>
             ))
@@ -116,17 +129,28 @@ const Home = () => {
             latestArticles?.map((article) => (
               <Card 
                 key={article.id} 
-                className="hover:shadow-lg transition-shadow cursor-pointer"
+                className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
                 onClick={() => navigate(`/article/${article.id}`)}
               >
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <CardTitle className="text-lg">{article.title}</CardTitle>
-                    <span className="text-sm text-muted-foreground">
-                      {new Date(article.created_at).toLocaleDateString("pt-BR")}
-                    </span>
+                <CardHeader className="flex flex-row items-start space-y-0 gap-4">
+                  {article.image_url && (
+                    <div className="w-24 h-24 flex-shrink-0 overflow-hidden rounded">
+                      <img
+                        src={article.image_url}
+                        alt={article.title}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center">
+                      <CardTitle className="text-lg">{article.title}</CardTitle>
+                      <span className="text-sm text-muted-foreground">
+                        {new Date(article.created_at).toLocaleDateString("pt-BR")}
+                      </span>
+                    </div>
+                    <CardDescription>{article.description}</CardDescription>
                   </div>
-                  <CardDescription>{article.description}</CardDescription>
                 </CardHeader>
               </Card>
             ))
