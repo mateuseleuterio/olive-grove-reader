@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NavigationBar from "./components/NavigationBar";
-import Index from "./pages/Index";
+import Home from "./pages/Home";
+import BibleReader from "./components/BibleReader";
 import SermonBuilder from "./pages/SermonBuilder";
 import SermonEditor from "./pages/SermonEditor";
 import BibleChallenge from "./pages/BibleChallenge";
@@ -18,7 +19,8 @@ function App() {
             <NavigationBar />
             <div className="pt-16">
               <Routes>
-                <Route path="/" element={<Index />} />
+                <Route path="/" element={<Home />} />
+                <Route path="/bible" element={<BibleReader />} />
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor/:type" element={<SermonEditor />} />
                 <Route path="/bible-challenge" element={<BibleChallenge />} />

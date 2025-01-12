@@ -97,6 +97,13 @@ const NavigationBar = () => {
         <NavigationMenu>
           <NavigationMenuList className="gap-2">
             <NavigationMenuItem>
+              <Link to="/bible">
+                <Button variant="ghost" className="text-white hover:bg-bible-accent">
+                  Bíblia
+                </Button>
+              </Link>
+            </NavigationMenuItem>
+            <NavigationMenuItem>
               <Link to="/">
                 <Button variant="ghost" className="text-white hover:bg-bible-accent">
                   Home

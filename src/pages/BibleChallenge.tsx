@@ -58,7 +58,7 @@ const BibleChallenge = () => {
           user_id,
           score,
           completed_at,
-          profiles (
+          profiles:user_id (
             full_name
           )
         `)
@@ -74,7 +74,7 @@ const BibleChallenge = () => {
         throw error;
       }
 
-      return data as UserScore[];
+      return data as unknown as UserScore[];
     },
   });
 
