@@ -12,6 +12,7 @@ import ArticleView from "./pages/ArticleView";
 import ArticleEditor from "./pages/ArticleEditor";
 import Study from "./pages/Study";
 import StudyCategory from "./pages/StudyCategory";
+import ReadingPlans from "./pages/ReadingPlans";
 
 const queryClient = new QueryClient();
 
@@ -35,7 +36,7 @@ function App() {
                 <Route path="/new-article" element={<ArticleEditor />} />
                 <Route path="/study" element={<Study />} />
                 <Route path="/study/:category" element={<StudyCategory />} />
-                <Route path="/reading-plans" element={<div>Planos de Leitura</div>} />
+                <Route path="/reading-plans" element={<ReadingPlans />} />
               </Routes>
             </div>
           </div>
