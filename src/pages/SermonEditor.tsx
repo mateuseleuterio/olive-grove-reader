@@ -1,15 +1,17 @@
-import React, { useState } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Save, ImagePlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { id } = useParams();
   const { toast } = useToast();
   const type = location.pathname.split("/").pop();
 
@@ -28,6 +30,38 @@ const SermonEditor = () => {
   const [generatedSermon, setGeneratedSermon] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // Fetch existing sermon if in edit mode
+  const { data: existingSermon } = useQuery({
+    queryKey: ["sermon", id],
+    queryFn: async () => {
+      if (!id) return null;
+      const { data, error } = await supabase
+        .from("sermons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id,
+  });
+
+  // Load existing sermon data
+  useEffect(() => {
+    if (existingSermon) {
+      if (existingSermon.bible_text) {
+        setBlankTitle(existingSermon.title);
+        setBlankContent(existingSermon.bible_text);
+      } else {
+        setStructuredTitle(existingSermon.title);
+        setIntroduction(existingSermon.introduction || "");
+        setPoints(existingSermon.points || [{ title: "", content: "", illustrations: [] }]);
+        setConclusion(existingSermon.conclusion || "");
+      }
+    }
+  }, [existingSermon]);
 
   const handleSaveSermon = async () => {
     try {
@@ -53,13 +87,13 @@ const SermonEditor = () => {
         conclusion: "",
       };
 
-      if (type === "blank") {
+      if (type === "blank" || (existingSermon && existingSermon.bible_text)) {
         sermonData = {
           ...sermonData,
           title: blankTitle,
           bible_text: blankContent,
         };
-      } else if (type === "structure") {
+      } else if (type === "structure" || (existingSermon && !existingSermon.bible_text)) {
         sermonData = {
           ...sermonData,
           title: structuredTitle,
@@ -75,16 +109,34 @@ const SermonEditor = () => {
         };
       }
 
-      const { data, error } = await supabase.from("sermons").insert(sermonData).select().single();
+      let result;
+      if (id) {
+        const { data, error } = await supabase
+          .from("sermons")
+          .update(sermonData)
+          .eq("id", id)
+          .select()
+          .single();
 
-      if (error) throw error;
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase
+          .from("sermons")
+          .insert(sermonData)
+          .select()
+          .single();
+
+        if (error) throw error;
+        result = data;
+      }
 
       toast({
         title: "Sucesso",
         description: "Sermão salvo com sucesso!",
       });
 
-      navigate(`/preaching-mode/${data.id}`);
+      navigate(`/preaching-mode/${result.id}`);
     } catch (error) {
       toast({
         title: "Erro",
@@ -313,9 +365,13 @@ const SermonEditor = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif text-bible-navy">
-            {type === "blank" && "Começar do Zero"}
-            {type === "structure" && "Estrutura Comprovada"}
-            {type === "ai" && "Sermão com IA"}
+            {id ? "Editar Sermão" : (
+              <>
+                {type === "blank" && "Começar do Zero"}
+                {type === "structure" && "Estrutura Comprovada"}
+                {type === "ai" && "Sermão com IA"}
+              </>
+            )}
           </h1>
           <Button
             variant="ghost"
@@ -327,8 +383,8 @@ const SermonEditor = () => {
           </Button>
         </div>
         <div className="bg-white rounded-lg shadow-sm p-6">
-          {type === "blank" && renderBlankSermon()}
-          {type === "structure" && renderStructuredSermon()}
+          {(type === "blank" || (existingSermon && existingSermon.bible_text)) && renderBlankSermon()}
+          {(type === "structure" || (existingSermon && !existingSermon.bible_text)) && renderStructuredSermon()}
           {type === "ai" && renderAISermon()}
         </div>
       </div>
