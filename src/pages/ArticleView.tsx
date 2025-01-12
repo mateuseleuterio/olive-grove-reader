@@ -1,10 +1,13 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import ReactMarkdown from "react-markdown";
+import { Button } from "@/components/ui/button";
+import { Edit } from "lucide-react";
 
 const ArticleView = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const { data: article, isLoading } = useQuery({
     queryKey: ["article", id],
@@ -44,6 +47,22 @@ const ArticleView = () => {
 
   return (
     <div className="container mx-auto py-8 px-4">
+      <div className="flex justify-between items-start mb-8">
+        <div>
+          <h1 className="text-4xl font-bold text-bible-navy mb-4">{article.title}</h1>
+          <div className="text-sm text-bible-verse">
+            {new Date(article.created_at).toLocaleDateString("pt-BR")} • {article.category}
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          onClick={() => navigate(`/edit-article/${article.id}`)}
+          className="flex items-center gap-2"
+        >
+          <Edit className="h-4 w-4" />
+          Editar
+        </Button>
+      </div>
       {article.image_url && (
         <img
           src={article.image_url}
@@ -52,10 +71,6 @@ const ArticleView = () => {
         />
       )}
       <div className="prose prose-lg max-w-none">
-        <h1 className="text-4xl font-bold text-bible-navy mb-4">{article.title}</h1>
-        <div className="text-sm text-bible-verse mb-8">
-          {new Date(article.created_at).toLocaleDateString("pt-BR")} • {article.category}
-        </div>
         <ReactMarkdown>{article.content}</ReactMarkdown>
       </div>
     </div>
