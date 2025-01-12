@@ -1,45 +1,67 @@
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Plus } from "lucide-react";
+import { CreateMentalMap } from "@/components/mental-maps/CreateMentalMap";
 
 interface MentalMap {
   id: string;
   title: string;
   content: any;
-  type: 'note' | 'mindmap';
+  type: "note" | "mindmap";
   created_at: string;
   updated_at: string;
 }
 
 const MentalMaps = () => {
   const [maps, setMaps] = useState<MentalMap[]>([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { toast } = useToast();
 
+  const fetchMaps = async () => {
+    const { data, error } = await supabase
+      .from("mental_maps")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Não foi possível carregar os mapas mentais.",
+      });
+      return;
+    }
+
+    setMaps(data as MentalMap[]);
+  };
+
   useEffect(() => {
-    const fetchMaps = async () => {
-      const { data, error } = await supabase
-        .from('mental_maps')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar os mapas mentais.",
-        });
-        return;
-      }
-
-      setMaps(data || []);
-    };
-
     fetchMaps();
-  }, [toast]);
+  }, []);
 
   return (
     <div className="container mx-auto py-6">
-      <h1 className="text-2xl font-bold mb-6">Mapas Mentais</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Mapas Mentais</h1>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="mr-2 h-4 w-4" />
+              Novo Mapa Mental
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[800px]">
+            <CreateMentalMap
+              onClose={() => setIsDialogOpen(false)}
+              onCreated={fetchMaps}
+            />
+          </DialogContent>
+        </Dialog>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {maps.map((map) => (
           <div
@@ -52,9 +74,14 @@ const MentalMaps = () => {
             </p>
             <div className="mt-2">
               <span className="inline-block px-2 py-1 text-xs font-semibold text-white bg-bible-navy rounded">
-                {map.type === 'note' ? 'Nota' : 'Mapa Mental'}
+                {map.type === "note" ? "Nota" : "Mapa Mental"}
               </span>
             </div>
+            {map.type === "note" && (
+              <p className="mt-4 text-sm text-gray-600 line-clamp-3">
+                {map.content}
+              </p>
+            )}
           </div>
         ))}
       </div>
