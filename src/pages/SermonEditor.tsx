@@ -68,20 +68,16 @@ const SermonEditor = () => {
 
     setIsGeneratingFormat(true);
     try {
-      const response = await fetch("/api/generate-formatted-sermon", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ content }),
+      const { data, error } = await supabase.functions.invoke('generate-formatted-sermon', {
+        body: { content }
       });
 
-      if (!response.ok) throw new Error("Failed to format sermon");
+      if (error) throw error;
 
-      const data = await response.json();
       setFormattedSermon(data.choices[0].message.content);
       setIsFormattedSermonOpen(true);
     } catch (error) {
+      console.error('Error:', error);
       toast({
         title: "Erro",
         description: "Erro ao formatar o sermão",
