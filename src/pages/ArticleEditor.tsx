@@ -20,12 +20,26 @@ const ArticleEditor = () => {
     image: null as File | null,
     image_url: "",
   });
+  const [previewUrl, setPreviewUrl] = useState<string>("");
 
   useEffect(() => {
     if (id) {
       loadArticle();
     }
   }, [id]);
+
+  useEffect(() => {
+    // Update preview URL when image or image_url changes
+    if (formData.image) {
+      const url = URL.createObjectURL(formData.image);
+      setPreviewUrl(url);
+      return () => URL.revokeObjectURL(url);
+    } else if (formData.image_url) {
+      setPreviewUrl(formData.image_url);
+    } else {
+      setPreviewUrl("");
+    }
+  }, [formData.image, formData.image_url]);
 
   const loadArticle = async () => {
     try {
@@ -167,11 +181,11 @@ const ArticleEditor = () => {
               accept="image/*"
               onChange={handleImageChange}
             />
-            {(formData.image_url || formData.image) && (
+            {previewUrl && (
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Preview:</p>
                 <img
-                  src={formData.image_url || (formData.image ? URL.createObjectURL(formData.image) : '')}
+                  src={previewUrl}
                   alt="Preview"
                   className="max-h-48 rounded-lg object-cover"
                 />
