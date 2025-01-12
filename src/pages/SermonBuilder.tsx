@@ -57,8 +57,13 @@ const SermonBuilder = () => {
     }
   };
 
-  const handleRowClick = (id: number, type: string) => {
-    navigate(`/sermon-editor/${type}?id=${id}`);
+  const handleRowClick = (id: number) => {
+    navigate(`/preaching-mode/${id}`);
+  };
+
+  const handleEdit = (e: React.MouseEvent, id: number, type: string) => {
+    e.stopPropagation();
+    navigate(`/sermon-editor/${id}`);
   };
 
   const filteredSermons = sermons.filter(sermon => 
@@ -162,7 +167,7 @@ const SermonBuilder = () => {
                 <TableRow 
                   key={sermon.id}
                   className="cursor-pointer hover:bg-gray-50"
-                  onClick={() => handleRowClick(sermon.id, sermon.type)}
+                  onClick={() => handleRowClick(sermon.id)}
                 >
                   <TableCell>{sermon.title}</TableCell>
                   <TableCell>
@@ -171,18 +176,28 @@ const SermonBuilder = () => {
                     {sermon.type === 'ai' && 'Sermão com IA'}
                   </TableCell>
                   <TableCell>{new Date(sermon.createdAt).toLocaleDateString('pt-BR')}</TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(sermon.id);
-                      }}
-                      className="text-bible-accent hover:text-bible-navy hover:bg-bible-gray/10"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                  <TableCell>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => handleEdit(e, sermon.id, sermon.type)}
+                        className="text-bible-navy hover:bg-bible-gray/10"
+                      >
+                        <FileText className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(sermon.id);
+                        }}
+                        className="text-bible-accent hover:text-bible-navy hover:bg-bible-gray/10"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}

@@ -63,11 +63,11 @@ const PreachingMode = () => {
             <div className="text-lg leading-relaxed font-serif">{sermon.introduction}</div>
           </div>
 
-          {sermon.points && sermon.points.map((point: any, index: number) => (
+          {sermon.points && Array.isArray(sermon.points) && sermon.points.map((point: any, index: number) => (
             <div key={index} className="space-y-4">
               <h2 className="text-2xl font-serif text-bible-navy">{point.title}</h2>
               <div className="text-lg leading-relaxed font-serif">{point.content}</div>
-              {point.illustrations && point.illustrations.map((ill: any, illIndex: number) => (
+              {point.illustrations && Array.isArray(point.illustrations) && point.illustrations.map((ill: any, illIndex: number) => (
                 <div key={illIndex} className="ml-6 p-4 bg-bible-gray/20 rounded-lg">
                   <div className="text-lg leading-relaxed font-serif">{ill.content}</div>
                 </div>
