@@ -135,7 +135,7 @@ const NavigationBar = () => {
                   {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
+              <SheetContent side="left" className="w-[250px] bg-bible-navy p-0">
                 <SheetHeader className="p-6 border-b border-bible-accent">
                   <SheetTitle className="text-white">Menu</SheetTitle>
                 </SheetHeader>
@@ -145,19 +145,16 @@ const NavigationBar = () => {
               </SheetContent>
             </Sheet>
           ) : (
-            <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
-              <Menu className="h-5 w-5" />
-            </Button>
+            <Link to="/" className="text-xl font-bold whitespace-nowrap">
+              Biblia App
+            </Link>
           )}
-          <Link to="/" className="text-xl font-bold whitespace-nowrap">
-            Biblia App
-          </Link>
         </div>
 
         {!isMobile && (
-          <NavigationMenu>
-            <NavigationMenuList className="gap-2">
-              <NavigationMenuItem>
+          <NavigationMenu className="hidden md:block">
+            <NavigationMenuList className="flex gap-2">
+              <NavigationMenuItem className="flex">
                 <MenuItems />
               </NavigationMenuItem>
             </NavigationMenuList>
