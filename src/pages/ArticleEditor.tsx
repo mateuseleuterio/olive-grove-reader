@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import UnsplashImageSelector from "@/components/UnsplashImageSelector";
 import { Loader2 } from "lucide-react";
 
 const ArticleEditor = () => {
@@ -60,10 +59,6 @@ const ArticleEditor = () => {
     if (e.target.files && e.target.files[0]) {
       setFormData((prev) => ({ ...prev, image: e.target.files![0], image_url: "" }));
     }
-  };
-
-  const handleUnsplashImageSelect = (imageUrl: string) => {
-    setFormData((prev) => ({ ...prev, image_url: imageUrl, image: null }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -172,7 +167,6 @@ const ArticleEditor = () => {
               accept="image/*"
               onChange={handleImageChange}
             />
-            <UnsplashImageSelector onSelect={handleUnsplashImageSelect} />
             {(formData.image_url || formData.image) && (
               <div className="mt-4">
                 <p className="text-sm font-medium mb-2">Preview:</p>
