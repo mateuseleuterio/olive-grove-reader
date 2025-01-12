@@ -272,6 +272,7 @@ export type Database = {
           bible_text: string | null
           conclusion: string | null
           created_at: string
+          deleted_at: string | null
           id: string
           introduction: string | null
           points: Json | null
@@ -283,6 +284,7 @@ export type Database = {
           bible_text?: string | null
           conclusion?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           introduction?: string | null
           points?: Json | null
@@ -294,6 +296,7 @@ export type Database = {
           bible_text?: string | null
           conclusion?: string | null
           created_at?: string
+          deleted_at?: string | null
           id?: string
           introduction?: string | null
           points?: Json | null
