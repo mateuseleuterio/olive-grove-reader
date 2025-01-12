@@ -33,7 +33,7 @@ const BibleChallenge = () => {
         .from("daily_challenges")
         .select("*")
         .eq("date", new Date().toISOString().split("T")[0])
-        .single();
+        .maybeSingle();
 
       if (error) {
         toast({
@@ -44,7 +44,7 @@ const BibleChallenge = () => {
         throw error;
       }
 
-      return data as DailyChallenge;
+      return data as DailyChallenge | null;
     },
   });
 
@@ -58,7 +58,7 @@ const BibleChallenge = () => {
           user_id,
           score,
           completed_at,
-          profiles:user_id (
+          profiles (
             full_name
           )
         `)
@@ -83,7 +83,6 @@ const BibleChallenge = () => {
   };
 
   const handleCreateGroupChallenge = () => {
-    // To be implemented in the next iteration
     toast({
       title: "Em breve!",
       description: "A funcionalidade de desafios em grupo estará disponível em breve.",
@@ -125,7 +124,7 @@ const BibleChallenge = () => {
               </>
             ) : (
               <p className="text-muted-foreground">
-                Nenhum desafio disponível para hoje.
+                Nenhum desafio disponível para hoje. Volte amanhã!
               </p>
             )}
           </CardContent>
@@ -142,18 +141,24 @@ const BibleChallenge = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {topScores?.map((score, index) => (
-                <div
-                  key={score.id}
-                  className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="font-bold text-bible-navy">{index + 1}º</span>
-                    <span>{score.profiles.full_name || "Anônimo"}</span>
+              {topScores?.length ? (
+                topScores.map((score, index) => (
+                  <div
+                    key={score.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-bible-navy">{index + 1}º</span>
+                      <span>{score.profiles?.full_name || "Anônimo"}</span>
+                    </div>
+                    <span className="font-semibold">{score.score} pts</span>
                   </div>
-                  <span className="font-semibold">{score.score} pts</span>
-                </div>
-              ))}
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center">
+                  Nenhuma pontuação registrada ainda.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>
