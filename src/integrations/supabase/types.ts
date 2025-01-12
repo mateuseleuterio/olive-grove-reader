@@ -100,6 +100,33 @@ export type Database = {
           },
         ]
       }
+      historical_events: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          year: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          year?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
