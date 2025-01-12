@@ -24,6 +24,10 @@ const PreachingMode = () => {
     },
   });
 
+  const handleEditClick = () => {
+    navigate(`/sermon-editor/${id}`);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bible-gray p-8">
@@ -92,7 +96,7 @@ const PreachingMode = () => {
             <Timer />
             <Button
               variant="ghost"
-              onClick={() => navigate(`/sermon-editor/${id}`)}
+              onClick={handleEditClick}
               className="text-bible-navy hover:bg-bible-gray/10"
             >
               <Edit className="h-4 w-4 mr-2" />
