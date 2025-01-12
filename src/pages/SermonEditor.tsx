@@ -45,14 +45,18 @@ const SermonEditor = () => {
 
       let sermonData = {
         user_id: user.id,
-        type: type,
+        title: "",
+        bible_text: "",
+        introduction: "",
+        points: null,
+        conclusion: "",
       };
 
       if (type === "blank") {
         sermonData = {
           ...sermonData,
           title: blankTitle,
-          content: blankContent,
+          bible_text: blankContent,
         };
       } else if (type === "structure") {
         sermonData = {
@@ -65,7 +69,8 @@ const SermonEditor = () => {
       } else if (type === "ai") {
         sermonData = {
           ...sermonData,
-          content: generatedSermon,
+          title: "Sermão Gerado por IA",
+          bible_text: generatedSermon,
         };
       }
 
