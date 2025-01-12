@@ -14,6 +14,7 @@ import Study from "./pages/Study";
 import StudyCategory from "./pages/StudyCategory";
 import ReadingPlans from "./pages/ReadingPlans";
 import MentalMaps from "./pages/MentalMaps";
+import CreateMentalMap from "./pages/CreateMentalMap";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ function App() {
                 <Route path="/study/:category" element={<StudyCategory />} />
                 <Route path="/reading-plans" element={<ReadingPlans />} />
                 <Route path="/mental-maps" element={<MentalMaps />} />
+                <Route path="/mental-maps/new" element={<CreateMentalMap />} />
               </Routes>
             </div>
           </div>

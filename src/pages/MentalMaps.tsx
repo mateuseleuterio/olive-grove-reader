@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
-import { CreateMentalMap } from "@/components/mental-maps/CreateMentalMap";
 
 interface MentalMap {
   id: string;
@@ -17,7 +16,7 @@ interface MentalMap {
 
 const MentalMaps = () => {
   const [maps, setMaps] = useState<MentalMap[]>([]);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const fetchMaps = async () => {
@@ -46,27 +45,18 @@ const MentalMaps = () => {
     <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Mapas Mentais</h1>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Novo Mapa Mental
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[800px]">
-            <CreateMentalMap
-              onClose={() => setIsDialogOpen(false)}
-              onCreated={fetchMaps}
-            />
-          </DialogContent>
-        </Dialog>
+        <Button onClick={() => navigate("/mental-maps/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          Novo Mapa Mental
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {maps.map((map) => (
           <div
             key={map.id}
-            className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow"
+            className="bg-white p-4 rounded-lg shadow hover:shadow-md transition-shadow cursor-pointer"
+            onClick={() => navigate(`/mental-maps/${map.id}`)}
           >
             <h2 className="text-lg font-semibold">{map.title}</h2>
             <p className="text-sm text-gray-500 mt-2">
