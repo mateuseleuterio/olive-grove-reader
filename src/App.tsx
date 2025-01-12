@@ -35,6 +35,7 @@ function App() {
                 <Route path="/new-article" element={<ArticleEditor />} />
                 <Route path="/study" element={<Study />} />
                 <Route path="/study/:category" element={<StudyCategory />} />
+                <Route path="/reading-plans" element={<div>Planos de Leitura</div>} />
               </Routes>
             </div>
           </div>

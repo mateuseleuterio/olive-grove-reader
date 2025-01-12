@@ -267,6 +267,84 @@ export type Database = {
         }
         Relationships: []
       }
+      reading_plan_entries: {
+        Row: {
+          book_id: number | null
+          chapter_end: number
+          chapter_start: number
+          created_at: string
+          day_number: number
+          id: string
+          plan_id: string | null
+        }
+        Insert: {
+          book_id?: number | null
+          chapter_end: number
+          chapter_start: number
+          created_at?: string
+          day_number: number
+          id?: string
+          plan_id?: string | null
+        }
+        Update: {
+          book_id?: number | null
+          chapter_end?: number
+          chapter_start?: number
+          created_at?: string
+          day_number?: number
+          id?: string
+          plan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reading_plan_entries_book_id_fkey"
+            columns: ["book_id"]
+            isOneToOne: false
+            referencedRelation: "bible_books"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reading_plan_entries_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reading_plans: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_days: number
+          id: string
+          is_public: boolean
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days: number
+          id?: string
+          is_public?: boolean
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_days?: number
+          id?: string
+          is_public?: boolean
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sermons: {
         Row: {
           bible_text: string | null
@@ -305,6 +383,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      user_reading_progress: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          current_day: number
+          id: string
+          plan_id: string | null
+          started_at: string
+          user_id: string | null
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          current_day?: number
+          id?: string
+          plan_id?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          current_day?: number
+          id?: string
+          plan_id?: string | null
+          started_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_reading_progress_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "reading_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_scores: {
         Row: {

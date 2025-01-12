@@ -109,6 +109,12 @@ const NavigationBar = () => {
           Sermões
         </Button>
       </Link>
+      <Link to="/reading-plans" className="block">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
+          <BookOpen className="h-4 w-4" />
+          Planos de Leitura
+        </Button>
+      </Link>
       <Link to="/bible-challenge" className="block">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
           <Puzzle className="h-4 w-4" />
