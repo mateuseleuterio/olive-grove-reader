@@ -1,12 +1,14 @@
-export interface SermonPoint {
-  title: string;
-  content: string;
-  illustrations: Illustration[];
-}
+import type { Json } from "@/integrations/supabase/types";
 
 export interface Illustration {
   content: string;
   type: string;
+}
+
+export interface SermonPoint {
+  title: string;
+  content: string;
+  illustrations: Illustration[];
 }
 
 export interface SermonType {

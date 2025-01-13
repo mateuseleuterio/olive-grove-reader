@@ -18,7 +18,6 @@ const PreachingMode = () => {
       if (error) throw error;
       if (!data) throw new Error('Sermão não encontrado');
 
-      // Converter o campo points para o tipo correto
       return {
         ...data,
         points: data.points as unknown as SermonPoint[]
@@ -56,7 +55,7 @@ const PreachingMode = () => {
                     <h4 className="font-medium">Ilustrações:</h4>
                     <ul className="list-disc list-inside">
                       {point.illustrations.map((illustration, i) => (
-                        <li key={i}>{illustration}</li>
+                        <li key={i}>{illustration.content}</li>
                       ))}
                     </ul>
                   </div>
