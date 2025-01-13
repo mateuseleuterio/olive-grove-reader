@@ -57,6 +57,27 @@ const BibleControls = ({
     }
   };
 
+  const importStrongs = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('import-strongs');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso!",
+        description: "A importação do dicionário Strong's foi iniciada com sucesso.",
+      });
+      
+    } catch (error) {
+      console.error('Erro ao importar Strong\'s:', error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao importar o dicionário Strong's. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
       <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
@@ -100,8 +121,18 @@ const BibleControls = ({
           size="icon"
           onClick={importBible}
           className="relative"
+          title="Importar Bíblia"
         >
           <Download className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={importStrongs}
+          className="relative"
+          title="Importar Strong's"
+        >
+          <Book className="h-4 w-4" />
         </Button>
         <Button
           variant="outline"
@@ -109,6 +140,7 @@ const BibleControls = ({
           onClick={onAddVersion}
           disabled={versionsCount >= 4}
           className="relative"
+          title="Adicionar versão"
         >
           <Plus className="h-4 w-4" />
         </Button>
@@ -117,6 +149,7 @@ const BibleControls = ({
           size="icon"
           onClick={onCommentaryOpen}
           className="relative"
+          title="Abrir comentários"
         >
           <BookOpen className="h-4 w-4" />
         </Button>

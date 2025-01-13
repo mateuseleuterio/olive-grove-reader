@@ -1,1 +1,4 @@
 project_id = "rxhxhztskozxgiylygye"
+
+[functions.import-strongs]
+verify_jwt = false
