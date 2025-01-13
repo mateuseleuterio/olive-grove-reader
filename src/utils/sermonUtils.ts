@@ -8,7 +8,6 @@ export const saveSermon = async (
   id?: string
 ) => {
   const dataToSave = {
-    id: id || crypto.randomUUID(),
     title: sermonData.title,
     bible_text: sermonData.bible_text,
     introduction: sermonData.introduction,

@@ -40,25 +40,25 @@ const BibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('bible_books')
-          .select('id, name')
-          .order('position');
+      const { data, error } = await supabase
+        .from('bible_books')
+        .select('id, name')
+        .order('position');
 
-        if (error) {
-          console.error('Erro ao buscar livros:', error);
-          return;
-        }
-
-        if (data) {
-          const uniqueBooks = data.filter((book, index, self) =>
-            index === self.findIndex((b) => b.name === book.name)
-          );
-          setBooks(uniqueBooks);
-        }
-      } catch (error) {
+      if (error) {
         console.error('Erro ao buscar livros:', error);
+        return;
+      }
+
+      if (data) {
+        // Remover duplicatas baseado no nome do livro
+        const uniqueBooks = data.filter((book, index, self) =>
+          index === self.findIndex((b) => b.name === book.name)
+        );
+        setBooks(uniqueBooks);
+        if (uniqueBooks.length > 0 && !selectedBook) {
+          setSelectedBook(uniqueBooks[0].id);
+        }
       }
     };
 
@@ -83,6 +83,7 @@ const BibleReader = () => {
 
       if (data && data.length > 0) {
         setMaxChapters(data[0].chapter_number);
+        setChapter("1");
       }
     };
 
@@ -90,10 +91,12 @@ const BibleReader = () => {
   }, [selectedBook]);
 
   const addVersion = () => {
+    // Desabilitado pois só temos ACF
     console.log('Apenas versão ACF disponível');
   };
 
   const removeVersion = (index: number) => {
+    // Não permitir remover a única versão
     if (versions.length <= 1) return;
     const newVersions = versions.filter((_, i) => i !== index);
     setVersions(newVersions);
@@ -109,84 +112,19 @@ const BibleReader = () => {
     setVersions(newVersions);
   };
 
-  // Renderização inicial com Gênesis
-  if (books.length === 0) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex justify-between items-center mb-4">
-          <BibleControls
-            books={[{ id: 1, name: "Gênesis" }]}
-            selectedBook={1}
-            chapter="1"
-            maxChapters={50}
-            onBookChange={setSelectedBook}
-            onChapterChange={setChapter}
-            onAddVersion={addVersion}
-            onCommentaryOpen={() => setIsCommentaryOpen(true)}
-            versionsCount={versions.length}
-          />
-        </div>
-        
-        {isMobile ? (
-          <div className="flex flex-col gap-4">
-            {versions.map((version, index) => (
-              <div key={`mobile-version-${version.id}-${index}`} className="border rounded-lg bg-white">
-                <BibleVersionPanel
-                  version={version}
-                  onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
-                  onRemove={() => removeVersion(index)}
-                  canRemove={versions.length > 1}
-                  selectedBook={1}
-                  chapter="1"
-                  versions={BIBLE_VERSIONS}
-                />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <ResizablePanelGroup 
-            direction="horizontal" 
-            className="min-h-[400px] w-full rounded-lg border"
-          >
-            {versions.map((version, index) => (
-              <React.Fragment key={`panel-${version.id}-${index}`}>
-                <ResizablePanel defaultSize={100 / versions.length}>
-                  <BibleVersionPanel
-                    version={version}
-                    onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
-                    onRemove={() => removeVersion(index)}
-                    canRemove={versions.length > 1}
-                    selectedBook={1}
-                    chapter="1"
-                    versions={BIBLE_VERSIONS}
-                  />
-                </ResizablePanel>
-                {index < versions.length - 1 && (
-                  <ResizableHandle withHandle />
-                )}
-              </React.Fragment>
-            ))}
-          </ResizablePanelGroup>
-        )}
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-4">
-        <BibleControls
-          books={books}
-          selectedBook={selectedBook}
-          chapter={chapter}
-          maxChapters={maxChapters}
-          onBookChange={setSelectedBook}
-          onChapterChange={setChapter}
-          onAddVersion={addVersion}
-          onCommentaryOpen={() => setIsCommentaryOpen(true)}
-          versionsCount={versions.length}
-        />
-      </div>
+      <BibleControls
+        books={books}
+        selectedBook={selectedBook}
+        chapter={chapter}
+        maxChapters={maxChapters}
+        onBookChange={setSelectedBook}
+        onChapterChange={setChapter}
+        onAddVersion={addVersion}
+        onCommentaryOpen={() => setIsCommentaryOpen(true)}
+        versionsCount={versions.length}
+      />
       
       {isMobile ? (
         <div className="flex flex-col gap-4">

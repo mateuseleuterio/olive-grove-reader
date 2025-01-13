@@ -26,7 +26,7 @@ const WordDetails = ({ word }: WordDetailsProps) => {
 
       if (mappingError) throw mappingError;
       
-      if (wordMapping?.strong_number) {
+      if (wordMapping) {
         const { data: strongData, error: strongError } = await supabase
           .from('strongs_dictionary')
           .select('*')

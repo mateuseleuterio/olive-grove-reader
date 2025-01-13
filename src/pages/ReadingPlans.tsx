@@ -88,9 +88,7 @@ const ReadingPlans = () => {
         return;
       }
 
-      const newPlanId = crypto.randomUUID();
       const { error } = await supabase.from("reading_plans").insert({
-        id: newPlanId,
         ...newPlan,
         created_by: session.user.id,
       });
