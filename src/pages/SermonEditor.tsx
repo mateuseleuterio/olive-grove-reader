@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
-import type { SermonType, SermonPoint } from "@/types/sermon";
+import { Plus as PlusIcon, Trash as TrashIcon } from "lucide-react";
+import type { SermonType, SermonPoint, Illustration } from "@/types/sermon";
 
 const SermonEditor = () => {
-  const { id, type } = useParams<{ id: string; type: string }>();
+  const { id, type } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [sermon, setSermon] = useState<SermonType>({
@@ -19,7 +19,7 @@ const SermonEditor = () => {
     introduction: "",
     points: [],
     conclusion: "",
-    user_id: "user123", // TODO: Get from auth
+    user_id: "user123" // TODO: Get from auth
   });
 
   const { data: existingSermon } = useQuery({
@@ -51,10 +51,15 @@ const SermonEditor = () => {
 
   const saveSermonMutation = useMutation({
     mutationFn: async (newSermon: SermonType) => {
+      const dataToSave = {
+        ...newSermon,
+        points: newSermon.points as unknown as Json
+      };
+
       if (id && type !== 'new') {
         const { data, error } = await supabase
           .from('sermons')
-          .update(newSermon)
+          .update(dataToSave)
           .eq('id', id)
           .select()
           .single();
@@ -64,7 +69,7 @@ const SermonEditor = () => {
       } else {
         const { data, error } = await supabase
           .from('sermons')
-          .insert([newSermon])
+          .insert([dataToSave])
           .select()
           .single();
 
@@ -75,13 +80,16 @@ const SermonEditor = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sermon'] });
       navigate('/sermon-builder');
-    },
+    }
   });
 
   const handleAddPoint = () => {
     setSermon(prev => ({
       ...prev,
-      points: [...prev.points, { title: "", content: "", illustrations: [] }]
+      points: [
+        ...prev.points,
+        { title: "", content: "", illustrations: [] }
+      ]
     }));
   };
 
@@ -99,7 +107,10 @@ const SermonEditor = () => {
         if (i === pointIndex) {
           return {
             ...point,
-            illustrations: [...point.illustrations, ""]
+            illustrations: [
+              ...point.illustrations,
+              { content: "", type: "text" }
+            ]
           };
         }
         return point;

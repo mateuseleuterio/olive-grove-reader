@@ -24,10 +24,7 @@ export const saveSermon = async (
       .select()
       .single();
 
-    if (error) {
-      console.error('Error updating sermon:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   } else {
     const { data, error } = await supabase
@@ -36,10 +33,7 @@ export const saveSermon = async (
       .select()
       .single();
 
-    if (error) {
-      console.error('Error inserting sermon:', error);
-      throw error;
-    }
+    if (error) throw error;
     return data;
   }
 };
