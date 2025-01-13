@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
-import { Bible } from "lucide-react";
+import { BookOpen } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -53,7 +53,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       <DialogContent className="sm:max-w-md bg-bible-gray">
         <DialogHeader className="text-center">
           <div className="mx-auto mb-4 p-3 rounded-full bg-bible-navy/10">
-            <Bible className="h-8 w-8 text-bible-navy" />
+            <BookOpen className="h-8 w-8 text-bible-navy" />
           </div>
           <DialogTitle className="text-2xl font-serif text-bible-navy">Bem-vindo</DialogTitle>
           <DialogDescription className="text-bible-text">
@@ -81,11 +81,6 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                   inputBorder: "#E2E8F0",
                   inputBorderHover: "#556B2F",
                   inputBorderFocus: "#556B2F",
-                },
-                borderRadii: {
-                  borderRadiusButton: "0.5rem",
-                  buttonBorderRadius: "0.5rem",
-                  inputBorderRadius: "0.5rem",
                 },
               },
             },
