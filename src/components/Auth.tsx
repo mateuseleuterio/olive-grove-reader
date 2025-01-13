@@ -25,20 +25,32 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   useEffect(() => {
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        console.log("Session found, closing modal");
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          console.log("Session found, checking profile");
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (!error && data) {
-          setErrorMessage("");
-          onClose();
-          navigate("/");
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            setErrorMessage("Erro ao carregar perfil. Por favor, tente novamente.");
+            return;
+          }
+
+          if (profile) {
+            console.log("Profile found, closing modal");
+            setErrorMessage("");
+            onClose();
+            navigate("/");
+          }
         }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setErrorMessage("Erro ao verificar sessão. Por favor, tente novamente.");
       }
     };
 
@@ -47,17 +59,29 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       if (event === "SIGNED_IN" && session) {
-        console.log("User signed in successfully");
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        try {
+          console.log("User signed in, checking profile");
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (!error && data) {
-          setErrorMessage("");
-          onClose();
-          navigate("/");
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            setErrorMessage("Erro ao carregar perfil. Por favor, tente novamente.");
+            return;
+          }
+
+          if (profile) {
+            console.log("Profile found, redirecting");
+            setErrorMessage("");
+            onClose();
+            navigate("/");
+          }
+        } catch (error) {
+          console.error('Error handling sign in:', error);
+          setErrorMessage("Erro ao processar login. Por favor, tente novamente.");
         }
       }
       if (event === "SIGNED_OUT") {

@@ -44,6 +44,7 @@ const NavigationBar = () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user) {
+          console.log("Fetching profile for user:", session.user.id);
           const { data, error } = await supabase
             .from('profiles')
             .select('*')
@@ -61,6 +62,7 @@ const NavigationBar = () => {
           }
 
           if (data) {
+            console.log("Profile loaded successfully");
             setProfile(data);
           }
         }
@@ -79,6 +81,7 @@ const NavigationBar = () => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log("Auth state changed:", event);
       if (event === 'SIGNED_IN' && session) {
+        console.log("User signed in, fetching profile");
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -86,10 +89,12 @@ const NavigationBar = () => {
           .maybeSingle();
         
         if (!error && data) {
+          console.log("Profile loaded after sign in");
           setProfile(data);
         }
       }
       if (event === 'SIGNED_OUT') {
+        console.log("User signed out, clearing profile");
         setProfile(null);
       }
     });
