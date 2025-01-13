@@ -178,6 +178,27 @@ export type Database = {
           },
         ]
       }
+      bible_word_strongs_mapping: {
+        Row: {
+          id: number
+          word: string
+          strong_number: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          word: string
+          strong_number: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          word?: string
+          strong_number?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       challenge_questions: {
         Row: {
           correct_answer: string
@@ -249,7 +270,7 @@ export type Database = {
           created_at?: string
           creator_id: string
           expires_at: string
-          id?: string
+          id: string
           title: string
         }
         Update: {
@@ -346,7 +367,7 @@ export type Database = {
           bio?: string | null
           email?: string | null
           full_name?: string | null
-          id?: string
+          id: string
           phone?: string | null
           updated_at?: string
           username?: string | null
@@ -415,7 +436,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           duration_days: number
-          id?: string
+          id: string
           is_public?: boolean
           title: string
           updated_at?: string
@@ -450,7 +471,7 @@ export type Database = {
           conclusion?: string | null
           created_at?: string
           deleted_at?: string | null
-          id?: string
+          id: string
           introduction?: string | null
           points?: Json | null
           title: string
@@ -618,10 +639,10 @@ export type Tables<
         PublicSchema["Views"])
     ? (PublicSchema["Tables"] &
         PublicSchema["Views"])[PublicTableNameOrOptions] extends {
-        Row: infer R
-      }
-      ? R
-      : never
+      Row: infer R
+    }
+    ? R
+    : never
     : never
 
 export type TablesInsert<
