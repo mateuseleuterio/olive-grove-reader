@@ -1,51 +1,60 @@
+import { useState, useEffect } from "react";
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface WordDetailsProps {
   word: string;
-  hebrew?: string;
-  transliteration?: string;
-  meaning?: string;
 }
 
-// This is a mock database of Hebrew words - in a real app, this would come from an API
-const hebrewWords: Record<string, { hebrew: string; transliteration: string; meaning: string }> = {
-  "princípio": {
-    hebrew: "בְּרֵאשִׁית",
-    transliteration: "bereshit",
-    meaning: "no princípio, começo, início"
-  },
-  "criou": {
-    hebrew: "בָּרָא",
-    transliteration: "bara",
-    meaning: "criar, formar, dar existência"
-  },
-  "Deus": {
-    hebrew: "אֱלֹהִים",
-    transliteration: "Elohim",
-    meaning: "Deus, divindade, ser divino"
-  },
-  "céus": {
-    hebrew: "שָׁמַיִם",
-    transliteration: "shamayim",
-    meaning: "céus, firmamento, região celestial"
-  },
-  "terra": {
-    hebrew: "אֶרֶץ",
-    transliteration: "erets",
-    meaning: "terra, mundo, solo, território"
-  }
-};
+interface StrongEntry {
+  strong_number: string;
+  hebrew_word: string;
+  transliteration: string;
+  meaning: string;
+}
 
 const WordDetails = ({ word }: WordDetailsProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const details = hebrewWords[word.toLowerCase()];
-  
-  if (!details) {
+  const [strongData, setStrongData] = useState<StrongEntry | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchStrongData = async () => {
+      if (!word) return;
+      
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('strongs_dictionary')
+          .select('strong_number, hebrew_word, transliteration, meaning')
+          .eq('portuguese_word', word.toLowerCase())
+          .maybeSingle();
+
+        if (error) {
+          console.error('Erro ao buscar dados do Strong:', error);
+          return;
+        }
+
+        if (data) {
+          setStrongData(data);
+        }
+      } catch (error) {
+        console.error('Erro:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (isOpen) {
+      fetchStrongData();
+    }
+  }, [word, isOpen]);
+
+  if (!strongData) {
     return <span className="mr-1">{word}</span>;
   }
 
@@ -60,11 +69,16 @@ const WordDetails = ({ word }: WordDetailsProps) => {
         </span>
       </HoverCardTrigger>
       <HoverCardContent className="w-80 bg-white p-4 shadow-lg rounded-lg border border-gray-200">
-        <div className="space-y-2">
-          <p className="text-2xl font-bold text-bible-navy">{details.hebrew}</p>
-          <p className="text-sm text-gray-500 italic">{details.transliteration}</p>
-          <p className="text-sm text-gray-700">{details.meaning}</p>
-        </div>
+        {loading ? (
+          <div className="text-center">Carregando...</div>
+        ) : (
+          <div className="space-y-2">
+            <p className="text-2xl font-bold text-bible-navy">{strongData.hebrew_word}</p>
+            <p className="text-sm text-gray-500 italic">{strongData.transliteration}</p>
+            <p className="text-xs text-gray-400">Strong's #{strongData.strong_number}</p>
+            <p className="text-sm text-gray-700">{strongData.meaning}</p>
+          </div>
+        )}
       </HoverCardContent>
     </HoverCard>
   );

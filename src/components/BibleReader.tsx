@@ -40,6 +40,7 @@ const BibleReader = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Fetch books only once when component mounts
   useEffect(() => {
     const fetchBooks = async () => {
       const { data, error } = await supabase
@@ -54,17 +55,19 @@ const BibleReader = () => {
 
       if (data) {
         setBooks(data);
-        if (data.length > 0) {
+        if (data.length > 0 && !selectedBook) {
           setSelectedBook(data[0].id);
         }
       }
     };
 
     fetchBooks();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   useEffect(() => {
     const fetchChapterCount = async () => {
+      if (!selectedBook) return;
+      
       const { data, error } = await supabase
         .from('bible_chapters')
         .select('chapter_number')
@@ -83,9 +86,7 @@ const BibleReader = () => {
       }
     };
 
-    if (selectedBook) {
-      fetchChapterCount();
-    }
+    fetchChapterCount();
   }, [selectedBook]);
 
   const addVersion = () => {
@@ -131,7 +132,7 @@ const BibleReader = () => {
       {isMobile ? (
         <div className="flex flex-col gap-4">
           {versions.map((version, index) => (
-            <div key={`mobile-panel-${index}`} className="border rounded-lg bg-white">
+            <div key={`mobile-version-${version.id}-${index}`} className="border rounded-lg bg-white">
               <BibleVersionPanel
                 version={version}
                 onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
@@ -150,7 +151,7 @@ const BibleReader = () => {
           className="min-h-[400px] w-full rounded-lg border"
         >
           {versions.map((version, index) => (
-            <React.Fragment key={`panel-${index}`}>
+            <React.Fragment key={`panel-${version.id}-${index}`}>
               <ResizablePanel defaultSize={100 / versions.length}>
                 <BibleVersionPanel
                   version={version}
