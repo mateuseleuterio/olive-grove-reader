@@ -21,6 +21,7 @@ const BibleReader = () => {
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
+  // Inicializa com o ID 1 (Gênesis)
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
@@ -55,9 +56,6 @@ const BibleReader = () => {
           index === self.findIndex((b) => b.name === book.name)
         );
         setBooks(uniqueBooks);
-        if (uniqueBooks.length > 0 && !selectedBook) {
-          setSelectedBook(uniqueBooks[0].id);
-        }
       }
     };
 
