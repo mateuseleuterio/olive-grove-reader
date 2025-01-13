@@ -21,8 +21,7 @@ const BibleReader = () => {
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
-  // Inicializa com o ID 1 (Gênesis)
-  const [selectedBook, setSelectedBook] = useState<number>(1);
+  const [selectedBook, setSelectedBook] = useState<number>(1); // Genesis ID é 1
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
