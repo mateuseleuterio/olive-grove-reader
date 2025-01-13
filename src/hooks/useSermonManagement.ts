@@ -26,9 +26,18 @@ export const useSermonManagement = (id?: string) => {
         data: { user },
       } = await supabase.auth.getUser();
 
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para salvar sermões",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const finalSermonData: SermonInput = {
         title: sermonData.title,
-        user_id: user?.id || '00000000-0000-0000-0000-000000000000',
+        user_id: user.id,
         bible_text: sermonData.bible_text,
         introduction: sermonData.introduction,
         points: sermonData.points,
