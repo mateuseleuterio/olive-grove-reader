@@ -26,7 +26,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
+        // Clear any existing errors
+        setErrorMessage("");
+        // Close the modal
         onClose();
+        // Navigate to home page
         navigate("/");
       }
       if (event === "SIGNED_OUT") {
