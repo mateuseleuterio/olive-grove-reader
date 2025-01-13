@@ -22,6 +22,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import AuthModal from "@/components/Auth";
 
 interface Profile {
   id: string;
@@ -35,6 +36,7 @@ const NavigationBar = () => {
   const { toast } = useToast();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const isMobile = useIsMobile();
 
   useEffect(() => {
@@ -177,7 +179,7 @@ const NavigationBar = () => {
           <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10" onClick={() => navigate("/settings")}>
             <Settings className="h-5 w-5" />
           </Button>
           <DropdownMenu>
@@ -187,19 +189,35 @@ const NavigationBar = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="font-normal">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{profile?.full_name || 'Minha Conta'}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
-              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>Sair</DropdownMenuItem>
+              {profile ? (
+                <>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{profile.full_name || 'Minha Conta'}</p>
+                      {profile.avatar_url && <img src={profile.avatar_url} alt="Avatar" className="w-8 h-8 rounded-full" />}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate("/profile")}>
+                    Perfil
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/settings")}>
+                    Configurações
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    Sair
+                  </DropdownMenuItem>
+                </>
+              ) : (
+                <DropdownMenuItem onClick={() => setIsAuthModalOpen(true)}>
+                  Entrar
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </nav>
   );
 };
