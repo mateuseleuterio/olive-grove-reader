@@ -19,3 +19,5 @@ export interface SermonType {
   deleted_at?: string | null;
   user_id: string;
 }
+
+export type SermonInput = Pick<SermonType, 'title' | 'user_id'> & Partial<Omit<SermonType, 'title' | 'user_id' | 'id'>>;

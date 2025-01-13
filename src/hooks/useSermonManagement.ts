@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { SermonType } from "@/types/sermon";
+import type { SermonType, SermonInput } from "@/types/sermon";
 import { saveSermon } from "@/utils/sermonUtils";
 
 export const useSermonManagement = (id?: string) => {
@@ -26,16 +26,19 @@ export const useSermonManagement = (id?: string) => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      const finalSermonData = {
-        ...sermonData,
+      const finalSermonData: SermonInput = {
         title: sermonData.title,
         user_id: user?.id || '00000000-0000-0000-0000-000000000000',
+        bible_text: sermonData.bible_text,
+        introduction: sermonData.introduction,
+        points: sermonData.points,
+        conclusion: sermonData.conclusion,
       };
 
       console.log('Saving sermon with data:', finalSermonData);
 
       const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      const result = await saveSermon(finalSermonData as SermonType, isValidUUID, id);
+      const result = await saveSermon(finalSermonData, isValidUUID, id);
 
       toast({
         title: "Sucesso",
