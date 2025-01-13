@@ -14,21 +14,25 @@ interface Book {
   name: string;
 }
 
-interface Version {
-  id: string;
-  name: string;
-}
+const BIBLE_VERSIONS = {
+  "ACF": "Almeida Corrigida Fiel",
+  "NVI": "Nova Versão Internacional",
+  "ARA": "Almeida Revista e Atualizada"
+} as const;
+
+type BibleVersion = keyof typeof BIBLE_VERSIONS;
 
 const BibleReader = () => {
   const { toast } = useToast();
-  const [versions, setVersions] = useState<Version[]>([
-    { id: "ACF", name: "Almeida Corrigida Fiel" }
+  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
+    { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [maxChapters, setMaxChapters] = useState(50); // Valor padrão
 
   useEffect(() => {
     const checkMobile = () => {
@@ -50,21 +54,61 @@ const BibleReader = () => {
 
       if (error) {
         console.error('Erro ao buscar livros:', error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível carregar a lista de livros.",
+          variant: "destructive",
+        });
         return;
       }
 
-      setBooks(data || []);
-      if (data && data.length > 0) {
-        setSelectedBook(data[0].id);
+      if (data) {
+        setBooks(data);
+        if (data.length > 0) {
+          setSelectedBook(data[0].id);
+        }
       }
     };
 
     fetchBooks();
-  }, []);
+  }, [toast]);
+
+  // Buscar o número máximo de capítulos para o livro selecionado
+  useEffect(() => {
+    const fetchChapterCount = async () => {
+      const { data, error } = await supabase
+        .from('bible_chapters')
+        .select('chapter_number')
+        .eq('book_id', selectedBook)
+        .order('chapter_number', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Erro ao buscar número de capítulos:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setMaxChapters(data[0].chapter_number);
+        // Resetar para capítulo 1 quando mudar de livro
+        setChapter("1");
+      }
+    };
+
+    if (selectedBook) {
+      fetchChapterCount();
+    }
+  }, [selectedBook]);
 
   const addVersion = () => {
     if (versions.length < 4) {
-      setVersions([...versions, { id: "NVI", name: "Nova Versão Internacional" }]);
+      // Encontrar uma versão que ainda não está sendo usada
+      const unusedVersion = (Object.entries(BIBLE_VERSIONS) as [BibleVersion, string][])
+        .find(([id]) => !versions.some(v => v.id === id));
+      
+      if (unusedVersion) {
+        setVersions([...versions, { id: unusedVersion[0], name: unusedVersion[1] }]);
+      }
     }
   };
 
@@ -73,23 +117,17 @@ const BibleReader = () => {
     setVersions(newVersions);
   };
 
-  const handleVersionChange = (index: number, newVersion: string) => {
-    const versionMap: { [key: string]: string } = {
-      "ACF": "Almeida Corrigida Fiel",
-      "NVI": "Nova Versão Internacional",
-      "ARA": "Almeida Revista e Atualizada"
-    };
-
+  const handleVersionChange = (index: number, newVersion: BibleVersion) => {
     const newVersions = versions.map((v, i) => {
       if (i === index) {
-        return { id: newVersion, name: versionMap[newVersion] || newVersion };
+        return { id: newVersion, name: BIBLE_VERSIONS[newVersion] };
       }
       return v;
     });
     setVersions(newVersions);
   };
 
-  const chapters = Array.from({ length: 50 }, (_, i) => (i + 1).toString());
+  const chapters = Array.from({ length: maxChapters }, (_, i) => (i + 1).toString());
   
   const importBible = async () => {
     try {
@@ -183,15 +221,15 @@ const BibleReader = () => {
               <div className="flex items-center justify-between p-4 border-b">
                 <Select 
                   value={version.id} 
-                  onValueChange={(value) => handleVersionChange(index, value)}
+                  onValueChange={(value) => handleVersionChange(index, value as BibleVersion)}
                 >
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Selecione a versão" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ACF">Almeida Corrigida Fiel</SelectItem>
-                    <SelectItem value="NVI">Nova Versão Internacional</SelectItem>
-                    <SelectItem value="ARA">Almeida Revista e Atualizada</SelectItem>
+                    {Object.entries(BIBLE_VERSIONS).map(([id, name]) => (
+                      <SelectItem key={id} value={id}>{name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {versions.length > 1 && (
@@ -227,15 +265,15 @@ const BibleReader = () => {
                   <div className="flex items-center justify-between p-4 border-b bg-white">
                     <Select 
                       value={version.id} 
-                      onValueChange={(value) => handleVersionChange(index, value)}
+                      onValueChange={(value) => handleVersionChange(index, value as BibleVersion)}
                     >
                       <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder="Selecione a versão" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ACF">Almeida Corrigida Fiel</SelectItem>
-                        <SelectItem value="NVI">Nova Versão Internacional</SelectItem>
-                        <SelectItem value="ARA">Almeida Revista e Atualizada</SelectItem>
+                        {Object.entries(BIBLE_VERSIONS).map(([id, name]) => (
+                          <SelectItem key={id} value={id}>{name}</SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     {versions.length > 1 && (
