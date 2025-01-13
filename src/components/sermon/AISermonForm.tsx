@@ -11,6 +11,7 @@ interface AISermonFormProps {
   onGeneratedSermonChange: (value: string) => void;
   onEditToggle: () => void;
   onGenerate: () => void;
+  onSave: () => void;
 }
 
 const AISermonForm = ({
@@ -22,6 +23,7 @@ const AISermonForm = ({
   onGeneratedSermonChange,
   onEditToggle,
   onGenerate,
+  onSave,
 }: AISermonFormProps) => {
   return (
     <div className="space-y-6">
@@ -42,13 +44,19 @@ const AISermonForm = ({
       </Button>
       {generatedSermon && (
         <div className="space-y-4">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
             <Button
               variant="outline"
               onClick={onEditToggle}
               className="text-bible-navy hover:bg-bible-gray/10"
             >
               {isEditing ? "Visualizar" : "Editar"}
+            </Button>
+            <Button
+              onClick={onSave}
+              className="bg-bible-navy hover:bg-bible-accent"
+            >
+              Salvar Sermão
             </Button>
           </div>
           {isEditing ? (
