@@ -136,6 +136,48 @@ export type Database = {
           },
         ]
       }
+      bible_word_strongs: {
+        Row: {
+          created_at: string
+          id: number
+          strong_number: string
+          verse_id: number | null
+          word: string
+          word_position: number
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          strong_number: string
+          verse_id?: number | null
+          word: string
+          word_position: number
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          strong_number?: string
+          verse_id?: number | null
+          word?: string
+          word_position?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_word_strongs_strong_number_fkey"
+            columns: ["strong_number"]
+            isOneToOne: false
+            referencedRelation: "strongs_dictionary"
+            referencedColumns: ["strong_number"]
+          },
+          {
+            foreignKeyName: "bible_word_strongs_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       challenge_questions: {
         Row: {
           correct_answer: string

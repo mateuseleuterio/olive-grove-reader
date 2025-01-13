@@ -1,80 +1,76 @@
-import { useState, useEffect } from "react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import type { StrongEntry } from "@/types/strong";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { StrongEntry } from "@/types/strong";
 
 interface WordDetailsProps {
   word: string;
 }
 
 const WordDetails = ({ word }: WordDetailsProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [strongData, setStrongData] = useState<StrongEntry | null>(null);
+  const [strongDetails, setStrongDetails] = useState<StrongEntry | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const fetchStrongData = async () => {
-      if (!word) return;
-      
+  const fetchStrongDetails = async () => {
+    try {
       setLoading(true);
-      try {
-        const { data, error } = await supabase
+      const { data: wordStrong, error: wordError } = await supabase
+        .from('bible_word_strongs')
+        .select('strong_number')
+        .eq('word', word)
+        .maybeSingle();
+
+      if (wordError) throw wordError;
+      
+      if (wordStrong) {
+        const { data: strongData, error: strongError } = await supabase
           .from('strongs_dictionary')
           .select('*')
-          .eq('portuguese_word', word.toLowerCase())
+          .eq('strong_number', wordStrong.strong_number)
           .maybeSingle();
 
-        if (error) {
-          console.error('Erro ao buscar dados do Strong:', error);
-          return;
+        if (strongError) throw strongError;
+        if (strongData) {
+          setStrongDetails(strongData);
         }
-
-        if (data) {
-          setStrongData(data as StrongEntry);
-        }
-      } catch (error) {
-        console.error('Erro:', error);
-      } finally {
-        setLoading(false);
       }
-    };
-
-    if (isOpen) {
-      fetchStrongData();
+    } catch (error) {
+      console.error('Erro ao buscar detalhes do Strong:', error);
+    } finally {
+      setLoading(false);
     }
-  }, [word, isOpen]);
-
-  if (!strongData) {
-    return <span className="mr-1">{word}</span>;
-  }
+  };
 
   return (
-    <HoverCard open={isOpen} onOpenChange={setIsOpen}>
-      <HoverCardTrigger asChild>
+    <Popover>
+      <PopoverTrigger asChild>
         <span 
-          className="cursor-pointer text-bible-accent hover:text-bible-navy hover:underline mr-1"
-          onClick={() => setIsOpen(!isOpen)}
+          className="cursor-pointer hover:text-bible-accent inline-block mx-1"
+          onClick={fetchStrongDetails}
         >
           {word}
         </span>
-      </HoverCardTrigger>
-      <HoverCardContent className="w-80 bg-white p-4 shadow-lg rounded-lg border border-gray-200">
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
         {loading ? (
-          <div className="text-center">Carregando...</div>
-        ) : (
+          <p>Carregando...</p>
+        ) : strongDetails ? (
           <div className="space-y-2">
-            <p className="text-2xl font-bold text-bible-navy">{strongData.hebrew_word}</p>
-            <p className="text-sm text-gray-500 italic">{strongData.transliteration}</p>
-            <p className="text-xs text-gray-400">Strong's #{strongData.strong_number}</p>
-            <p className="text-sm text-gray-700">{strongData.meaning}</p>
+            <p><strong>Palavra Original:</strong> {strongDetails.hebrew_word}</p>
+            <p><strong>Transliteração:</strong> {strongDetails.transliteration}</p>
+            <p><strong>Significado:</strong> {strongDetails.meaning}</p>
+            <p><strong>Tradução:</strong> {strongDetails.portuguese_word}</p>
+            <p className="text-xs text-muted-foreground">Strong's #{strongDetails.strong_number}</p>
           </div>
+        ) : (
+          <p>Nenhuma referência Strong encontrada para esta palavra.</p>
         )}
-      </HoverCardContent>
-    </HoverCard>
+      </PopoverContent>
+    </Popover>
   );
 };
 
