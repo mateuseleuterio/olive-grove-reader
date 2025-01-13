@@ -17,10 +17,19 @@ interface Verse {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchVerses = async () => {
+      if (!bookId || !chapter || !version) {
+        setLoading(false);
+        return;
+      }
+
       try {
+        setLoading(true);
+        setError(null);
+
         // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
@@ -31,6 +40,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (chapterError) {
           console.error('Erro ao buscar capítulo:', chapterError);
+          setError('Erro ao buscar capítulo');
           return;
         }
 
@@ -54,12 +64,14 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
+          setError('Erro ao buscar versículos');
           return;
         }
 
         setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
+        setError('Erro ao carregar versículos');
       } finally {
         setLoading(false);
       }
@@ -75,18 +87,27 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   };
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div className="flex items-center justify-center p-4">Carregando versículos...</div>;
+  }
+
+  if (error) {
+    return <div className="text-red-500 p-4">{error}</div>;
   }
 
   if (verses.length === 0) {
-    return <div>Nenhum versículo encontrado</div>;
+    return (
+      <div className="flex flex-col items-center justify-center p-8 text-gray-500">
+        <p className="text-lg">Nenhum versículo encontrado</p>
+        <p className="text-sm mt-2">Verifique se o capítulo existe na versão selecionada</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-4">
       {verses.map((verse) => (
         <p key={verse.id} className="break-words">
-          <span className="verse-number">{verse.verse_number}</span>
+          <span className="verse-number font-semibold mr-2">{verse.verse_number}</span>
           {renderVerse(verse.text)}
         </p>
       ))}

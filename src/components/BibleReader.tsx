@@ -20,7 +20,7 @@ const BibleReader = () => {
   const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
-  const [books, setBooks] = useState<Book[]>([{ id: 1, name: "Gênesis" }]); // Inicializa com Gênesis
+  const [books, setBooks] = useState<Book[]>([{ id: 1, name: "Gênesis" }]);
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
