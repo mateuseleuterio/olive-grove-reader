@@ -24,7 +24,7 @@ const WordDetails = ({ word }: WordDetailsProps) => {
       try {
         const { data, error } = await supabase
           .from('strongs_dictionary')
-          .select('strong_number, hebrew_word, transliteration, meaning, portuguese_word')
+          .select('*')
           .eq('portuguese_word', word.toLowerCase())
           .maybeSingle();
 

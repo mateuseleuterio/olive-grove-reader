@@ -429,6 +429,36 @@ export type Database = {
         }
         Relationships: []
       }
+      strongs_dictionary: {
+        Row: {
+          created_at: string
+          hebrew_word: string
+          id: number
+          meaning: string
+          portuguese_word: string
+          strong_number: string
+          transliteration: string
+        }
+        Insert: {
+          created_at?: string
+          hebrew_word: string
+          id?: number
+          meaning: string
+          portuguese_word: string
+          strong_number: string
+          transliteration: string
+        }
+        Update: {
+          created_at?: string
+          hebrew_word?: string
+          id?: number
+          meaning?: string
+          portuguese_word?: string
+          strong_number?: string
+          transliteration?: string
+        }
+        Relationships: []
+      }
       user_reading_progress: {
         Row: {
           completed: boolean

@@ -1,67 +1,75 @@
-import React from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import PreachingToolbar from "@/components/sermon/PreachingToolbar";
-import SermonContent from "@/components/sermon/SermonContent";
 import type { SermonType, SermonPoint } from "@/types/sermon";
 
 const PreachingMode = () => {
-  const navigate = useNavigate();
-  const { id } = useParams();
+  const { id } = useParams<{ id: string }>();
 
-  const { data: sermon, isLoading } = useQuery({
-    queryKey: ["sermon", id],
+  const { data: sermon } = useQuery({
+    queryKey: ['sermon', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("sermons")
-        .select("*")
-        .eq("id", id)
+        .from('sermons')
+        .select('*')
+        .eq('id', id)
         .maybeSingle();
 
       if (error) throw error;
-      
-      // Ensure points is properly typed when coming from the database
-      const typedSermon: SermonType = {
+      if (!data) throw new Error('Sermão não encontrado');
+
+      // Converter o campo points para o tipo correto
+      return {
         ...data,
-        points: data?.points ? data.points as SermonPoint[] : null
-      };
-      
-      return typedSermon;
-    },
+        points: data.points as unknown as SermonPoint[]
+      } as SermonType;
+    }
   });
 
-  const handleEditClick = () => {
-    navigate(`/sermon-editor/${id}`);
-  };
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bible-gray p-8">
-        <div className="max-w-4xl mx-auto">
-          <div>Carregando...</div>
-        </div>
-      </div>
-    );
-  }
-
   if (!sermon) {
-    return (
-      <div className="min-h-screen bg-bible-gray p-8">
-        <div className="max-w-4xl mx-auto">
-          <div>Sermão não encontrado</div>
-        </div>
-      </div>
-    );
+    return <div>Carregando...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-bible-gray">
-      <PreachingToolbar onEdit={handleEditClick} />
-      <div className="max-w-4xl mx-auto px-4 pt-32 pb-16">
-        <div className="bg-white rounded-lg shadow-sm p-8">
-          <SermonContent sermon={sermon} />
-        </div>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-4">{sermon.title}</h1>
+      <div className="space-y-6">
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Texto Bíblico</h2>
+          <p>{sermon.bible_text}</p>
+        </section>
+        
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Introdução</h2>
+          <p>{sermon.introduction}</p>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Pontos</h2>
+          <div className="space-y-4">
+            {sermon.points.map((point, index) => (
+              <div key={index}>
+                <h3 className="text-lg font-medium">{point.title}</h3>
+                <p>{point.content}</p>
+                {point.illustrations.length > 0 && (
+                  <div className="mt-2">
+                    <h4 className="font-medium">Ilustrações:</h4>
+                    <ul className="list-disc list-inside">
+                      {point.illustrations.map((illustration, i) => (
+                        <li key={i}>{illustration}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          <h2 className="text-xl font-semibold mb-2">Conclusão</h2>
+          <p>{sermon.conclusion}</p>
+        </section>
       </div>
     </div>
   );

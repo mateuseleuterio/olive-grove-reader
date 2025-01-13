@@ -1,88 +1,286 @@
-import React from "react";
-import { useParams, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import BlankSermonContainer from "@/components/sermon/BlankSermonContainer";
-import StructuredSermonContainer from "@/components/sermon/StructuredSermonContainer";
-import AISermonContainer from "@/components/sermon/AISermonContainer";
-import type { SermonType } from "@/types/sermon";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { PlusIcon, TrashIcon } from "@heroicons/react/24/outline";
+import type { SermonType, SermonPoint } from "@/types/sermon";
 
 const SermonEditor = () => {
-  const location = useLocation();
-  const { id } = useParams();
-  const type = location.pathname.split("/").pop();
+  const { id, type } = useParams<{ id: string; type: string }>();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [sermon, setSermon] = useState<SermonType>({
+    title: "",
+    bible_text: "",
+    introduction: "",
+    points: [],
+    conclusion: "",
+    user_id: "user123", // TODO: Get from auth
+  });
 
-  const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-
-  const { data: existingSermon, isLoading } = useQuery({
-    queryKey: ["sermon", id],
+  const { data: existingSermon } = useQuery({
+    queryKey: ['sermon', id],
     queryFn: async () => {
-      if (!isValidUUID) return null;
-      
+      if (!id || type === 'new') return null;
       const { data, error } = await supabase
-        .from("sermons")
-        .select("*")
-        .eq("id", id)
+        .from('sermons')
+        .select('*')
+        .eq('id', id)
         .maybeSingle();
 
       if (error) throw error;
-      return data as SermonType | null;
+      if (!data) throw new Error('Sermão não encontrado');
+
+      return {
+        ...data,
+        points: data.points as unknown as SermonPoint[]
+      } as SermonType;
     },
-    enabled: isValidUUID,
+    enabled: !!id && type !== 'new'
   });
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-bible-gray p-8">
-        <div className="max-w-4xl mx-auto">
-          <div>Carregando...</div>
-        </div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (existingSermon) {
+      setSermon(existingSermon);
+    }
+  }, [existingSermon]);
 
-  const defaultPoints = [{ 
-    title: "", 
-    content: "", 
-    illustrations: [] as Array<{ content: string; type: string }> 
-  }];
+  const saveSermonMutation = useMutation({
+    mutationFn: async (newSermon: SermonType) => {
+      if (id && type !== 'new') {
+        const { data, error } = await supabase
+          .from('sermons')
+          .update(newSermon)
+          .eq('id', id)
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      } else {
+        const { data, error } = await supabase
+          .from('sermons')
+          .insert([newSermon])
+          .select()
+          .single();
+
+        if (error) throw error;
+        return data;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sermon'] });
+      navigate('/sermon-builder');
+    },
+  });
+
+  const handleAddPoint = () => {
+    setSermon(prev => ({
+      ...prev,
+      points: [...prev.points, { title: "", content: "", illustrations: [] }]
+    }));
+  };
+
+  const handleRemovePoint = (index: number) => {
+    setSermon(prev => ({
+      ...prev,
+      points: prev.points.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleAddIllustration = (pointIndex: number) => {
+    setSermon(prev => ({
+      ...prev,
+      points: prev.points.map((point, i) => {
+        if (i === pointIndex) {
+          return {
+            ...point,
+            illustrations: [...point.illustrations, ""]
+          };
+        }
+        return point;
+      })
+    }));
+  };
+
+  const handleRemoveIllustration = (pointIndex: number, illustrationIndex: number) => {
+    setSermon(prev => ({
+      ...prev,
+      points: prev.points.map((point, i) => {
+        if (i === pointIndex) {
+          return {
+            ...point,
+            illustrations: point.illustrations.filter((_, j) => j !== illustrationIndex)
+          };
+        }
+        return point;
+      })
+    }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    saveSermonMutation.mutate(sermon);
+  };
 
   return (
-    <div className="min-h-screen bg-bible-gray p-8">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-serif text-bible-navy">
-            {isValidUUID ? "Editar Sermão" : (
-              <>
-                {type === "blank" && "Começar do Zero"}
-                {type === "structure" && "Estrutura Comprovada"}
-                {type === "ai" && "Sermão com IA"}
-              </>
-            )}
-          </h1>
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold mb-6">
+        {id && type !== 'new' ? 'Editar Sermão' : 'Novo Sermão'}
+      </h1>
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <Label htmlFor="title">Título</Label>
+          <Input
+            id="title"
+            value={sermon.title}
+            onChange={e => setSermon(prev => ({ ...prev, title: e.target.value }))}
+            required
+          />
         </div>
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          {(type === "blank" || (existingSermon && existingSermon.bible_text)) && (
-            <BlankSermonContainer
-              id={id}
-              initialTitle={existingSermon?.title || ""}
-              initialContent={existingSermon?.bible_text || ""}
-            />
-          )}
-          {(type === "structure" || (existingSermon && !existingSermon.bible_text)) && (
-            <StructuredSermonContainer
-              id={id}
-              initialTitle={existingSermon?.title || ""}
-              initialIntroduction={existingSermon?.introduction || ""}
-              initialPoints={existingSermon?.points || defaultPoints}
-              initialConclusion={existingSermon?.conclusion || ""}
-            />
-          )}
-          {type === "ai" && (
-            <AISermonContainer />
-          )}
+
+        <div>
+          <Label htmlFor="bible_text">Texto Bíblico</Label>
+          <Textarea
+            id="bible_text"
+            value={sermon.bible_text}
+            onChange={e => setSermon(prev => ({ ...prev, bible_text: e.target.value }))}
+            required
+          />
         </div>
-      </div>
+
+        <div>
+          <Label htmlFor="introduction">Introdução</Label>
+          <Textarea
+            id="introduction"
+            value={sermon.introduction}
+            onChange={e => setSermon(prev => ({ ...prev, introduction: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div>
+          <div className="flex justify-between items-center mb-4">
+            <Label>Pontos</Label>
+            <Button type="button" onClick={handleAddPoint} variant="outline" size="sm">
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Adicionar Ponto
+            </Button>
+          </div>
+
+          <div className="space-y-4">
+            {sermon.points.map((point, pointIndex) => (
+              <div key={pointIndex} className="border p-4 rounded-lg space-y-4">
+                <div className="flex justify-between items-start">
+                  <div className="flex-1 space-y-4">
+                    <Input
+                      placeholder="Título do ponto"
+                      value={point.title}
+                      onChange={e => setSermon(prev => ({
+                        ...prev,
+                        points: prev.points.map((p, i) =>
+                          i === pointIndex ? { ...p, title: e.target.value } : p
+                        )
+                      }))}
+                    />
+                    <Textarea
+                      placeholder="Conteúdo do ponto"
+                      value={point.content}
+                      onChange={e => setSermon(prev => ({
+                        ...prev,
+                        points: prev.points.map((p, i) =>
+                          i === pointIndex ? { ...p, content: e.target.value } : p
+                        )
+                      }))}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleRemovePoint(pointIndex)}
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-2">
+                    <Label>Ilustrações</Label>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddIllustration(pointIndex)}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <PlusIcon className="h-4 w-4 mr-2" />
+                      Adicionar Ilustração
+                    </Button>
+                  </div>
+
+                  <div className="space-y-2">
+                    {point.illustrations.map((illustration, illustrationIndex) => (
+                      <div key={illustrationIndex} className="flex gap-2">
+                        <Input
+                          placeholder="Ilustração"
+                          value={illustration}
+                          onChange={e => setSermon(prev => ({
+                            ...prev,
+                            points: prev.points.map((p, i) => {
+                              if (i === pointIndex) {
+                                const newIllustrations = [...p.illustrations];
+                                newIllustrations[illustrationIndex] = e.target.value;
+                                return { ...p, illustrations: newIllustrations };
+                              }
+                              return p;
+                            })
+                          }))}
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveIllustration(pointIndex, illustrationIndex)}
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <Label htmlFor="conclusion">Conclusão</Label>
+          <Textarea
+            id="conclusion"
+            value={sermon.conclusion}
+            onChange={e => setSermon(prev => ({ ...prev, conclusion: e.target.value }))}
+            required
+          />
+        </div>
+
+        <div className="flex justify-end gap-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => navigate('/sermon-builder')}
+          >
+            Cancelar
+          </Button>
+          <Button type="submit">
+            {id && type !== 'new' ? 'Salvar Alterações' : 'Criar Sermão'}
+          </Button>
+        </div>
+      </form>
     </div>
   );
 };
