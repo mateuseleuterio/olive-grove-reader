@@ -304,7 +304,7 @@ export type Database = {
           bio?: string | null
           email?: string | null
           full_name?: string | null
-          id?: string
+          id: string
           phone?: string | null
           updated_at?: string
           username?: string | null
@@ -328,7 +328,7 @@ export type Database = {
           chapter_start: number
           created_at?: string
           day_number: number
-          id?: string
+          id: string
           plan_id?: string | null
         }
         Update: {
@@ -408,7 +408,7 @@ export type Database = {
           conclusion?: string | null
           created_at?: string
           deleted_at?: string | null
-          id?: string
+          id: string
           introduction?: string | null
           points?: Json | null
           title: string
@@ -443,7 +443,7 @@ export type Database = {
           completed?: boolean
           completed_at?: string | null
           current_day?: number
-          id?: string
+          id: string
           plan_id?: string | null
           started_at?: string
           user_id?: string | null
@@ -509,6 +509,36 @@ export type Database = {
           },
         ]
       }
+      strongs_dictionary: {
+        Row: {
+          id: number
+          strong_number: string
+          hebrew_word: string
+          transliteration: string
+          meaning: string
+          portuguese_word: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          strong_number: string
+          hebrew_word: string
+          transliteration: string
+          meaning: string
+          portuguese_word: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          strong_number?: string
+          hebrew_word?: string
+          transliteration?: string
+          meaning?: string
+          portuguese_word?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -534,7 +564,7 @@ export type Tables<
   TableName extends PublicTableNameOrOptions extends { schema: keyof Database }
     ? keyof (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
         Database[PublicTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never,
 > = PublicTableNameOrOptions extends { schema: keyof Database }
   ? (Database[PublicTableNameOrOptions["schema"]]["Tables"] &
       Database[PublicTableNameOrOptions["schema"]]["Views"])[TableName] extends {
@@ -588,8 +618,8 @@ export type TablesUpdate<
     : never
   : PublicTableNameOrOptions extends keyof PublicSchema["Tables"]
     ? PublicSchema["Tables"][PublicTableNameOrOptions] extends {
-        Update: infer U
-      }
+      Update: infer U
+    }
       ? U
       : never
     : never
