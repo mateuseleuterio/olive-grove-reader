@@ -3,16 +3,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImagePlus } from "lucide-react";
-import type { SermonType } from "@/types/sermon";
+import type { SermonType, SermonPoint } from "@/types/sermon";
 
 interface StructuredSermonFormProps {
   title: string;
   introduction: string;
-  points: NonNullable<SermonType['points']>;
+  points: SermonPoint[];
   conclusion: string;
   onTitleChange: (value: string) => void;
   onIntroductionChange: (value: string) => void;
-  onPointsChange: (points: NonNullable<SermonType['points']>) => void;
+  onPointsChange: (points: SermonPoint[]) => void;
   onConclusionChange: (value: string) => void;
 }
 

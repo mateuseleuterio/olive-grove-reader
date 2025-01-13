@@ -5,16 +5,10 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { supabase } from "@/integrations/supabase/client";
+import type { StrongEntry } from "@/types/strong";
 
 interface WordDetailsProps {
   word: string;
-}
-
-interface StrongEntry {
-  strong_number: string;
-  hebrew_word: string;
-  transliteration: string;
-  meaning: string;
 }
 
 const WordDetails = ({ word }: WordDetailsProps) => {
@@ -30,7 +24,7 @@ const WordDetails = ({ word }: WordDetailsProps) => {
       try {
         const { data, error } = await supabase
           .from('strongs_dictionary')
-          .select('strong_number, hebrew_word, transliteration, meaning')
+          .select('strong_number, hebrew_word, transliteration, meaning, portuguese_word')
           .eq('portuguese_word', word.toLowerCase())
           .maybeSingle();
 
