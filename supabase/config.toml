@@ -1,4 +1,7 @@
 project_id = "rxhxhztskozxgiylygye"
 
+[functions.import-github-bible]
+verify_jwt = false
+
 [functions.import-strongs]
 verify_jwt = false

@@ -7,6 +7,7 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -20,72 +21,109 @@ serve(async (req) => {
 
     // Fetch Bible data from GitHub
     const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json')
+    if (!response.ok) {
+      throw new Error(`Failed to fetch Bible data: ${response.statusText}`)
+    }
+    
     const bibleData = await response.json()
+    console.log('Bible data fetched successfully')
 
     let processedCount = 0
     
     for (const book of bibleData) {
-      // Insert book
-      const { data: bookData, error: bookError } = await supabaseClient
-        .from('bible_books')
-        .insert({
-          name: book.name,
-          abbreviation: book.abbrev,
-          testament: book.testament || 'old', // você precisará especificar isso no JSON
-          position: processedCount + 1
-        })
-        .select()
-        .single()
-
-      if (bookError) {
-        throw bookError
-      }
-
-      // Insert chapters and verses
-      for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
-        // Insert chapter
-        const { data: chapterData, error: chapterError } = await supabaseClient
-          .from('bible_chapters')
+      try {
+        // Insert book
+        const { data: bookData, error: bookError } = await supabaseClient
+          .from('bible_books')
           .insert({
-            book_id: bookData.id,
-            chapter_number: chapterIndex + 1
+            name: book.name,
+            abbreviation: book.abbrev,
+            testament: book.testament || 'old',
+            position: processedCount + 1
           })
           .select()
           .single()
 
-        if (chapterError) {
-          throw chapterError
+        if (bookError) {
+          console.error(`Error inserting book ${book.name}:`, bookError)
+          throw bookError
         }
 
-        // Insert verses
-        const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
-          chapter_id: chapterData.id,
-          verse_number: index + 1,
-          text,
-          version: 'ACF'
-        }))
+        console.log(`Inserted book: ${book.name}`)
 
-        const { error: versesError } = await supabaseClient
-          .from('bible_verses')
-          .insert(verses)
+        // Insert chapters and verses
+        for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
+          // Insert chapter
+          const { data: chapterData, error: chapterError } = await supabaseClient
+            .from('bible_chapters')
+            .insert({
+              book_id: bookData.id,
+              chapter_number: chapterIndex + 1
+            })
+            .select()
+            .single()
 
-        if (versesError) {
-          throw versesError
+          if (chapterError) {
+            console.error(`Error inserting chapter ${chapterIndex + 1} for book ${book.name}:`, chapterError)
+            throw chapterError
+          }
+
+          console.log(`Inserted chapter ${chapterIndex + 1} for book ${book.name}`)
+
+          // Insert verses
+          const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
+            chapter_id: chapterData.id,
+            verse_number: index + 1,
+            text,
+            version: 'ACF'
+          }))
+
+          const { error: versesError } = await supabaseClient
+            .from('bible_verses')
+            .insert(verses)
+
+          if (versesError) {
+            console.error(`Error inserting verses for chapter ${chapterIndex + 1} of book ${book.name}:`, versesError)
+            throw versesError
+          }
+
+          console.log(`Inserted verses for chapter ${chapterIndex + 1} of book ${book.name}`)
         }
+
+        processedCount++
+      } catch (error) {
+        console.error(`Error processing book ${book.name}:`, error)
+        throw error
       }
-
-      processedCount++
     }
 
     return new Response(
-      JSON.stringify({ message: `Importação concluída! ${processedCount} livros processados.` }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ 
+        success: true,
+        message: `Importação concluída! ${processedCount} livros processados.` 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        } 
+      }
     )
 
   } catch (error) {
+    console.error('Error in import-github-bible function:', error)
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      JSON.stringify({ 
+        success: false,
+        error: error.message 
+      }),
+      { 
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json' 
+        },
+        status: 400 
+      }
     )
   }
 })
