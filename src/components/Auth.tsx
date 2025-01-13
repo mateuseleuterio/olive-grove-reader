@@ -28,9 +28,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         console.log("Session found, closing modal");
-        setErrorMessage("");
-        onClose();
-        navigate("/");
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!error && data) {
+          setErrorMessage("");
+          onClose();
+          navigate("/");
+        }
       }
     };
 
@@ -40,9 +48,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       console.log("Auth state changed:", event);
       if (event === "SIGNED_IN" && session) {
         console.log("User signed in successfully");
-        setErrorMessage("");
-        onClose();
-        navigate("/");
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (!error && data) {
+          setErrorMessage("");
+          onClose();
+          navigate("/");
+        }
       }
       if (event === "SIGNED_OUT") {
         console.log("User signed out");

@@ -48,7 +48,7 @@ const NavigationBar = () => {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .single();
+            .maybeSingle();
 
           if (error) {
             console.error('Error fetching profile:', error);
@@ -60,7 +60,9 @@ const NavigationBar = () => {
             return;
           }
 
-          setProfile(data);
+          if (data) {
+            setProfile(data);
+          }
         }
       } catch (error) {
         console.error('Error:', error);
@@ -75,12 +77,13 @@ const NavigationBar = () => {
     getProfile();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
       if (event === 'SIGNED_IN' && session) {
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
         
         if (!error && data) {
           setProfile(data);
