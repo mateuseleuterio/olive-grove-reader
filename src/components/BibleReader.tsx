@@ -150,8 +150,8 @@ const BibleReader = () => {
           className="min-h-[400px] w-full rounded-lg border"
         >
           {versions.map((version, index) => (
-            <>
-              <ResizablePanel key={`panel-${index}`} defaultSize={100 / versions.length}>
+            <React.Fragment key={`panel-${index}`}>
+              <ResizablePanel defaultSize={100 / versions.length}>
                 <BibleVersionPanel
                   version={version}
                   onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
@@ -165,7 +165,7 @@ const BibleReader = () => {
               {index < versions.length - 1 && (
                 <ResizableHandle withHandle />
               )}
-            </>
+            </React.Fragment>
           ))}
         </ResizablePanelGroup>
       )}
