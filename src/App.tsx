@@ -25,7 +25,7 @@ function App() {
         <TooltipProvider>
           <div className="min-h-screen bg-bible-gray">
             <NavigationBar />
-            <div className="pt-16 px-4 md:px-6 lg:px-8">
+            <div className="pt-24 px-4 md:px-6 lg:px-8"> {/* Increased padding-top from pt-16 to pt-24 */}
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
