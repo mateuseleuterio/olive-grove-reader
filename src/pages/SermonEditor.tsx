@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -109,7 +110,7 @@ const SermonEditor = () => {
             ...point,
             illustrations: [
               ...point.illustrations,
-              { content: "", type: "text" }
+              { content: "", type: "text" } as Illustration
             ]
           };
         }
@@ -239,13 +240,13 @@ const SermonEditor = () => {
                       <div key={illustrationIndex} className="flex gap-2">
                         <Input
                           placeholder="Ilustração"
-                          value={illustration}
+                          value={illustration.content}
                           onChange={e => setSermon(prev => ({
                             ...prev,
                             points: prev.points.map((p, i) => {
                               if (i === pointIndex) {
                                 const newIllustrations = [...p.illustrations];
-                                newIllustrations[illustrationIndex] = e.target.value;
+                                newIllustrations[illustrationIndex] = { ...newIllustrations[illustrationIndex], content: e.target.value };
                                 return { ...p, illustrations: newIllustrations };
                               }
                               return p;
