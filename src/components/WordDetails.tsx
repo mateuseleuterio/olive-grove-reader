@@ -18,19 +18,19 @@ const WordDetails = ({ word }: WordDetailsProps) => {
   const fetchStrongDetails = async () => {
     try {
       setLoading(true);
-      const { data: wordStrong, error: wordError } = await supabase
-        .from('bible_word_strongs')
+      const { data: wordMapping, error: mappingError } = await supabase
+        .from('bible_word_strongs_mapping')
         .select('strong_number')
-        .eq('word', word)
+        .eq('word', word.toLowerCase())
         .maybeSingle();
 
-      if (wordError) throw wordError;
+      if (mappingError) throw mappingError;
       
-      if (wordStrong) {
+      if (wordMapping) {
         const { data: strongData, error: strongError } = await supabase
           .from('strongs_dictionary')
           .select('*')
-          .eq('strong_number', wordStrong.strong_number)
+          .eq('strong_number', wordMapping.strong_number)
           .maybeSingle();
 
         if (strongError) throw strongError;
