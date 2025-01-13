@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Book, BookOpen, Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import WordDetails from "./WordDetails";
 import CommentaryDrawer from "./CommentaryDrawer";
+import BibleVerse from "./BibleVerse";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Pagination,
   PaginationContent,
@@ -16,24 +17,50 @@ import {
 } from "@/components/ui/pagination";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+interface Book {
+  id: number;
+  name: string;
+}
+
+interface Version {
+  id: string;
+  name: string;
+}
+
 const BibleReader = () => {
-  const [versions, setVersions] = useState([
-    { id: "almeida", name: "Almeida" }
+  const [versions, setVersions] = useState<Version[]>([
+    { id: "ACF", name: "Almeida Corrigida Fiel" }
   ]);
-  const [book, setBook] = useState("genesis");
+  const [books, setBooks] = useState<Book[]>([]);
+  const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const isMobile = useIsMobile();
-  
-  const renderVerse = (text: string) => {
-    return text.split(" ").map((word, index) => (
-      <WordDetails key={index} word={word} />
-    ));
-  };
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const { data, error } = await supabase
+        .from('bible_books')
+        .select('id, name')
+        .order('position');
+
+      if (error) {
+        console.error('Erro ao buscar livros:', error);
+        return;
+      }
+
+      setBooks(data || []);
+      if (data && data.length > 0) {
+        setSelectedBook(data[0].id);
+      }
+    };
+
+    fetchBooks();
+  }, []);
 
   const addVersion = () => {
     if (versions.length < 4) {
-      setVersions([...versions, { id: "nvi", name: "Nova Versão Internacional" }]);
+      setVersions([...versions, { id: "NVI", name: "Nova Versão Internacional" }]);
     }
   };
 
@@ -43,81 +70,36 @@ const BibleReader = () => {
   };
 
   const handleVersionChange = (index: number, newVersion: string) => {
+    const versionMap: { [key: string]: string } = {
+      "ACF": "Almeida Corrigida Fiel",
+      "NVI": "Nova Versão Internacional",
+      "ARA": "Almeida Revista e Atualizada"
+    };
+
     const newVersions = versions.map((v, i) => {
       if (i === index) {
-        return { id: newVersion, name: getVersionName(newVersion) };
+        return { id: newVersion, name: versionMap[newVersion] || newVersion };
       }
       return v;
     });
     setVersions(newVersions);
   };
 
-  const getVersionName = (versionId: string) => {
-    const versionMap: { [key: string]: string } = {
-      "almeida": "Almeida",
-      "nvi": "Nova Versão Internacional",
-      "ara": "Almeida Revista e Atualizada"
-    };
-    return versionMap[versionId] || versionId;
-  };
-
-  const books = [
-    { id: "genesis", name: "Gênesis" },
-    { id: "exodus", name: "Êxodo" },
-    { id: "leviticus", name: "Levítico" },
-    { id: "numbers", name: "Números" },
-    { id: "deuteronomy", name: "Deuteronômio" },
-    { id: "joshua", name: "Josué" },
-    { id: "judges", name: "Juízes" },
-    { id: "ruth", name: "Rute" },
-    { id: "1-samuel", name: "1 Samuel" },
-    { id: "2-samuel", name: "2 Samuel" },
-    { id: "1-kings", name: "1 Reis" },
-    { id: "2-kings", name: "2 Reis" },
-    { id: "1-chronicles", name: "1 Crônicas" },
-    { id: "2-chronicles", name: "2 Crônicas" },
-    { id: "ezra", name: "Esdras" },
-    { id: "nehemiah", name: "Neemias" },
-    { id: "esther", name: "Ester" },
-    { id: "job", name: "Jó" },
-    { id: "psalms", name: "Salmos" },
-    { id: "proverbs", name: "Provérbios" },
-    { id: "ecclesiastes", name: "Eclesiastes" },
-    { id: "song-of-solomon", name: "Cântico dos Cânticos" },
-    { id: "isaiah", name: "Isaías" },
-    { id: "jeremiah", name: "Jeremias" },
-    { id: "lamentations", name: "Lamentações" },
-    { id: "ezekiel", name: "Ezequiel" },
-    { id: "daniel", name: "Daniel" },
-    { id: "hosea", name: "Oséias" },
-    { id: "joel", name: "Joel" },
-    { id: "amos", name: "Amós" },
-    { id: "obadiah", name: "Obadias" },
-    { id: "jonah", name: "Jonas" },
-    { id: "micah", name: "Miquéias" },
-    { id: "nahum", name: "Naum" },
-    { id: "habakkuk", name: "Habacuque" },
-    { id: "zephaniah", name: "Sofonias" },
-    { id: "haggai", name: "Ageu" },
-    { id: "zechariah", name: "Zacarias" },
-    { id: "malachi", name: "Malaquias" },
-  ];
-  
   const chapters = Array.from({ length: 50 }, (_, i) => (i + 1).toString());
   
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
         <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-          <Select value={book} onValueChange={setBook}>
+          <Select value={selectedBook.toString()} onValueChange={(value) => setSelectedBook(parseInt(value))}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Selecione o livro" />
             </SelectTrigger>
             <SelectContent>
               <ScrollArea className="h-72">
-                {books.map((b) => (
-                  <SelectItem key={b.id} value={b.id}>
-                    {b.name}
+                {books.map((book) => (
+                  <SelectItem key={book.id} value={book.id.toString()}>
+                    {book.name}
                   </SelectItem>
                 ))}
               </ScrollArea>
@@ -171,12 +153,12 @@ const BibleReader = () => {
                   onValueChange={(value) => handleVersionChange(index, value)}
                 >
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select version" />
+                    <SelectValue placeholder="Selecione a versão" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="almeida">Almeida</SelectItem>
-                    <SelectItem value="nvi">Nova Versão Internacional</SelectItem>
-                    <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
+                    <SelectItem value="ACF">Almeida Corrigida Fiel</SelectItem>
+                    <SelectItem value="NVI">Nova Versão Internacional</SelectItem>
+                    <SelectItem value="ARA">Almeida Revista e Atualizada</SelectItem>
                   </SelectContent>
                 </Select>
                 {versions.length > 1 && (
@@ -191,23 +173,11 @@ const BibleReader = () => {
                 )}
               </div>
               <div className="bible-text space-y-6 p-4 md:p-8">
-                <h2 className="text-xl md:text-2xl font-serif font-bold text-bible-navy mb-6 break-words">
-                  A criação dos céus e da terra e de tudo o que neles há
-                </h2>
-                <div className="space-y-4">
-                  <p className="break-words">
-                    <span className="verse-number">1</span>
-                    {renderVerse("No princípio criou Deus os céus e a terra")}
-                  </p>
-                  <p className="break-words">
-                    <span className="verse-number">2</span>
-                    {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
-                  </p>
-                  <p className="break-words">
-                    <span className="verse-number">3</span>
-                    {renderVerse("Disse Deus Haja luz E houve luz")}
-                  </p>
-                </div>
+                <BibleVerse 
+                  bookId={selectedBook}
+                  chapter={chapter}
+                  version={version.id}
+                />
               </div>
             </div>
           ))}
@@ -227,12 +197,12 @@ const BibleReader = () => {
                       onValueChange={(value) => handleVersionChange(index, value)}
                     >
                       <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Select version" />
+                        <SelectValue placeholder="Selecione a versão" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="almeida">Almeida</SelectItem>
-                        <SelectItem value="nvi">Nova Versão Internacional</SelectItem>
-                        <SelectItem value="ara">Almeida Revista e Atualizada</SelectItem>
+                        <SelectItem value="ACF">Almeida Corrigida Fiel</SelectItem>
+                        <SelectItem value="NVI">Nova Versão Internacional</SelectItem>
+                        <SelectItem value="ARA">Almeida Revista e Atualizada</SelectItem>
                       </SelectContent>
                     </Select>
                     {versions.length > 1 && (
@@ -247,23 +217,11 @@ const BibleReader = () => {
                     )}
                   </div>
                   <div className="bible-text space-y-6 bg-white p-4 md:p-8 flex-1 overflow-y-auto">
-                    <h2 className="text-xl md:text-2xl font-serif font-bold text-bible-navy mb-6 break-words">
-                      A criação dos céus e da terra e de tudo o que neles há
-                    </h2>
-                    <div className="space-y-4">
-                      <p className="break-words">
-                        <span className="verse-number">1</span>
-                        {renderVerse("No princípio criou Deus os céus e a terra")}
-                      </p>
-                      <p className="break-words">
-                        <span className="verse-number">2</span>
-                        {renderVerse("A terra porém estava sem forma e vazia havia trevas sobre a face do abismo e o Espírito de Deus pairava por sobre as águas")}
-                      </p>
-                      <p className="break-words">
-                        <span className="verse-number">3</span>
-                        {renderVerse("Disse Deus Haja luz E houve luz")}
-                      </p>
-                    </div>
+                    <BibleVerse 
+                      bookId={selectedBook}
+                      chapter={chapter}
+                      version={version.id}
+                    />
                   </div>
                 </div>
               </ResizablePanel>
@@ -300,7 +258,7 @@ const BibleReader = () => {
       <CommentaryDrawer 
         isOpen={isCommentaryOpen}
         onClose={() => setIsCommentaryOpen(false)}
-        currentPassage={{ book, chapter }}
+        currentPassage={{ book: selectedBook.toString(), chapter }}
       />
     </div>
   );
