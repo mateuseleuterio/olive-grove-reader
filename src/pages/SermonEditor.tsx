@@ -23,7 +23,11 @@ const SermonEditor = () => {
   // State for structured sermon
   const [structuredTitle, setStructuredTitle] = useState("");
   const [introduction, setIntroduction] = useState("");
-  const [points, setPoints] = useState<NonNullable<SermonType['points']>>([
+  const [points, setPoints] = useState<Array<{
+    title: string;
+    content: string;
+    illustrations: Array<{ content: string; type: string }>;
+  }>>([
     { title: "", content: "", illustrations: [] }
   ]);
   const [conclusion, setConclusion] = useState("");
@@ -64,10 +68,14 @@ const SermonEditor = () => {
       } else {
         setStructuredTitle(existingSermon.title);
         setIntroduction(existingSermon.introduction || "");
-        const existingPoints = existingSermon.points as NonNullable<SermonType['points']> || [
-          { title: "", content: "", illustrations: [] }
-        ];
-        setPoints(existingPoints);
+        if (existingSermon.points) {
+          const existingPoints = existingSermon.points as Array<{
+            title: string;
+            content: string;
+            illustrations: Array<{ content: string; type: string }>;
+          }>;
+          setPoints(existingPoints);
+        }
         setConclusion(existingSermon.conclusion || "");
       }
     }
@@ -75,39 +83,31 @@ const SermonEditor = () => {
 
   const handleSaveSermon = async () => {
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para salvar um sermão",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      let sermonData: SermonType = {
-        id: isValidUUID ? id : undefined,
-        user_id: user.id,
+      let sermonData: Partial<SermonType> & { title: string; user_id: string } = {
         title: "",
+        user_id: "anonymous", // Default user_id for non-logged in users
         bible_text: null,
         introduction: null,
         points: null,
         conclusion: null,
       };
 
+      // Try to get the actual user_id if logged in
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        sermonData.user_id = user.id;
+      }
+
       if (type === "blank" || (existingSermon && existingSermon.bible_text)) {
         sermonData = {
           ...sermonData,
-          title: blankTitle,
+          title: blankTitle || "Untitled Sermon",
           bible_text: blankContent,
         };
       } else if (type === "structure" || (existingSermon && !existingSermon.bible_text)) {
         sermonData = {
           ...sermonData,
-          title: structuredTitle,
+          title: structuredTitle || "Untitled Sermon",
           introduction,
           points,
           conclusion,
@@ -115,7 +115,7 @@ const SermonEditor = () => {
       } else if (type === "ai") {
         sermonData = {
           ...sermonData,
-          title: "Sermão Gerado por IA",
+          title: "AI Generated Sermon",
           bible_text: generatedSermon,
         };
       }
