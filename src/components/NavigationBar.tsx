@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Settings, User, Puzzle, BookOpen, Brain, X, LogIn, Deer } from "lucide-react";
+import { Menu, Search, Settings, User, Puzzle, BookOpen, Brain, X, LogIn, Stag } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -175,7 +175,7 @@ const NavigationBar = () => {
             </SheetContent>
           </Sheet>
           <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors flex items-center gap-2">
-            <Deer className="h-8 w-8" />
+            <Stag className="h-8 w-8" />
             DeerBible
           </Link>
         </div>
