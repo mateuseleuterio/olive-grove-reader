@@ -31,10 +31,9 @@ const ReadingPlans = () => {
     is_public: true,
   });
 
-  const { data: publicPlans, isLoading, error } = useQuery({
+  const { data: publicPlans, isLoading } = useQuery({
     queryKey: ["reading-plans", "public"],
     queryFn: async () => {
-      console.log("Fetching public reading plans...");
       const { data, error } = await supabase
         .from("reading_plans")
         .select("*")
@@ -42,7 +41,6 @@ const ReadingPlans = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching public reading plans:", error);
         toast({
           variant: "destructive",
           title: "Erro",
@@ -50,16 +48,13 @@ const ReadingPlans = () => {
         });
         throw error;
       }
-
-      console.log("Public reading plans fetched:", data);
       return data as ReadingPlan[];
     },
   });
 
-  const { data: myPlans, isLoading: isLoadingMyPlans, error: myPlansError } = useQuery({
+  const { data: myPlans, isLoading: isLoadingMyPlans } = useQuery({
     queryKey: ["reading-plans", "my"],
     queryFn: async () => {
-      console.log("Fetching user reading plans...");
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return [];
 
@@ -70,7 +65,6 @@ const ReadingPlans = () => {
         .order("created_at", { ascending: false });
 
       if (error) {
-        console.error("Error fetching user reading plans:", error);
         toast({
           variant: "destructive",
           title: "Erro",
@@ -78,8 +72,6 @@ const ReadingPlans = () => {
         });
         throw error;
       }
-
-      console.log("User reading plans fetched:", data);
       return data as ReadingPlan[];
     },
   });
@@ -96,7 +88,6 @@ const ReadingPlans = () => {
         return;
       }
 
-      console.log("Creating new reading plan...");
       const { error } = await supabase.from("reading_plans").insert({
         ...newPlan,
         created_by: session.user.id,
@@ -145,18 +136,8 @@ const ReadingPlans = () => {
     </Card>
   );
 
-  if (error || myPlansError) {
-    return (
-      <div className="container mx-auto py-6 px-4">
-        <div className="text-center text-red-500">
-          Ocorreu um erro ao carregar os planos de leitura. Por favor, tente novamente mais tarde.
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="container mx-auto py-6">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Planos de Leitura</h1>
         <Dialog open={isCreating} onOpenChange={setIsCreating}>
@@ -214,55 +195,23 @@ const ReadingPlans = () => {
         </TabsList>
         <TabsContent value="public">
           {isLoading ? (
-            <div className="space-y-4">
-              {Array(3).fill(null).map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : publicPlans && publicPlans.length > 0 ? (
+            <div>Carregando...</div>
+          ) : (
             <div>
-              {publicPlans.map((plan) => (
+              {publicPlans?.map((plan) => (
                 <PlanCard key={plan.id} plan={plan} />
               ))}
-            </div>
-          ) : (
-            <div className="text-center text-muted-foreground py-8">
-              Nenhum plano público encontrado.
             </div>
           )}
         </TabsContent>
         <TabsContent value="my">
           {isLoadingMyPlans ? (
-            <div className="space-y-4">
-              {Array(2).fill(null).map((_, index) => (
-                <Card key={index} className="animate-pulse">
-                  <CardHeader>
-                    <div className="h-6 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2 mt-2"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : myPlans && myPlans.length > 0 ? (
+            <div>Carregando...</div>
+          ) : (
             <div>
-              {myPlans.map((plan) => (
+              {myPlans?.map((plan) => (
                 <PlanCard key={plan.id} plan={plan} />
               ))}
-            </div>
-          ) : (
-            <div className="text-center text-muted-foreground py-8">
-              Você ainda não criou nenhum plano de leitura.
             </div>
           )}
         </TabsContent>

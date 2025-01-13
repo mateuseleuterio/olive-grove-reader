@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
-import { BookOpen } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,75 +23,17 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          console.log("Session found, checking profile");
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            setErrorMessage("Erro ao carregar perfil. Por favor, tente novamente.");
-            return;
-          }
-
-          if (profile) {
-            console.log("Profile found, closing modal");
-            setErrorMessage("");
-            onClose();
-            navigate("/");
-          }
-        }
-      } catch (error) {
-        console.error('Error checking session:', error);
-        setErrorMessage("Erro ao verificar sessão. Por favor, tente novamente.");
-      }
-    };
-
-    checkSession();
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event);
-      if (event === "SIGNED_IN" && session) {
-        try {
-          console.log("User signed in, checking profile");
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            setErrorMessage("Erro ao carregar perfil. Por favor, tente novamente.");
-            return;
-          }
-
-          if (profile) {
-            console.log("Profile found, redirecting");
-            setErrorMessage("");
-            onClose();
-            navigate("/");
-          }
-        } catch (error) {
-          console.error('Error handling sign in:', error);
-          setErrorMessage("Erro ao processar login. Por favor, tente novamente.");
-        }
+      if (event === "SIGNED_IN") {
+        onClose();
+        navigate("/");
       }
       if (event === "SIGNED_OUT") {
-        console.log("User signed out");
         setErrorMessage("");
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, [navigate, onClose]);
 
   const getErrorMessage = (error: AuthError) => {
@@ -108,13 +49,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-bible-gray">
-        <DialogHeader className="text-center">
-          <div className="mx-auto mb-4 p-3 rounded-full bg-bible-navy/10">
-            <BookOpen className="h-8 w-8 text-bible-navy" />
-          </div>
-          <DialogTitle className="text-2xl font-serif text-bible-navy">Bem-vindo</DialogTitle>
-          <DialogDescription className="text-bible-text">
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Entrar ou Cadastrar</DialogTitle>
+          <DialogDescription>
             Faça login ou crie uma conta para acessar todos os recursos.
           </DialogDescription>
         </DialogHeader>
@@ -130,23 +68,10 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             variables: {
               default: {
                 colors: {
-                  brand: "#556B2F",
-                  brandAccent: "#8B8B2B",
-                  brandButtonText: "white",
-                  defaultButtonBackground: "#FFFDF0",
-                  defaultButtonBackgroundHover: "#F5F3E6",
-                  inputBackground: "white",
-                  inputBorder: "#E2E8F0",
-                  inputBorderHover: "#556B2F",
-                  inputBorderFocus: "#556B2F",
+                  brand: "#1e40af",
+                  brandAccent: "#1e3a8a",
                 },
               },
-            },
-            className: {
-              container: "font-sans",
-              label: "text-bible-text",
-              button: "font-medium",
-              input: "font-sans",
             },
           }}
           localization={{
@@ -155,22 +80,11 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 email_label: "Email",
                 password_label: "Senha",
                 button_label: "Entrar",
-                loading_button_label: "Entrando...",
-                social_provider_text: "Entrar com {{provider}}",
-                link_text: "Já tem uma conta? Entre",
               },
               sign_up: {
                 email_label: "Email",
                 password_label: "Senha",
                 button_label: "Cadastrar",
-                loading_button_label: "Cadastrando...",
-                social_provider_text: "Cadastrar com {{provider}}",
-                link_text: "Não tem uma conta? Cadastre-se",
-              },
-              forgotten_password: {
-                button_label: "Recuperar senha",
-                loading_button_label: "Enviando instruções...",
-                link_text: "Esqueceu sua senha?",
               },
             },
           }}

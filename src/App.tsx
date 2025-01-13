@@ -15,9 +15,6 @@ import StudyCategory from "./pages/StudyCategory";
 import ReadingPlans from "./pages/ReadingPlans";
 import MentalMaps from "./pages/MentalMaps";
 import CreateMentalMap from "./pages/CreateMentalMap";
-import Auth from "./pages/Auth";
-import Profile from "./pages/Profile";
-import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -26,9 +23,9 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <div className="min-h-screen bg-bible-gray flex flex-col">
+          <div className="min-h-screen bg-bible-gray">
             <NavigationBar />
-            <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 w-full max-w-7xl">
+            <div className="pt-16 px-4 md:px-6 lg:px-8">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
@@ -44,11 +41,8 @@ function App() {
                 <Route path="/reading-plans" element={<ReadingPlans />} />
                 <Route path="/mental-maps" element={<MentalMaps />} />
                 <Route path="/mental-maps/new" element={<CreateMentalMap />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/settings" element={<Settings />} />
               </Routes>
-            </main>
+            </div>
           </div>
         </TooltipProvider>
       </QueryClientProvider>

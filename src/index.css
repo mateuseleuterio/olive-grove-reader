@@ -32,16 +32,8 @@
     @apply border-border;
   }
 
-  html {
-    @apply h-full;
-  }
-
   body {
-    @apply bg-bible-gray text-bible-text font-sans min-h-full;
-  }
-
-  #root {
-    @apply min-h-full flex flex-col;
+    @apply bg-bible-gray text-bible-text font-sans;
   }
 
   .bible-text {
@@ -50,35 +42,5 @@
 
   .verse-number {
     @apply text-bible-verse font-sans text-sm align-super mr-1;
-  }
-
-  /* Responsive container classes */
-  .container {
-    @apply px-4 mx-auto;
-    max-width: 100%;
-  }
-
-  @screen sm {
-    .container {
-      max-width: 640px;
-    }
-  }
-
-  @screen md {
-    .container {
-      max-width: 768px;
-    }
-  }
-
-  @screen lg {
-    .container {
-      max-width: 1024px;
-    }
-  }
-
-  @screen xl {
-    .container {
-      max-width: 1280px;
-    }
   }
 }

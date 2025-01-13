@@ -1,6 +1,8 @@
-import { Database } from "@/integrations/supabase/types";
-
-export type SermonType = Database['public']['Tables']['sermons']['Row'] & {
+export interface SermonType {
+  id: string;
+  title: string;
+  bible_text?: string | null;
+  introduction?: string | null;
   points?: Array<{
     title: string;
     content: string;
@@ -9,4 +11,9 @@ export type SermonType = Database['public']['Tables']['sermons']['Row'] & {
       type: string;
     }>;
   }> | null;
-};
+  conclusion?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
+  user_id: string;
+}

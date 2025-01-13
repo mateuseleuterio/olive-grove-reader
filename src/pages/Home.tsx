@@ -4,33 +4,20 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
 const Home = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
 
   const { data: featuredArticles, isLoading: isFeaturedLoading } = useQuery({
     queryKey: ["featured-articles"],
     queryFn: async () => {
-      console.log("Fetching featured articles...");
       const { data, error } = await supabase
         .from("articles")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(3);
 
-      if (error) {
-        console.error("Error fetching featured articles:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar os artigos em destaque.",
-        });
-        throw error;
-      }
-      
-      console.log("Featured articles fetched:", data);
+      if (error) throw error;
       return data;
     },
   });
@@ -38,24 +25,13 @@ const Home = () => {
   const { data: latestArticles, isLoading: isLatestLoading } = useQuery({
     queryKey: ["latest-articles"],
     queryFn: async () => {
-      console.log("Fetching latest articles...");
       const { data, error } = await supabase
         .from("articles")
         .select("*")
         .order("created_at", { ascending: false })
         .limit(5);
 
-      if (error) {
-        console.error("Error fetching latest articles:", error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível carregar os artigos mais recentes.",
-        });
-        throw error;
-      }
-
-      console.log("Latest articles fetched:", data);
+      if (error) throw error;
       return data;
     },
   });
@@ -100,8 +76,8 @@ const Home = () => {
                 </CardHeader>
               </Card>
             ))
-          ) : featuredArticles && featuredArticles.length > 0 ? (
-            featuredArticles.map((article) => (
+          ) : (
+            featuredArticles?.map((article) => (
               <Card key={article.id} className="hover:shadow-lg transition-shadow overflow-hidden">
                 {article.image_url && (
                   <div className="h-48 w-full overflow-hidden">
@@ -129,10 +105,6 @@ const Home = () => {
                 </CardContent>
               </Card>
             ))
-          ) : (
-            <div className="col-span-3 text-center text-muted-foreground">
-              Nenhum artigo em destaque encontrado.
-            </div>
           )}
         </div>
       </section>
@@ -153,8 +125,8 @@ const Home = () => {
                 </CardHeader>
               </Card>
             ))
-          ) : latestArticles && latestArticles.length > 0 ? (
-            latestArticles.map((article) => (
+          ) : (
+            latestArticles?.map((article) => (
               <Card 
                 key={article.id} 
                 className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
@@ -182,10 +154,6 @@ const Home = () => {
                 </CardHeader>
               </Card>
             ))
-          ) : (
-            <div className="text-center text-muted-foreground">
-              Nenhum artigo encontrado.
-            </div>
           )}
         </div>
       </section>
