@@ -64,10 +64,13 @@ const SermonEditor = () => {
       } else {
         setStructuredTitle(existingSermon.title);
         setIntroduction(existingSermon.introduction || "");
-        const existingPoints = existingSermon.points as NonNullable<SermonType['points']> || [
-          { title: "", content: "", illustrations: [] }
-        ];
-        setPoints(existingPoints);
+        if (existingSermon.points) {
+          const existingPoints = existingSermon.points as NonNullable<SermonType['points']>;
+          setPoints(existingPoints.map(point => ({
+            ...point,
+            illustrations: point.illustrations || []
+          })));
+        }
         setConclusion(existingSermon.conclusion || "");
       }
     }
@@ -79,18 +82,9 @@ const SermonEditor = () => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para salvar um sermão",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      let sermonData: SermonType = {
+      let sermonData: Partial<SermonType> = {
         id: isValidUUID ? id : undefined,
-        user_id: user.id,
+        user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Default anonymous user
         title: "",
         bible_text: null,
         introduction: null,
@@ -99,12 +93,30 @@ const SermonEditor = () => {
       };
 
       if (type === "blank" || (existingSermon && existingSermon.bible_text)) {
+        if (!blankTitle.trim()) {
+          toast({
+            title: "Erro",
+            description: "Por favor, adicione um título para o sermão",
+            variant: "destructive",
+          });
+          return;
+        }
+
         sermonData = {
           ...sermonData,
           title: blankTitle,
           bible_text: blankContent,
         };
       } else if (type === "structure" || (existingSermon && !existingSermon.bible_text)) {
+        if (!structuredTitle.trim()) {
+          toast({
+            title: "Erro",
+            description: "Por favor, adicione um título para o sermão",
+            variant: "destructive",
+          });
+          return;
+        }
+
         sermonData = {
           ...sermonData,
           title: structuredTitle,
@@ -113,6 +125,15 @@ const SermonEditor = () => {
           conclusion,
         };
       } else if (type === "ai") {
+        if (!generatedSermon.trim()) {
+          toast({
+            title: "Erro",
+            description: "Por favor, gere um sermão primeiro",
+            variant: "destructive",
+          });
+          return;
+        }
+
         sermonData = {
           ...sermonData,
           title: "Sermão Gerado por IA",
@@ -152,7 +173,7 @@ const SermonEditor = () => {
       console.error('Error saving sermon:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar o sermão",
+        description: "Erro ao salvar o sermão. Por favor, tente novamente.",
         variant: "destructive",
       });
     }
