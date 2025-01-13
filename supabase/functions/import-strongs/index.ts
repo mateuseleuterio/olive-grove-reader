@@ -1,4 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -61,7 +62,7 @@ const processStrongsData = async (supabase: any, data: any, language: 'hebrew' |
   }
 }
 
-const serve = async (req: Request) => {
+const serve_fn = async (req: Request) => {
   const corsResult = handleCors(req)
   if (corsResult) return corsResult
 
@@ -97,4 +98,4 @@ const serve = async (req: Request) => {
   }
 }
 
-Deno.serve(serve)
+serve(serve_fn)
