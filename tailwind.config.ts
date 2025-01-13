@@ -25,11 +25,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         bible: {
-          navy: "#8B4513", // Changed from #556B2F to Saddle Brown
-          gray: "#FFF8DC", // Changed from #FFFDF0 to Cornsilk
-          accent: "#A0522D", // Changed from #8B8B2B to Sienna
-          text: "#654321", // Changed from #4A4A24 to Dark Brown
-          verse: "#8E8371", // Changed from #8E9196 to Warm Gray
+          navy: "#556B2F",
+          gray: "#FFFDF0",
+          accent: "#8B8B2B",
+          text: "#4A4A24",
+          verse: "#8E9196",
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -73,24 +73,24 @@ export default {
         DEFAULT: {
           css: {
             maxWidth: 'none',
-            color: '#654321',
-            '--tw-prose-headings': '#8B4513',
-            '--tw-prose-links': '#A0522D',
+            color: '#4A4A24',
+            '--tw-prose-headings': '#556B2F',
+            '--tw-prose-links': '#8B8B2B',
             h1: {
-              color: '#8B4513',
+              color: '#556B2F',
               fontFamily: 'Merriweather, serif',
               fontSize: '2rem',
               marginBottom: '1.5rem',
             },
             h2: {
-              color: '#8B4513',
+              color: '#556B2F',
               fontFamily: 'Merriweather, serif',
               fontSize: '1.5rem',
               marginTop: '2rem',
               marginBottom: '1rem',
             },
             h3: {
-              color: '#8B4513',
+              color: '#556B2F',
               fontFamily: 'Merriweather, serif',
               fontSize: '1.25rem',
               marginTop: '1.5rem',
