@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
+import { useToast } from "@/hooks/use-toast";
 
 interface Book {
   id: number;
@@ -26,6 +27,7 @@ const BibleReader = () => {
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [maxChapters, setMaxChapters] = useState(50);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -51,7 +53,6 @@ const BibleReader = () => {
       }
 
       if (data) {
-        // Remover duplicatas baseado no nome do livro
         const uniqueBooks = data.filter((book, index, self) =>
           index === self.findIndex((b) => b.name === book.name)
         );
@@ -91,15 +92,41 @@ const BibleReader = () => {
   }, [selectedBook]);
 
   const addVersion = () => {
-    // Desabilitado pois só temos ACF
-    console.log('Apenas versão ACF disponível');
+    if (versions.length >= 4) {
+      toast({
+        title: "Limite atingido",
+        description: "Você pode adicionar no máximo 4 versões para comparação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Por enquanto só temos ACF disponível
+    const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
+    setVersions([...versions, newVersion]);
+    
+    toast({
+      title: "Versão adicionada",
+      description: "Uma nova versão foi adicionada para comparação.",
+    });
   };
 
   const removeVersion = (index: number) => {
-    // Não permitir remover a única versão
-    if (versions.length <= 1) return;
+    if (versions.length <= 1) {
+      toast({
+        title: "Operação não permitida",
+        description: "Você precisa manter pelo menos uma versão.",
+        variant: "destructive",
+      });
+      return;
+    }
     const newVersions = versions.filter((_, i) => i !== index);
     setVersions(newVersions);
+    
+    toast({
+      title: "Versão removida",
+      description: "A versão foi removida da comparação.",
+    });
   };
 
   const handleVersionChange = (index: number, newVersion: BibleVersion) => {
