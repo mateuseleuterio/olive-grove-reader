@@ -92,21 +92,31 @@ const NavigationBar = () => {
     }
   };
 
-  const MenuItems = () => (
+  const MainMenuItems = () => (
+    <>
+      <Link to="/bible">
+        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+          Bíblia
+        </Button>
+      </Link>
+      <Link to="/sermon-builder">
+        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+          Sermões
+        </Button>
+      </Link>
+      <Link to="/study">
+        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+          Estudo
+        </Button>
+      </Link>
+    </>
+  );
+
+  const SideMenuItems = () => (
     <>
       <Link to="/" className="block">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
           Blog
-        </Button>
-      </Link>
-      <Link to="/bible" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
-          Bíblia
-        </Button>
-      </Link>
-      <Link to="/sermon-builder" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
-          Sermões
         </Button>
       </Link>
       <Link to="/reading-plans" className="block">
@@ -127,12 +137,6 @@ const NavigationBar = () => {
           Mapas Mentais
         </Button>
       </Link>
-      <Link to="/study" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
-          <BookOpen className="h-5 w-5" />
-          Estudos
-        </Button>
-      </Link>
     </>
   );
 
@@ -140,38 +144,33 @@ const NavigationBar = () => {
     <nav className="bg-bible-navy text-white py-6 fixed top-0 w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          {isMobile ? (
-            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
-                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
-                <SheetHeader className="p-6 border-b border-bible-accent">
-                  <SheetTitle className="text-white text-xl">Menu</SheetTitle>
-                </SheetHeader>
-                <div className="py-4">
-                  <MenuItems />
-                </div>
-              </SheetContent>
-            </Sheet>
-          ) : (
-            <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
-              Biblia App
-            </Link>
-          )}
+          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
+                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
+              <SheetHeader className="p-6 border-b border-bible-accent">
+                <SheetTitle className="text-white text-xl">Menu</SheetTitle>
+              </SheetHeader>
+              <div className="py-4">
+                <SideMenuItems />
+              </div>
+            </SheetContent>
+          </Sheet>
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
+            Biblia App
+          </Link>
         </div>
 
-        {!isMobile && (
-          <NavigationMenu className="hidden md:block">
-            <NavigationMenuList className="flex gap-4">
-              <NavigationMenuItem className="flex">
-                <MenuItems />
-              </NavigationMenuItem>
-            </NavigationMenuList>
-          </NavigationMenu>
-        )}
+        <NavigationMenu>
+          <NavigationMenuList className="flex gap-4">
+            <NavigationMenuItem className="flex">
+              <MainMenuItems />
+            </NavigationMenuItem>
+          </NavigationMenuList>
+        </NavigationMenu>
 
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
