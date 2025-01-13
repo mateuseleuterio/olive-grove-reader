@@ -219,6 +219,7 @@ const SermonEditor = () => {
               content={blankContent}
               onTitleChange={setBlankTitle}
               onContentChange={setBlankContent}
+              onSave={handleSaveSermon}
             />
           )}
           {(type === "structure" || (existingSermon && !existingSermon.bible_text)) && (
