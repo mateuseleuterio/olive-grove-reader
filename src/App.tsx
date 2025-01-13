@@ -26,9 +26,9 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <div className="min-h-screen bg-bible-gray">
+          <div className="min-h-screen bg-bible-gray flex flex-col">
             <NavigationBar />
-            <div className="pt-16 px-4 md:px-6 lg:px-8">
+            <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-8 w-full max-w-7xl">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
@@ -48,7 +48,7 @@ function App() {
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
-            </div>
+            </main>
           </div>
         </TooltipProvider>
       </QueryClientProvider>
