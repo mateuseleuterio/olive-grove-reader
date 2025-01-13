@@ -178,6 +178,27 @@ export type Database = {
           },
         ]
       }
+      bible_word_strongs_mapping: {
+        Row: {
+          created_at: string
+          id: number
+          strong_number: string
+          word: string
+        }
+        Insert: {
+          created_at?: string
+          id?: number
+          strong_number: string
+          word: string
+        }
+        Update: {
+          created_at?: string
+          id?: number
+          strong_number?: string
+          word?: string
+        }
+        Relationships: []
+      }
       challenge_questions: {
         Row: {
           correct_answer: string
