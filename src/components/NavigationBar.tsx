@@ -175,7 +175,7 @@ const NavigationBar = () => {
             </SheetContent>
           </Sheet>
           <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
-            Biblia App
+            BibleGuide
           </Link>
         </div>
 
