@@ -4,10 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
-import StrongMappingPanel from "./StrongMappingPanel";
-import BiblePdfUploader from "./BiblePdfUploader";
-import { Button } from "./ui/button";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 interface Book {
   id: number;
@@ -55,7 +51,6 @@ const BibleReader = () => {
       }
 
       if (data) {
-        // Remover duplicatas baseado no nome do livro
         const uniqueBooks = data.filter((book, index, self) =>
           index === self.findIndex((b) => b.name === book.name)
         );
@@ -95,12 +90,10 @@ const BibleReader = () => {
   }, [selectedBook]);
 
   const addVersion = () => {
-    // Desabilitado pois só temos ACF
     console.log('Apenas versão ACF disponível');
   };
 
   const removeVersion = (index: number) => {
-    // Não permitir remover a única versão
     if (versions.length <= 1) return;
     const newVersions = versions.filter((_, i) => i !== index);
     setVersions(newVersions);
@@ -119,32 +112,17 @@ const BibleReader = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
-        <div className="flex items-center gap-4">
-          <BibleControls
-            books={books}
-            selectedBook={selectedBook}
-            chapter={chapter}
-            maxChapters={maxChapters}
-            onBookChange={setSelectedBook}
-            onChapterChange={setChapter}
-            onAddVersion={addVersion}
-            onCommentaryOpen={() => setIsCommentaryOpen(true)}
-            versionsCount={versions.length}
-          />
-          <BiblePdfUploader />
-        </div>
-        
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button variant="outline">Painel Strong</Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="w-[400px] sm:w-[540px]">
-            <SheetHeader>
-              <SheetTitle>Mapeamento Strong</SheetTitle>
-            </SheetHeader>
-            <StrongMappingPanel />
-          </SheetContent>
-        </Sheet>
+        <BibleControls
+          books={books}
+          selectedBook={selectedBook}
+          chapter={chapter}
+          maxChapters={maxChapters}
+          onBookChange={setSelectedBook}
+          onChapterChange={setChapter}
+          onAddVersion={addVersion}
+          onCommentaryOpen={() => setIsCommentaryOpen(true)}
+          versionsCount={versions.length}
+        />
       </div>
       
       {isMobile ? (
