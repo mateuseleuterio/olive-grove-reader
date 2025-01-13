@@ -1,157 +1,90 @@
-import { serve } from "https://deno.fresh.run/std@v9.6.1/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-
-interface BibleBook {
-  abbrev: string;
-  book: string;
-  chapters: string[][];
-}
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Content-Type': 'application/json',
-};
+}
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Configurar cliente Supabase
-    const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '';
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { version, book } = await req.json()
 
-    // Receber dados do request
-    const { books, version } = await req.json();
-
-    if (!Array.isArray(books) || !version) {
+    if (!version || !book) {
       return new Response(
-        JSON.stringify({ error: 'Formato inválido. Necessário array de livros e versão.' }),
-        { status: 400, headers: corsHeaders }
-      );
+        JSON.stringify({ error: 'Version and book data are required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      )
     }
 
-    console.log(`Iniciando importação de ${books.length} livros da versão ${version}`);
-    const results = [];
+    // Create Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
 
-    for (const book of books) {
-      try {
-        console.log(`Processando livro: ${book.book}`);
-        
-        // 1. Inserir ou buscar o livro
-        const { data: bookData, error: bookError } = await supabase
-          .from('bible_books')
-          .select('id')
-          .eq('abbreviation', book.abbrev)
-          .maybeSingle();
+    // Insert book
+    const { data: bookData, error: bookError } = await supabaseClient
+      .from('bible_books')
+      .insert({
+        name: book.book,
+        abbreviation: book.abbrev,
+        testament: book.testament || 'old', // você precisará especificar isso no JSON
+        position: book.position // você precisará especificar isso no JSON
+      })
+      .select()
+      .single()
 
-        if (bookError) throw bookError;
+    if (bookError) {
+      throw bookError
+    }
 
-        let bookId;
-        if (!bookData) {
-          const { data: newBook, error: newBookError } = await supabase
-            .from('bible_books')
-            .insert({
-              name: book.book,
-              abbreviation: book.abbrev,
-              testament: 'old', // Você pode ajustar isso baseado em alguma lógica
-              position: 1 // Você precisa definir a posição correta
-            })
-            .select('id')
-            .single();
+    // Insert chapters and verses
+    for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
+      // Insert chapter
+      const { data: chapterData, error: chapterError } = await supabaseClient
+        .from('bible_chapters')
+        .insert({
+          book_id: bookData.id,
+          chapter_number: chapterIndex + 1
+        })
+        .select()
+        .single()
 
-          if (newBookError) throw newBookError;
-          bookId = newBook.id;
-          console.log(`Novo livro criado: ${book.book} com ID ${bookId}`);
-        } else {
-          bookId = bookData.id;
-          console.log(`Livro existente encontrado: ${book.book} com ID ${bookId}`);
-        }
+      if (chapterError) {
+        throw chapterError
+      }
 
-        // 2. Processar cada capítulo
-        for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
-          console.log(`Processando capítulo ${chapterIndex + 1} do livro ${book.book}`);
-          
-          // Inserir capítulo
-          const { data: chapterData, error: chapterError } = await supabase
-            .from('bible_chapters')
-            .insert({
-              book_id: bookId,
-              chapter_number: chapterIndex + 1
-            })
-            .select('id')
-            .single();
+      // Insert verses
+      const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
+        chapter_id: chapterData.id,
+        verse_number: index + 1,
+        text,
+        version
+      }))
 
-          if (chapterError && !chapterError.message.includes('duplicate')) {
-            throw chapterError;
-          }
+      const { error: versesError } = await supabaseClient
+        .from('bible_verses')
+        .insert(verses)
 
-          // Buscar ID do capítulo se já existir
-          let chapterId;
-          if (chapterError?.message.includes('duplicate')) {
-            const { data: existingChapter } = await supabase
-              .from('bible_chapters')
-              .select('id')
-              .eq('book_id', bookId)
-              .eq('chapter_number', chapterIndex + 1)
-              .single();
-            chapterId = existingChapter?.id;
-            console.log(`Capítulo existente encontrado com ID ${chapterId}`);
-          } else {
-            chapterId = chapterData?.id;
-            console.log(`Novo capítulo criado com ID ${chapterId}`);
-          }
-
-          // 3. Inserir versículos
-          const verses = book.chapters[chapterIndex];
-          console.log(`Inserindo ${verses.length} versículos para o capítulo ${chapterIndex + 1}`);
-          
-          for (let verseIndex = 0; verseIndex < verses.length; verseIndex++) {
-            const { error: verseError } = await supabase
-              .from('bible_verses')
-              .insert({
-                chapter_id: chapterId,
-                verse_number: verseIndex + 1,
-                text: verses[verseIndex],
-                version: version
-              });
-
-            if (verseError && !verseError.message.includes('duplicate')) {
-              console.error(`Erro ao inserir versículo ${verseIndex + 1}:`, verseError);
-              throw verseError;
-            }
-          }
-        }
-
-        results.push({
-          book: book.book,
-          status: 'success'
-        });
-
-      } catch (error) {
-        console.error(`Erro ao processar livro ${book.book}:`, error);
-        results.push({
-          book: book.book,
-          status: 'error',
-          error: error.message
-        });
+      if (versesError) {
+        throw versesError
       }
     }
 
     return new Response(
-      JSON.stringify({ message: 'Importação concluída', results }),
-      { headers: corsHeaders }
-    );
+      JSON.stringify({ message: 'Book imported successfully' }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    )
 
   } catch (error) {
-    console.error('Erro geral na importação:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: corsHeaders }
-    );
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+    )
   }
-});
+})
