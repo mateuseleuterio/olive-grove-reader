@@ -19,3 +19,10 @@ export interface StrongSuggestion {
   strongNumber: string;
   confidence: number;
 }
+
+export interface BibleWordStrongMapping {
+  id: number;
+  word: string;
+  strong_number: string;
+  created_at: string;
+}
