@@ -5,6 +5,7 @@ import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
 import StrongMappingPanel from "./StrongMappingPanel";
+import BiblePdfUploader from "./BiblePdfUploader";
 import { Button } from "./ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
@@ -118,17 +119,20 @@ const BibleReader = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-4">
-        <BibleControls
-          books={books}
-          selectedBook={selectedBook}
-          chapter={chapter}
-          maxChapters={maxChapters}
-          onBookChange={setSelectedBook}
-          onChapterChange={setChapter}
-          onAddVersion={addVersion}
-          onCommentaryOpen={() => setIsCommentaryOpen(true)}
-          versionsCount={versions.length}
-        />
+        <div className="flex items-center gap-4">
+          <BibleControls
+            books={books}
+            selectedBook={selectedBook}
+            chapter={chapter}
+            maxChapters={maxChapters}
+            onBookChange={setSelectedBook}
+            onChapterChange={setChapter}
+            onAddVersion={addVersion}
+            onCommentaryOpen={() => setIsCommentaryOpen(true)}
+            versionsCount={versions.length}
+          />
+          <BiblePdfUploader />
+        </div>
         
         <Sheet>
           <SheetTrigger asChild>
