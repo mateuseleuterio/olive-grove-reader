@@ -95,41 +95,41 @@ const NavigationBar = () => {
   const MenuItems = () => (
     <>
       <Link to="/" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
           Blog
         </Button>
       </Link>
       <Link to="/bible" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
           Bíblia
         </Button>
       </Link>
       <Link to="/sermon-builder" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
           Sermões
         </Button>
       </Link>
       <Link to="/reading-plans" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
-          <BookOpen className="h-4 w-4" />
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
+          <BookOpen className="h-5 w-5" />
           Planos de Leitura
         </Button>
       </Link>
       <Link to="/bible-challenge" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
-          <Puzzle className="h-4 w-4" />
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
+          <Puzzle className="h-5 w-5" />
           Desafio Bíblico
         </Button>
       </Link>
       <Link to="/mental-maps" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
-          <Brain className="h-4 w-4" />
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
+          <Brain className="h-5 w-5" />
           Mapas Mentais
         </Button>
       </Link>
       <Link to="/study" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-2">
-          <BookOpen className="h-4 w-4" />
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
+          <BookOpen className="h-5 w-5" />
           Estudos
         </Button>
       </Link>
@@ -137,9 +137,9 @@ const NavigationBar = () => {
   );
 
   return (
-    <nav className="bg-bible-navy text-white py-4 fixed top-0 w-full z-50">
-      <div className="max-w-7xl mx-auto px-4 flex items-center justify-between">
-        <div className="flex items-center gap-4">
+    <nav className="bg-bible-navy text-white py-6 fixed top-0 w-full z-50 shadow-lg">
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        <div className="flex items-center gap-6">
           {isMobile ? (
             <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
               <SheetTrigger asChild>
@@ -147,9 +147,9 @@ const NavigationBar = () => {
                   {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-[250px] bg-bible-navy p-0">
+              <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
                 <SheetHeader className="p-6 border-b border-bible-accent">
-                  <SheetTitle className="text-white">Menu</SheetTitle>
+                  <SheetTitle className="text-white text-xl">Menu</SheetTitle>
                 </SheetHeader>
                 <div className="py-4">
                   <MenuItems />
@@ -157,7 +157,7 @@ const NavigationBar = () => {
               </SheetContent>
             </Sheet>
           ) : (
-            <Link to="/" className="text-xl font-bold whitespace-nowrap">
+            <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
               Biblia App
             </Link>
           )}
@@ -165,7 +165,7 @@ const NavigationBar = () => {
 
         {!isMobile && (
           <NavigationMenu className="hidden md:block">
-            <NavigationMenuList className="flex gap-2">
+            <NavigationMenuList className="flex gap-4">
               <NavigationMenuItem className="flex">
                 <MenuItems />
               </NavigationMenuItem>
@@ -173,27 +173,29 @@ const NavigationBar = () => {
           </NavigationMenu>
         )}
 
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
             <Search className="h-5 w-5" />
           </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
+          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
             <Settings className="h-5 w-5" />
           </Button>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
                 <User className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>
-                {profile?.full_name || 'Minha Conta'}
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="font-normal">
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium leading-none">{profile?.full_name || 'Minha Conta'}</p>
+                </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Perfil</DropdownMenuItem>
-              <DropdownMenuItem>Configurações</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleLogout}>Sair</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
+              <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>Sair</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
