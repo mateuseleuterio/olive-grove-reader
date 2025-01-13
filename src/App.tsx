@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NavigationBar from "./components/NavigationBar";
@@ -25,9 +25,10 @@ function App() {
         <TooltipProvider>
           <div className="min-h-screen bg-bible-gray">
             <NavigationBar />
-            <div className="pt-24 px-4 md:px-6 lg:px-8"> {/* Increased padding-top from pt-16 to pt-24 */}
+            <div className="pt-24 px-4 md:px-6 lg:px-8">
               <Routes>
-                <Route path="/" element={<Home />} />
+                <Route path="/" element={<Navigate to="/bible" replace />} />
+                <Route path="/blog" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor/:id" element={<SermonEditor />} />
