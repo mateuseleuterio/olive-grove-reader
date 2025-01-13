@@ -1,7 +1,12 @@
 export interface SermonPoint {
   title: string;
   content: string;
-  illustrations: string[];
+  illustrations: Illustration[];
+}
+
+export interface Illustration {
+  content: string;
+  type: string;
 }
 
 export interface SermonType {
@@ -15,4 +20,13 @@ export interface SermonType {
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
+}
+
+export interface SermonInput {
+  title: string;
+  bible_text?: string;
+  introduction?: string;
+  points?: SermonPoint[];
+  conclusion?: string;
+  user_id: string;
 }

@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ImagePlus } from "lucide-react";
-import type { SermonType, SermonPoint } from "@/types/sermon";
+import type { SermonPoint, Illustration } from "@/types/sermon";
 
 interface StructuredSermonFormProps {
   title: string;
@@ -30,15 +30,17 @@ const StructuredSermonForm = ({
     const newPoints = [...points];
     newPoints[pointIndex].illustrations.push({
       content: "",
-      type: "text",
+      type: "text"
     });
     onPointsChange(newPoints);
   };
 
   const updateIllustration = (pointIndex: number, illIndex: number, content: string) => {
     const newPoints = [...points];
-    newPoints[pointIndex].illustrations[illIndex].content = content;
-    onPointsChange(newPoints);
+    if (newPoints[pointIndex].illustrations[illIndex]) {
+      newPoints[pointIndex].illustrations[illIndex].content = content;
+      onPointsChange(newPoints);
+    }
   };
 
   const addPoint = () => {

@@ -12,7 +12,7 @@ export const saveSermon = async (
     title: sermonData.title,
     bible_text: sermonData.bible_text,
     introduction: sermonData.introduction,
-    points: sermonData.points as any, // Necessário para compatibilidade com o tipo Json do Supabase
+    points: sermonData.points,
     conclusion: sermonData.conclusion,
     user_id: sermonData.user_id
   };
