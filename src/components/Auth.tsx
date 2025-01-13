@@ -24,21 +24,33 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setErrorMessage("");
+        onClose();
+        navigate("/");
+      }
+    };
+
+    checkSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        // Clear any existing errors
+        console.log("User signed in successfully");
         setErrorMessage("");
-        // Close the modal
         onClose();
-        // Navigate to home page
         navigate("/");
       }
       if (event === "SIGNED_OUT") {
+        console.log("User signed out");
         setErrorMessage("");
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate, onClose]);
 
   const getErrorMessage = (error: AuthError) => {
