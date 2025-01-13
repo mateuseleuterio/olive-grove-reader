@@ -10,6 +10,8 @@ export const saveSermon = async (
   isValidUUID: boolean,
   id?: string
 ) => {
+  console.log('Saving sermon with data:', sermonData); // Debug log
+
   if (isValidUUID && id) {
     const { data, error } = await supabase
       .from("sermons")
@@ -18,7 +20,10 @@ export const saveSermon = async (
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating sermon:', error); // Debug log
+      throw error;
+    }
     return data;
   } else {
     const { data, error } = await supabase
@@ -27,7 +32,10 @@ export const saveSermon = async (
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error inserting sermon:', error); // Debug log
+      throw error;
+    }
     return data;
   }
 };

@@ -86,7 +86,7 @@ const SermonEditor = () => {
 
       let sermonData = {
         id: isValidUUID ? id : undefined,
-        user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Default anonymous user
+        user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Use anonymous user ID if not logged in
         title: "",
         bible_text: null as string | null,
         introduction: null as string | null,
@@ -143,7 +143,10 @@ const SermonEditor = () => {
         };
       }
 
+      console.log('Saving sermon with data:', sermonData); // Debug log
+
       const result = await saveSermon(sermonData, isValidUUID, id);
+      console.log('Save result:', result); // Debug log
 
       toast({
         title: "Sucesso",
