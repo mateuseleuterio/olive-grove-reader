@@ -21,7 +21,27 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   useEffect(() => {
     const fetchVerses = async () => {
       try {
-        const { data, error } = await supabase
+        // Primeiro, buscar o chapter_id
+        const { data: chapterData, error: chapterError } = await supabase
+          .from('bible_chapters')
+          .select('id')
+          .eq('book_id', bookId)
+          .eq('chapter_number', parseInt(chapter))
+          .maybeSingle();
+
+        if (chapterError) {
+          console.error('Erro ao buscar capítulo:', chapterError);
+          return;
+        }
+
+        if (!chapterData) {
+          console.log('Capítulo não encontrado');
+          setVerses([]);
+          return;
+        }
+
+        // Agora buscar os versículos usando o chapter_id
+        const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
           .select(`
             id,
@@ -29,23 +49,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             text
           `)
           .eq('version', version)
-          .eq('chapter_id', 
-            supabase
-              .from('bible_chapters')
-              .select('id')
-              .eq('book_id', bookId)
-              .eq('chapter_number', parseInt(chapter))
-              .single()
-              .then(res => res.data?.id)
-          )
+          .eq('chapter_id', chapterData.id)
           .order('verse_number');
 
-        if (error) {
-          console.error('Erro ao buscar versículos:', error);
+        if (versesError) {
+          console.error('Erro ao buscar versículos:', versesError);
           return;
         }
 
-        setVerses(data || []);
+        setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
       } finally {
@@ -58,12 +70,16 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   const renderVerse = (text: string) => {
     return text.split(" ").map((word, index) => (
-      <WordDetails key={index} word={word} />
+      <WordDetails key={`${text}-${index}`} word={word} />
     ));
   };
 
   if (loading) {
     return <div>Carregando...</div>;
+  }
+
+  if (verses.length === 0) {
+    return <div>Nenhum versículo encontrado</div>;
   }
 
   return (
