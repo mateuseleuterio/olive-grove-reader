@@ -40,7 +40,14 @@ const ReadingPlans = () => {
         .eq("is_public", true)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Erro ao carregar planos de leitura públicos",
+        });
+        throw error;
+      }
       return data as ReadingPlan[];
     },
   });
@@ -57,7 +64,14 @@ const ReadingPlans = () => {
         .eq("created_by", session.user.id)
         .order("created_at", { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Erro ao carregar seus planos de leitura",
+        });
+        throw error;
+      }
       return data as ReadingPlan[];
     },
   });

@@ -64,7 +64,6 @@ const SermonEditor = () => {
       } else {
         setStructuredTitle(existingSermon.title);
         setIntroduction(existingSermon.introduction || "");
-        // Ensure points is an array with the correct structure
         const existingPoints = existingSermon.points as NonNullable<SermonType['points']> || [
           { title: "", content: "", illustrations: [] }
         ];
@@ -89,7 +88,8 @@ const SermonEditor = () => {
         return;
       }
 
-      let sermonData: Partial<SermonType> & { title: string; user_id: string } = {
+      let sermonData: SermonType = {
+        id: isValidUUID ? id : undefined,
         user_id: user.id,
         title: "",
         bible_text: null,
