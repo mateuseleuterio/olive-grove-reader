@@ -4,6 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
+import StrongMappingPanel from "./StrongMappingPanel";
+import { Button } from "./ui/button";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet";
 
 interface Book {
   id: number;
@@ -114,17 +117,31 @@ const BibleReader = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <BibleControls
-        books={books}
-        selectedBook={selectedBook}
-        chapter={chapter}
-        maxChapters={maxChapters}
-        onBookChange={setSelectedBook}
-        onChapterChange={setChapter}
-        onAddVersion={addVersion}
-        onCommentaryOpen={() => setIsCommentaryOpen(true)}
-        versionsCount={versions.length}
-      />
+      <div className="flex justify-between items-center mb-4">
+        <BibleControls
+          books={books}
+          selectedBook={selectedBook}
+          chapter={chapter}
+          maxChapters={maxChapters}
+          onBookChange={setSelectedBook}
+          onChapterChange={setChapter}
+          onAddVersion={addVersion}
+          onCommentaryOpen={() => setIsCommentaryOpen(true)}
+          versionsCount={versions.length}
+        />
+        
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline">Painel Strong</Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+            <SheetHeader>
+              <SheetTitle>Mapeamento Strong</SheetTitle>
+            </SheetHeader>
+            <StrongMappingPanel />
+          </SheetContent>
+        </Sheet>
+      </div>
       
       {isMobile ? (
         <div className="flex flex-col gap-4">

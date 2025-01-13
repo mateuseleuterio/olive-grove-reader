@@ -14,3 +14,8 @@ export interface StrongMapping {
   strong_number: string;
   created_at: string;
 }
+
+export interface StrongSuggestion {
+  strongNumber: string;
+  confidence: number;
+}
