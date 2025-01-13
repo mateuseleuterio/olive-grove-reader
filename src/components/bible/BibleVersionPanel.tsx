@@ -1,4 +1,4 @@
-import { X } from "lucide-react";
+import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
@@ -11,6 +11,10 @@ interface BibleVersionPanelProps {
   selectedBook: number;
   chapter: string;
   versions: Record<string, string>;
+  onPreviousChapter: () => void;
+  onNextChapter: () => void;
+  hasNextChapter: boolean;
+  hasPreviousChapter: boolean;
 }
 
 const BibleVersionPanel = ({
@@ -20,7 +24,11 @@ const BibleVersionPanel = ({
   canRemove,
   selectedBook,
   chapter,
-  versions
+  versions,
+  onPreviousChapter,
+  onNextChapter,
+  hasNextChapter,
+  hasPreviousChapter
 }: BibleVersionPanelProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -49,12 +57,52 @@ const BibleVersionPanel = ({
           </Button>
         )}
       </div>
+      <div className="flex justify-center gap-4 py-4 bg-white border-b">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onPreviousChapter}
+          disabled={!hasPreviousChapter}
+          title="Capítulo anterior"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onNextChapter}
+          disabled={!hasNextChapter}
+          title="Próximo capítulo"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Button>
+      </div>
       <div className="bible-text space-y-6 bg-white p-4 md:p-8 flex-1 overflow-y-auto">
         <BibleVerse 
           bookId={selectedBook}
           chapter={chapter}
           version={version.id}
         />
+      </div>
+      <div className="flex justify-center gap-4 py-4 bg-white border-t">
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onPreviousChapter}
+          disabled={!hasPreviousChapter}
+          title="Capítulo anterior"
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={onNextChapter}
+          disabled={!hasNextChapter}
+          title="Próximo capítulo"
+        >
+          <ArrowRight className="h-4 w-4" />
+        </Button>
       </div>
     </div>
   );

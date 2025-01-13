@@ -91,6 +91,42 @@ const BibleReader = () => {
     fetchChapterCount();
   }, [selectedBook]);
 
+  const handleNextChapter = () => {
+    const currentChapter = parseInt(chapter);
+    if (currentChapter < maxChapters) {
+      setChapter((currentChapter + 1).toString());
+    } else if (selectedBook < books.length) {
+      setSelectedBook(selectedBook + 1);
+      setChapter("1");
+    }
+  };
+
+  const handlePreviousChapter = () => {
+    const currentChapter = parseInt(chapter);
+    if (currentChapter > 1) {
+      setChapter((currentChapter - 1).toString());
+    } else if (selectedBook > 1) {
+      setSelectedBook(selectedBook - 1);
+      // Buscar o último capítulo do livro anterior
+      const fetchPreviousBookChapters = async () => {
+        const { data, error } = await supabase
+          .from('bible_chapters')
+          .select('chapter_number')
+          .eq('book_id', selectedBook - 1)
+          .order('chapter_number', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          setChapter(data[0].chapter_number.toString());
+        }
+      };
+      fetchPreviousBookChapters();
+    }
+  };
+
+  const hasNextChapter = parseInt(chapter) < maxChapters || selectedBook < books.length;
+  const hasPreviousChapter = parseInt(chapter) > 1 || selectedBook > 1;
+
   const addVersion = () => {
     if (versions.length >= 4) {
       toast({
@@ -101,7 +137,6 @@ const BibleReader = () => {
       return;
     }
 
-    // Por enquanto só temos ACF disponível
     const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
     setVersions([...versions, newVersion]);
     
@@ -165,6 +200,10 @@ const BibleReader = () => {
                 selectedBook={selectedBook}
                 chapter={chapter}
                 versions={BIBLE_VERSIONS}
+                onNextChapter={handleNextChapter}
+                onPreviousChapter={handlePreviousChapter}
+                hasNextChapter={hasNextChapter}
+                hasPreviousChapter={hasPreviousChapter}
               />
             </div>
           ))}
@@ -185,6 +224,10 @@ const BibleReader = () => {
                   selectedBook={selectedBook}
                   chapter={chapter}
                   versions={BIBLE_VERSIONS}
+                  onNextChapter={handleNextChapter}
+                  onPreviousChapter={handlePreviousChapter}
+                  hasNextChapter={hasNextChapter}
+                  hasPreviousChapter={hasPreviousChapter}
                 />
               </ResizablePanel>
               {index < versions.length - 1 && (
