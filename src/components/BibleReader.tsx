@@ -1,21 +1,13 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Book, BookOpen, Plus, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Book, BookOpen, Plus, X, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { useToast } from "@/hooks/use-toast";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleVerse from "./BibleVerse";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Book {
   id: number;
@@ -28,6 +20,7 @@ interface Version {
 }
 
 const BibleReader = () => {
+  const { toast } = useToast();
   const [versions, setVersions] = useState<Version[]>([
     { id: "ACF", name: "Almeida Corrigida Fiel" }
   ]);
@@ -87,6 +80,27 @@ const BibleReader = () => {
 
   const chapters = Array.from({ length: 50 }, (_, i) => (i + 1).toString());
   
+  const importBible = async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('import-github-bible');
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Sucesso!",
+        description: "A importação da Bíblia foi iniciada com sucesso.",
+      });
+      
+    } catch (error) {
+      console.error('Erro ao importar bíblia:', error);
+      toast({
+        title: "Erro",
+        description: "Houve um erro ao importar a Bíblia. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
@@ -123,6 +137,14 @@ const BibleReader = () => {
         </div>
 
         <div className="flex items-center gap-4 w-full md:w-auto">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={importBible}
+            className="relative"
+          >
+            <Download className="h-4 w-4" />
+          </Button>
           <Button
             variant="outline"
             size="icon"
