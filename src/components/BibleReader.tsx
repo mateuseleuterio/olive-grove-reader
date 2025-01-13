@@ -20,8 +20,8 @@ const BibleReader = () => {
   const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
-  const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<number>(1); // Genesis ID é 1
+  const [books, setBooks] = useState<Book[]>([{ id: 1, name: "Gênesis" }]); // Inicializa com Gênesis
+  const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -41,7 +41,6 @@ const BibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
-      setIsLoading(true);
       try {
         const { data, error } = await supabase
           .from('bible_books')
@@ -112,11 +111,6 @@ const BibleReader = () => {
     });
     setVersions(newVersions);
   };
-
-  // Não renderiza nada enquanto os livros estão carregando
-  if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[400px]">Carregando...</div>;
-  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
