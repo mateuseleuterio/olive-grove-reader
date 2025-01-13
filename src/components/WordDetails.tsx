@@ -3,6 +3,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useState } from "react";
 
 interface WordDetailsProps {
   word: string;
@@ -41,6 +42,7 @@ const hebrewWords: Record<string, { hebrew: string; transliteration: string; mea
 };
 
 const WordDetails = ({ word }: WordDetailsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const details = hebrewWords[word.toLowerCase()];
   
   if (!details) {
@@ -48,9 +50,12 @@ const WordDetails = ({ word }: WordDetailsProps) => {
   }
 
   return (
-    <HoverCard>
+    <HoverCard open={isOpen} onOpenChange={setIsOpen}>
       <HoverCardTrigger asChild>
-        <span className="cursor-pointer text-bible-accent hover:text-bible-navy hover:underline mr-1">
+        <span 
+          className="cursor-pointer text-bible-accent hover:text-bible-navy hover:underline mr-1"
+          onClick={() => setIsOpen(!isOpen)}
+        >
           {word}
         </span>
       </HoverCardTrigger>

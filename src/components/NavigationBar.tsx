@@ -96,18 +96,18 @@ const NavigationBar = () => {
 
   const MainMenuItems = () => (
     <>
-      <Link to="/bible">
-        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+      <Link to="/bible" className="w-full">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Bíblia
         </Button>
       </Link>
-      <Link to="/sermon-builder">
-        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+      <Link to="/sermon-builder" className="w-full">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Sermões
         </Button>
       </Link>
-      <Link to="/study">
-        <Button variant="ghost" className="text-white hover:bg-bible-accent">
+      <Link to="/study" className="w-full">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Estudo
         </Button>
       </Link>
@@ -116,24 +116,24 @@ const NavigationBar = () => {
 
   const SideMenuItems = () => (
     <>
-      <Link to="/" className="block">
-        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6">
+      <Link to="/" className="w-full">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           Blog
         </Button>
       </Link>
-      <Link to="/reading-plans" className="block">
+      <Link to="/reading-plans" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <BookOpen className="h-5 w-5" />
           Planos de Leitura
         </Button>
       </Link>
-      <Link to="/bible-challenge" className="block">
+      <Link to="/bible-challenge" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <Puzzle className="h-5 w-5" />
           Desafio Bíblico
         </Button>
       </Link>
-      <Link to="/mental-maps" className="block">
+      <Link to="/mental-maps" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <Brain className="h-5 w-5" />
           Mapas Mentais
@@ -156,8 +156,21 @@ const NavigationBar = () => {
               <SheetHeader className="p-6 border-b border-bible-accent">
                 <SheetTitle className="text-white text-xl">Menu</SheetTitle>
               </SheetHeader>
-              <div className="py-4">
+              <div className="py-4 flex flex-col gap-2">
+                <MainMenuItems />
+                <div className="border-t border-bible-accent my-4" />
                 <SideMenuItems />
+                <div className="border-t border-bible-accent my-4" />
+                <div className="px-6 flex flex-col gap-2">
+                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
+                    <Search className="h-5 w-5" />
+                    Pesquisar
+                  </Button>
+                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
+                    <Settings className="h-5 w-5" />
+                    Configurações
+                  </Button>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
@@ -166,7 +179,7 @@ const NavigationBar = () => {
           </Link>
         </div>
 
-        <NavigationMenu>
+        <NavigationMenu className="hidden md:flex">
           <NavigationMenuList className="flex gap-4">
             <NavigationMenuItem className="flex">
               <MainMenuItems />
@@ -175,12 +188,14 @@ const NavigationBar = () => {
         </NavigationMenu>
 
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
-            <Search className="h-5 w-5" />
-          </Button>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
-            <Settings className="h-5 w-5" />
-          </Button>
+          <div className="hidden md:flex">
+            <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
+              <Search className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
+              <Settings className="h-5 w-5" />
+            </Button>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
