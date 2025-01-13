@@ -11,9 +11,7 @@ interface Book {
 }
 
 const BIBLE_VERSIONS = {
-  "ACF": "Almeida Corrigida Fiel",
-  "NVI": "Nova Versão Internacional",
-  "ARA": "Almeida Revista e Atualizada"
+  "ACF": "Almeida Corrigida Fiel"
 } as const;
 
 type BibleVersion = keyof typeof BIBLE_VERSIONS;
@@ -40,7 +38,6 @@ const BibleReader = () => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Fetch books only once when component mounts
   useEffect(() => {
     const fetchBooks = async () => {
       const { data, error } = await supabase
@@ -54,15 +51,19 @@ const BibleReader = () => {
       }
 
       if (data) {
-        setBooks(data);
-        if (data.length > 0 && !selectedBook) {
-          setSelectedBook(data[0].id);
+        // Remover duplicatas baseado no nome do livro
+        const uniqueBooks = data.filter((book, index, self) =>
+          index === self.findIndex((b) => b.name === book.name)
+        );
+        setBooks(uniqueBooks);
+        if (uniqueBooks.length > 0 && !selectedBook) {
+          setSelectedBook(uniqueBooks[0].id);
         }
       }
     };
 
     fetchBooks();
-  }, []); // Empty dependency array means this runs once on mount
+  }, []); 
 
   useEffect(() => {
     const fetchChapterCount = async () => {
@@ -90,17 +91,13 @@ const BibleReader = () => {
   }, [selectedBook]);
 
   const addVersion = () => {
-    if (versions.length < 4) {
-      const unusedVersion = (Object.entries(BIBLE_VERSIONS) as [BibleVersion, string][])
-        .find(([id]) => !versions.some(v => v.id === id));
-      
-      if (unusedVersion) {
-        setVersions([...versions, { id: unusedVersion[0], name: unusedVersion[1] }]);
-      }
-    }
+    // Desabilitado pois só temos ACF
+    console.log('Apenas versão ACF disponível');
   };
 
   const removeVersion = (index: number) => {
+    // Não permitir remover a única versão
+    if (versions.length <= 1) return;
     const newVersions = versions.filter((_, i) => i !== index);
     setVersions(newVersions);
   };
