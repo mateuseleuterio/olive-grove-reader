@@ -54,6 +54,7 @@ const SermonEditor = () => {
     mutationFn: async (newSermon: SermonType) => {
       const dataToSave = {
         ...newSermon,
+        id: id || crypto.randomUUID(),
         points: newSermon.points as unknown as Json
       };
 
