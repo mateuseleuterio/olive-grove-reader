@@ -20,4 +20,4 @@ export interface SermonType {
   user_id: string;
 }
 
-export type SermonInput = Pick<SermonType, 'title' | 'user_id'> & Partial<Omit<SermonType, 'title' | 'user_id' | 'id'>>;
+export type SermonInput = Omit<SermonType, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>;
