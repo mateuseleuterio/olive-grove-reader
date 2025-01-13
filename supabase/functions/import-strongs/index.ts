@@ -6,7 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-// Handle CORS preflight requests
 const handleCors = (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
@@ -36,25 +35,31 @@ const processStrongsData = async (supabase: any, data: any, language: 'hebrew' |
   for (const [strongNumber, entry] of Object.entries(data)) {
     try {
       const { data: existingEntry, error: checkError } = await supabase
-        .from('strong_definitions')
+        .from('strongs_dictionary')
         .select('id')
         .eq('strong_number', strongNumber)
         .maybeSingle()
 
-      if (checkError) throw checkError
+      if (checkError) {
+        console.error(`Erro ao verificar entrada ${strongNumber}:`, checkError)
+        continue
+      }
       
       if (!existingEntry) {
         const { error: insertError } = await supabase
-          .from('strong_definitions')
+          .from('strongs_dictionary')
           .insert({
             strong_number: strongNumber,
             language,
+            hebrew_word: language === 'hebrew' ? (entry as any).word : '',
             transliteration: (entry as any).translit || '',
-            pronunciation: (entry as any).pron || '',
-            definition: (entry as any).def || '',
+            meaning: (entry as any).def || '',
+            portuguese_word: '' // Será preenchido posteriormente
           })
 
-        if (insertError) throw insertError
+        if (insertError) {
+          console.error(`Erro ao inserir entrada ${strongNumber}:`, insertError)
+        }
       }
     } catch (error) {
       console.error(`Erro ao processar entrada ${strongNumber}:`, error)
@@ -62,7 +67,7 @@ const processStrongsData = async (supabase: any, data: any, language: 'hebrew' |
   }
 }
 
-const serve_fn = async (req: Request) => {
+serve(async (req: Request) => {
   const corsResult = handleCors(req)
   if (corsResult) return corsResult
 
@@ -83,8 +88,6 @@ const serve_fn = async (req: Request) => {
     await processStrongsData(supabase, hebrewData, 'hebrew')
     await processStrongsData(supabase, greekData, 'greek')
     
-    console.log('Importação concluída com sucesso!')
-
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
@@ -96,6 +99,4 @@ const serve_fn = async (req: Request) => {
       status: 500,
     })
   }
-}
-
-serve(serve_fn)
+})

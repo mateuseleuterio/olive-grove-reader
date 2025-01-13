@@ -5,14 +5,7 @@ export interface SermonType {
   title: string;
   bible_text?: string | null;
   introduction?: string | null;
-  points?: Array<{
-    title: string;
-    content: string;
-    illustrations: Array<{
-      content: string;
-      type: string;
-    }>;
-  }> | null;
+  points?: Json | null;
   conclusion?: string | null;
   created_at?: string;
   updated_at?: string;
