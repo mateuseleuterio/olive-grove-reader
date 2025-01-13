@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthError } from "@supabase/supabase-js";
+import { Bible } from "lucide-react";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN") {
+      if (event === "SIGNED_IN" && session) {
         onClose();
         navigate("/");
       }
@@ -49,10 +50,13 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Entrar ou Cadastrar</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-md bg-bible-gray">
+        <DialogHeader className="text-center">
+          <div className="mx-auto mb-4 p-3 rounded-full bg-bible-navy/10">
+            <Bible className="h-8 w-8 text-bible-navy" />
+          </div>
+          <DialogTitle className="text-2xl font-serif text-bible-navy">Bem-vindo</DialogTitle>
+          <DialogDescription className="text-bible-text">
             Faça login ou crie uma conta para acessar todos os recursos.
           </DialogDescription>
         </DialogHeader>
@@ -68,10 +72,28 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
             variables: {
               default: {
                 colors: {
-                  brand: "#1e40af",
-                  brandAccent: "#1e3a8a",
+                  brand: "#556B2F",
+                  brandAccent: "#8B8B2B",
+                  brandButtonText: "white",
+                  defaultButtonBackground: "#FFFDF0",
+                  defaultButtonBackgroundHover: "#F5F3E6",
+                  inputBackground: "white",
+                  inputBorder: "#E2E8F0",
+                  inputBorderHover: "#556B2F",
+                  inputBorderFocus: "#556B2F",
+                },
+                borderRadii: {
+                  borderRadiusButton: "0.5rem",
+                  buttonBorderRadius: "0.5rem",
+                  inputBorderRadius: "0.5rem",
                 },
               },
+            },
+            className: {
+              container: "font-sans",
+              label: "text-bible-text",
+              button: "font-medium",
+              input: "font-sans",
             },
           }}
           localization={{
@@ -80,11 +102,22 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
                 email_label: "Email",
                 password_label: "Senha",
                 button_label: "Entrar",
+                loading_button_label: "Entrando...",
+                social_provider_text: "Entrar com {{provider}}",
+                link_text: "Já tem uma conta? Entre",
               },
               sign_up: {
                 email_label: "Email",
                 password_label: "Senha",
                 button_label: "Cadastrar",
+                loading_button_label: "Cadastrando...",
+                social_provider_text: "Cadastrar com {{provider}}",
+                link_text: "Não tem uma conta? Cadastre-se",
+              },
+              forgotten_password: {
+                button_label: "Recuperar senha",
+                loading_button_label: "Enviando instruções...",
+                link_text: "Esqueceu sua senha?",
               },
             },
           }}
