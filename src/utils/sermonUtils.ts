@@ -1,8 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { SermonType } from "@/types/sermon";
 
+type RequiredSermonFields = Pick<SermonType, 'title' | 'user_id'>;
+type OptionalSermonFields = Partial<Omit<SermonType, 'title' | 'user_id'>>;
+type SermonInput = RequiredSermonFields & OptionalSermonFields;
+
 export const saveSermon = async (
-  sermonData: Partial<SermonType>,
+  sermonData: SermonInput,
   isValidUUID: boolean,
   id?: string
 ) => {
