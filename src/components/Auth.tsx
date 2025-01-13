@@ -27,6 +27,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
+        console.log("Session found, closing modal");
         setErrorMessage("");
         onClose();
         navigate("/");
@@ -36,6 +37,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     checkSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event);
       if (event === "SIGNED_IN" && session) {
         console.log("User signed in successfully");
         setErrorMessage("");

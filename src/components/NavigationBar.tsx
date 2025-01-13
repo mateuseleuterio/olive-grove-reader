@@ -48,7 +48,7 @@ const NavigationBar = () => {
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
-            .maybeSingle();
+            .single();
 
           if (error) {
             console.error('Error fetching profile:', error);
@@ -73,6 +73,27 @@ const NavigationBar = () => {
     };
 
     getProfile();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (!error && data) {
+          setProfile(data);
+        }
+      }
+      if (event === 'SIGNED_OUT') {
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const handleLogout = async () => {
