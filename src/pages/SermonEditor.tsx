@@ -82,14 +82,14 @@ const SermonEditor = () => {
         data: { user },
       } = await supabase.auth.getUser();
 
-      let sermonData: Partial<SermonType> = {
+      let sermonData = {
         id: isValidUUID ? id : undefined,
         user_id: user?.id || '00000000-0000-0000-0000-000000000000', // Default anonymous user
         title: "",
-        bible_text: null,
-        introduction: null,
-        points: null,
-        conclusion: null,
+        bible_text: null as string | null,
+        introduction: null as string | null,
+        points: null as SermonType['points'] | null,
+        conclusion: null as string | null,
       };
 
       if (type === "blank" || (existingSermon && existingSermon.bible_text)) {
