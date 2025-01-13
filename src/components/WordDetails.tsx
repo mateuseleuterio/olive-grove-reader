@@ -34,7 +34,7 @@ const WordDetails = ({ word }: WordDetailsProps) => {
         }
 
         if (data) {
-          setStrongData(data);
+          setStrongData(data as StrongEntry);
         }
       } catch (error) {
         console.error('Erro:', error);

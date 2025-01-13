@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import PreachingToolbar from "@/components/sermon/PreachingToolbar";
 import SermonContent from "@/components/sermon/SermonContent";
-import type { SermonType } from "@/types/sermon";
+import type { SermonType, SermonPoint } from "@/types/sermon";
 
 const PreachingMode = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const PreachingMode = () => {
       // Ensure points is properly typed when coming from the database
       const typedSermon: SermonType = {
         ...data,
-        points: data?.points ? data.points as SermonType['points'] : null
+        points: data?.points ? data.points as SermonPoint[] : null
       };
       
       return typedSermon;
