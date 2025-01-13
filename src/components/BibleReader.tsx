@@ -26,6 +26,7 @@ const BibleReader = () => {
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [maxChapters, setMaxChapters] = useState(50);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -40,21 +41,28 @@ const BibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
-      const { data, error } = await supabase
-        .from('bible_books')
-        .select('id, name')
-        .order('position');
+      setIsLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('bible_books')
+          .select('id, name')
+          .order('position');
 
-      if (error) {
+        if (error) {
+          console.error('Erro ao buscar livros:', error);
+          return;
+        }
+
+        if (data) {
+          const uniqueBooks = data.filter((book, index, self) =>
+            index === self.findIndex((b) => b.name === book.name)
+          );
+          setBooks(uniqueBooks);
+        }
+      } catch (error) {
         console.error('Erro ao buscar livros:', error);
-        return;
-      }
-
-      if (data) {
-        const uniqueBooks = data.filter((book, index, self) =>
-          index === self.findIndex((b) => b.name === book.name)
-        );
-        setBooks(uniqueBooks);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -79,7 +87,6 @@ const BibleReader = () => {
 
       if (data && data.length > 0) {
         setMaxChapters(data[0].chapter_number);
-        setChapter("1");
       }
     };
 
@@ -105,6 +112,11 @@ const BibleReader = () => {
     });
     setVersions(newVersions);
   };
+
+  // Não renderiza nada enquanto os livros estão carregando
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-[400px]">Carregando...</div>;
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
