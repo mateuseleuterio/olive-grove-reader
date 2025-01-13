@@ -1,19 +1,17 @@
 import React from "react";
 import { useParams, useLocation } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import BlankSermonContainer from "@/components/sermon/BlankSermonContainer";
 import StructuredSermonContainer from "@/components/sermon/StructuredSermonContainer";
 import AISermonContainer from "@/components/sermon/AISermonContainer";
+import type { SermonType } from "@/types/sermon";
 
 const SermonEditor = () => {
   const location = useLocation();
   const { id } = useParams();
   const type = location.pathname.split("/").pop();
 
-  // Only fetch if id is a valid UUID
   const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 
   const { data: existingSermon, isLoading } = useQuery({
@@ -28,7 +26,7 @@ const SermonEditor = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as SermonType | null;
     },
     enabled: isValidUUID,
   });
@@ -42,6 +40,12 @@ const SermonEditor = () => {
       </div>
     );
   }
+
+  const defaultPoints = [{ 
+    title: "", 
+    content: "", 
+    illustrations: [] as Array<{ content: string; type: string }> 
+  }];
 
   return (
     <div className="min-h-screen bg-bible-gray p-8">
@@ -70,7 +74,7 @@ const SermonEditor = () => {
               id={id}
               initialTitle={existingSermon?.title || ""}
               initialIntroduction={existingSermon?.introduction || ""}
-              initialPoints={existingSermon?.points || [{ title: "", content: "", illustrations: [] }]}
+              initialPoints={existingSermon?.points || defaultPoints}
               initialConclusion={existingSermon?.conclusion || ""}
             />
           )}
