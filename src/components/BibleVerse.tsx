@@ -21,16 +21,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   useEffect(() => {
     const fetchVerses = async () => {
-      if (!bookId || !chapter || !version) {
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         setError(null);
 
-        // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
@@ -45,12 +39,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         }
 
         if (!chapterData) {
-          console.log('Capítulo não encontrado');
           setVerses([]);
           return;
         }
 
-        // Agora buscar os versículos usando o chapter_id
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
           .select(`
@@ -77,7 +69,9 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       }
     };
 
-    fetchVerses();
+    if (bookId && chapter && version) {
+      fetchVerses();
+    }
   }, [bookId, chapter, version]);
 
   const renderVerse = (text: string) => {
