@@ -1,8 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { SermonType } from "@/types/sermon";
 
-type RequiredSermonFields = Pick<SermonType, 'title' | 'user_id'>;
-type OptionalSermonFields = Partial<Omit<SermonType, 'title' | 'user_id'>>;
+type RequiredSermonFields = {
+  title: string;
+  user_id: string;
+};
+
+type OptionalSermonFields = Partial<Omit<SermonType, keyof RequiredSermonFields>>;
 type SermonInput = RequiredSermonFields & OptionalSermonFields;
 
 export const saveSermon = async (
@@ -10,7 +14,7 @@ export const saveSermon = async (
   isValidUUID: boolean,
   id?: string
 ) => {
-  console.log('Saving sermon with data:', sermonData); // Debug log
+  console.log('Saving sermon with data:', sermonData);
 
   if (isValidUUID && id) {
     const { data, error } = await supabase
@@ -21,7 +25,7 @@ export const saveSermon = async (
       .single();
 
     if (error) {
-      console.error('Error updating sermon:', error); // Debug log
+      console.error('Error updating sermon:', error);
       throw error;
     }
     return data;
@@ -33,7 +37,7 @@ export const saveSermon = async (
       .single();
 
     if (error) {
-      console.error('Error inserting sermon:', error); // Debug log
+      console.error('Error inserting sermon:', error);
       throw error;
     }
     return data;

@@ -11,6 +11,15 @@ export const useSermonManagement = (id?: string) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSaveSermon = async (sermonData: Partial<SermonType>) => {
+    if (!sermonData.title) {
+      toast({
+        title: "Erro",
+        description: "O título do sermão é obrigatório",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
       const {
@@ -19,13 +28,14 @@ export const useSermonManagement = (id?: string) => {
 
       const finalSermonData = {
         ...sermonData,
+        title: sermonData.title,
         user_id: user?.id || '00000000-0000-0000-0000-000000000000',
       };
 
       console.log('Saving sermon with data:', finalSermonData);
 
       const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      const result = await saveSermon(finalSermonData, isValidUUID, id);
+      const result = await saveSermon(finalSermonData as SermonType, isValidUUID, id);
 
       toast({
         title: "Sucesso",
