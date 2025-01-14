@@ -1,9 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "./WordDetails";
-import HebrewVerse from "./HebrewVerse";
-import { Button } from "./ui/button";
-import { ScrollText } from "lucide-react";
 
 interface BibleVerseProps {
   bookId: number;
@@ -20,12 +17,11 @@ interface Verse {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchVerses = async () => {
       try {
-        console.log('Fetching verses for:', { bookId, chapter, version });
+        // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
@@ -44,6 +40,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           return;
         }
 
+        // Agora buscar os versículos usando o chapter_id
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
           .select(`
@@ -71,8 +68,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     fetchVerses();
   }, [bookId, chapter, version]);
 
-  const toggleHebrewVerse = (verseNumber: number) => {
-    setSelectedVerse(selectedVerse === verseNumber ? null : verseNumber);
+  const renderVerse = (text: string) => {
+    return text.split(" ").map((word, index) => (
+      <WordDetails key={`${text}-${index}`} word={word} />
+    ));
   };
 
   if (loading) {
@@ -86,42 +85,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {verses.map((verse) => (
-        <div key={verse.id} className="space-y-2">
-          <div className="flex items-start justify-between gap-4">
-            <p className="break-words flex-1">
-              <span className="verse-number font-semibold mr-2">
-                {verse.verse_number}
-              </span>
-              {verse.text.split(" ").map((word, index) => (
-                <span
-                  key={`${verse.id}-${index}`}
-                  className="cursor-pointer hover:text-bible-accent inline-block mx-1 transition-colors"
-                >
-                  <WordDetails word={word} />
-                </span>
-              ))}
-            </p>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => toggleHebrewVerse(verse.verse_number)}
-              className="mt-1 hover:bg-gray-100"
-              title="Ver texto original"
-            >
-              <ScrollText className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {selectedVerse === verse.verse_number && (
-            <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-              <HebrewVerse 
-                bookId={bookId}
-                chapter={chapter}
-                verseNumber={verse.verse_number}
-              />
-            </div>
-          )}
-        </div>
+        <p key={verse.id} className="break-words">
+          <span className="verse-number">{verse.verse_number}</span>
+          {renderVerse(verse.text)}
+        </p>
       ))}
     </div>
   );

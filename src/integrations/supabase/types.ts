@@ -51,7 +51,6 @@ export type Database = {
           created_at: string
           id: number
           name: string
-          name_bsb: string | null
           position: number
           testament: string
         }
@@ -60,7 +59,6 @@ export type Database = {
           created_at?: string
           id?: number
           name: string
-          name_bsb?: string | null
           position: number
           testament: string
         }
@@ -69,7 +67,6 @@ export type Database = {
           created_at?: string
           id?: number
           name?: string
-          name_bsb?: string | null
           position?: number
           testament?: string
         }
@@ -284,82 +281,6 @@ export type Database = {
           title?: string
         }
         Relationships: []
-      }
-      hebrew_bible_verses: {
-        Row: {
-          chapter_id: number | null
-          created_at: string
-          hebrew_text: string
-          id: number
-          transliteration: string | null
-          verse_number: number
-        }
-        Insert: {
-          chapter_id?: number | null
-          created_at?: string
-          hebrew_text: string
-          id?: number
-          transliteration?: string | null
-          verse_number: number
-        }
-        Update: {
-          chapter_id?: number | null
-          created_at?: string
-          hebrew_text?: string
-          id?: number
-          transliteration?: string | null
-          verse_number?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hebrew_bible_verses_chapter_id_fkey"
-            columns: ["chapter_id"]
-            isOneToOne: false
-            referencedRelation: "bible_chapters"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      hebrew_word_parsing: {
-        Row: {
-          created_at: string
-          hebrew_word: string
-          id: number
-          morphology: string | null
-          strong_number: string | null
-          transliteration: string | null
-          verse_id: number | null
-          word_position: number
-        }
-        Insert: {
-          created_at?: string
-          hebrew_word: string
-          id?: number
-          morphology?: string | null
-          strong_number?: string | null
-          transliteration?: string | null
-          verse_id?: number | null
-          word_position: number
-        }
-        Update: {
-          created_at?: string
-          hebrew_word?: string
-          id?: number
-          morphology?: string | null
-          strong_number?: string | null
-          transliteration?: string | null
-          verse_id?: number | null
-          word_position?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "hebrew_word_parsing_verse_id_fkey"
-            columns: ["verse_id"]
-            isOneToOne: false
-            referencedRelation: "hebrew_bible_verses"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       historical_events: {
         Row: {

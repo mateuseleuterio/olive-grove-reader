@@ -1,17 +1,7 @@
 project_id = "rxhxhztskozxgiylygye"
 
-[api]
-enabled = true
-port = 54321
-schemas = ["public", "storage", "graphql_public"]
+[functions.import-github-bible]
+verify_jwt = false
 
-[db]
-port = 54322
-
-[studio]
-enabled = true
-port = 54323
-
-[[functions]]
-name = "import-hebrew-bible"
+[functions.import-strongs]
 verify_jwt = false
