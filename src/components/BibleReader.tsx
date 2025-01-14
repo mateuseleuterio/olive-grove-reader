@@ -14,9 +14,6 @@ interface Book {
 const BIBLE_VERSIONS = {
   "ACF": "Almeida Corrigida Fiel",
   "AA": "Almeida Atualizada",
-  "NVI": "Nova Versão Internacional",
-  "RA": "Almeida Revista e Atualizada",
-  "NTLH": "Nova Tradução na Linguagem de Hoje",
   "KJF": "King James 1611"
 } as const;
 
