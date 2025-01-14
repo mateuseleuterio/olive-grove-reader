@@ -2,14 +2,6 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import BibleControls from "@/components/bible/BibleControls";
 import HebrewVersePanel from "@/components/hebrew-bible/HebrewVersePanel";
 
@@ -57,7 +49,11 @@ const HebrewBible = () => {
   };
 
   if (isLoadingBooks) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-pulse text-bible-navy">Carregando...</div>
+      </div>
+    );
   }
 
   return (
@@ -76,12 +72,12 @@ const HebrewBible = () => {
         versionsCount={1}
       />
 
-      <div className="grid grid-cols-1 gap-6">
+      <ScrollArea className="h-[calc(100vh-300px)] mt-6">
         <HebrewVersePanel
           selectedBook={selectedBook}
           chapter={chapter}
         />
-      </div>
+      </ScrollArea>
     </div>
   );
 };

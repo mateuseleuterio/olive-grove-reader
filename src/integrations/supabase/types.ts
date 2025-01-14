@@ -323,30 +323,54 @@ export type Database = {
       hebrew_word_parsing: {
         Row: {
           created_at: string
+          gender: string | null
           hebrew_word: string
           id: number
+          lexeme: string | null
           morphology: string | null
+          number: string | null
+          part_of_speech: string | null
+          person: string | null
+          state: string | null
+          stem: string | null
           strong_number: string | null
+          tense: string | null
           transliteration: string | null
           verse_id: number | null
           word_position: number
         }
         Insert: {
           created_at?: string
+          gender?: string | null
           hebrew_word: string
           id?: number
+          lexeme?: string | null
           morphology?: string | null
+          number?: string | null
+          part_of_speech?: string | null
+          person?: string | null
+          state?: string | null
+          stem?: string | null
           strong_number?: string | null
+          tense?: string | null
           transliteration?: string | null
           verse_id?: number | null
           word_position: number
         }
         Update: {
           created_at?: string
+          gender?: string | null
           hebrew_word?: string
           id?: number
+          lexeme?: string | null
           morphology?: string | null
+          number?: string | null
+          part_of_speech?: string | null
+          person?: string | null
+          state?: string | null
+          stem?: string | null
           strong_number?: string | null
+          tense?: string | null
           transliteration?: string | null
           verse_id?: number | null
           word_position?: number

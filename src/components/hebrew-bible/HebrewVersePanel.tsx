@@ -21,7 +21,7 @@ const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
 
       if (!chapterData) return [];
 
-      // Agora buscar os versículos em hebraico
+      // Agora buscar os versículos em hebraico com o parsing completo
       const { data, error } = await supabase
         .from('hebrew_bible_verses')
         .select(`
@@ -33,19 +33,43 @@ const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
             hebrew_word,
             transliteration,
             morphology,
-            strong_number
+            strong_number,
+            lexeme,
+            part_of_speech,
+            person,
+            gender,
+            number,
+            state,
+            stem,
+            tense
           )
         `)
         .eq('chapter_id', chapterData.id)
         .order('verse_number');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching verses:', error);
+        throw error;
+      }
+      
       return data || [];
     },
   });
 
   if (isLoading) {
-    return <div>Carregando versículos...</div>;
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-pulse text-bible-navy">Carregando versículos...</div>
+      </div>
+    );
+  }
+
+  if (!verses.length) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="text-bible-navy">Nenhum versículo encontrado.</div>
+      </div>
+    );
   }
 
   return (
