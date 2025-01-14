@@ -76,7 +76,7 @@ const BibleControls = ({
           size="icon"
           onClick={onAddVersion}
           disabled={versionsCount >= 4}
-          className="relative"
+          className="relative hidden"
           title="Adicionar versão"
         >
           <Plus className="h-4 w-4" />
