@@ -9,24 +9,32 @@ export const useUserRole = () => {
 
   useEffect(() => {
     const fetchUserRoles = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: userRoles, error } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          const { data: userRoles, error } = await supabase
+            .from('user_roles')
+            .select('role')
+            .eq('user_id', session.user.id)
+            .single();
 
-        if (error) {
-          console.error('Error fetching user roles:', error);
-          setRoles([]);
+          if (error) {
+            console.error('Error fetching user roles:', error);
+            setRoles([]);
+          } else {
+            // Se encontrou um role, adiciona ao array
+            setRoles(userRoles ? [userRoles.role as UserRole] : []);
+          }
         } else {
-          setRoles(userRoles?.map(r => r.role as UserRole) || []);
+          setRoles([]);
         }
-      } else {
+      } catch (error) {
+        console.error('Error:', error);
         setRoles([]);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     fetchUserRoles();
