@@ -50,6 +50,11 @@ const BibleReader = () => {
 
       if (error) {
         console.error('Erro ao buscar livros:', error);
+        toast({
+          title: "Erro ao carregar livros",
+          description: "Não foi possível carregar a lista de livros.",
+          variant: "destructive",
+        });
         return;
       }
 
