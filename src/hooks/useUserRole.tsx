@@ -16,15 +16,16 @@ export const useUserRole = () => {
           const { data: userRoles, error } = await supabase
             .from('user_roles')
             .select('role')
-            .eq('user_id', session.user.id)
-            .single();
+            .eq('user_id', session.user.id);
 
           if (error) {
             console.error('Error fetching user roles:', error);
             setRoles([]);
           } else {
-            // Se encontrou um role, adiciona ao array
-            setRoles(userRoles ? [userRoles.role as UserRole] : []);
+            // Convertemos o array de roles para o formato esperado
+            const roleArray = userRoles?.map(role => role.role as UserRole) || [];
+            console.log('Roles encontrados:', roleArray); // Debug
+            setRoles(roleArray);
           }
         } else {
           setRoles([]);
@@ -46,7 +47,10 @@ export const useUserRole = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const hasRole = (role: UserRole) => roles.includes(role);
+  const hasRole = (role: UserRole) => {
+    console.log('Checking role:', role, 'Current roles:', roles); // Debug
+    return roles.includes(role);
+  };
   const isAdmin = () => hasRole('admin');
   const isEditor = () => hasRole('editor');
   const canManageArticles = () => isAdmin() || isEditor();
