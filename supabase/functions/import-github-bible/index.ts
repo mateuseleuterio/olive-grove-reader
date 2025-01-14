@@ -10,6 +10,7 @@ const BATCH_SIZE = 5; // Reduced batch size even more
 const BATCH_DELAY = 500; // Increased delay between batches
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
