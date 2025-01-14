@@ -49,19 +49,23 @@ const NavigationBar = () => {
     navigate("/");
   };
 
+  const handleMenuItemClick = () => {
+    setIsMenuOpen(false);
+  };
+
   const MainMenuItems = () => (
     <>
-      <Link to="/bible" className="w-full">
+      <Link to="/bible" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Bíblia
         </Button>
       </Link>
-      <Link to="/sermon-builder" className="w-full">
+      <Link to="/sermon-builder" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Sermões
         </Button>
       </Link>
-      <Link to="/blog" className="w-full">
+      <Link to="/blog" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Blog
         </Button>
@@ -71,24 +75,24 @@ const NavigationBar = () => {
 
   const SideMenuItems = () => (
     <>
-      <Link to="/blog" className="w-full">
+      <Link to="/blog" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           Blog
         </Button>
       </Link>
-      <Link to="/reading-plans" className="w-full">
+      <Link to="/reading-plans" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <BookOpen className="h-5 w-5" />
           Planos de Leitura
         </Button>
       </Link>
-      <Link to="/bible-challenge" className="w-full">
+      <Link to="/bible-challenge" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <Puzzle className="h-5 w-5" />
           Desafio Bíblico
         </Button>
       </Link>
-      <Link to="/mental-maps" className="w-full">
+      <Link to="/mental-maps" className="w-full" onClick={handleMenuItemClick}>
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           <Brain className="h-5 w-5" />
           Mapas Mentais
@@ -159,11 +163,11 @@ const NavigationBar = () => {
                 <SideMenuItems />
                 <div className="border-t border-bible-accent my-4" />
                 <div className="px-6 flex flex-col gap-2">
-                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
+                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3" onClick={handleMenuItemClick}>
                     <Search className="h-5 w-5" />
                     Pesquisar
                   </Button>
-                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
+                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3" onClick={handleMenuItemClick}>
                     <Settings className="h-5 w-5" />
                     Configurações
                   </Button>
