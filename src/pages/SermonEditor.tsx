@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
 import { Card } from "@/components/ui/card";
+import { Plus, Trash2 } from "lucide-react";
 
 const SermonEditor = () => {
   const navigate = useNavigate();
@@ -14,9 +15,9 @@ const SermonEditor = () => {
     title: "",
     introduction: "",
     points: [{
-      title: "Desenvolvimento",
+      title: "Ponto 1",
       content: "",
-      illustrations: [] // Adicionando o array de illustrations requerido
+      illustrations: []
     }],
     conclusion: "",
   });
@@ -29,6 +30,27 @@ const SermonEditor = () => {
     } catch (error) {
       console.error('Error saving sermon:', error);
     }
+  };
+
+  const addPoint = () => {
+    setSermon(prev => ({
+      ...prev,
+      points: [
+        ...prev.points,
+        {
+          title: `Ponto ${prev.points.length + 1}`,
+          content: "",
+          illustrations: []
+        }
+      ]
+    }));
+  };
+
+  const removePoint = (index: number) => {
+    setSermon(prev => ({
+      ...prev,
+      points: prev.points.filter((_, i) => i !== index)
+    }));
   };
 
   return (
@@ -57,18 +79,50 @@ const SermonEditor = () => {
             />
           </div>
 
-          <div>
-            <Label htmlFor="development">Desenvolvimento</Label>
-            <Textarea
-              id="development"
-              value={sermon.points[0].content}
-              onChange={e => setSermon(prev => ({
-                ...prev,
-                points: [{ ...prev.points[0], content: e.target.value }]
-              }))}
-              placeholder="Digite o desenvolvimento do sermão"
-              className="min-h-[200px]"
-            />
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <Label>Desenvolvimento</Label>
+              <Button
+                type="button"
+                onClick={addPoint}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Adicionar Ponto
+              </Button>
+            </div>
+            
+            {sermon.points.map((point, index) => (
+              <div key={index} className="space-y-2 p-4 border rounded-lg relative">
+                <div className="flex items-center justify-between mb-2">
+                  <Label>{point.title}</Label>
+                  {sermon.points.length > 1 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removePoint(index)}
+                      className="text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  )}
+                </div>
+                <Textarea
+                  value={point.content}
+                  onChange={e => setSermon(prev => ({
+                    ...prev,
+                    points: prev.points.map((p, i) =>
+                      i === index ? { ...p, content: e.target.value } : p
+                    )
+                  }))}
+                  placeholder={`Digite o conteúdo do ${point.title.toLowerCase()}`}
+                  className="min-h-[100px]"
+                />
+              </div>
+            ))}
           </div>
 
           <div>
