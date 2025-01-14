@@ -13,6 +13,11 @@ interface StructuredSermonContainerProps {
   id?: string;
 }
 
+const isValidUUID = (uuid: string) => {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+};
+
 const StructuredSermonContainer = ({
   initialTitle = "",
   initialIntroduction = "",
@@ -37,6 +42,32 @@ const StructuredSermonContainer = ({
     
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchSermon = async () => {
+      if (!id || !isValidUUID(id)) return;
+
+      const { data: sermon, error } = await supabase
+        .from("sermons")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching sermon:', error);
+        return;
+      }
+
+      if (sermon) {
+        setTitle(sermon.title);
+        setIntroduction(sermon.introduction || "");
+        setPoints(sermon.points || [{ title: "", content: "", illustrations: [] }]);
+        setConclusion(sermon.conclusion || "");
+      }
+    };
+
+    fetchSermon();
+  }, [id]);
 
   const onSave = async () => {
     const { data: { user } } = await supabase.auth.getUser();
