@@ -6,7 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BATCH_SIZE = 100; // Processar 100 versículos por vez
+const BATCH_SIZE = 50; // Reduzido para 50 versículos por vez
+const BATCH_DELAY = 500; // Aumentado para 500ms
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -39,7 +40,7 @@ serve(async (req) => {
     }
     
     const responseText = await response.text();
-    console.log('Resposta bruta do GitHub:', responseText.substring(0, 500) + '...');
+    console.log('Resposta recebida do GitHub, iniciando processamento...');
     
     let bibleData;
     try {
@@ -49,12 +50,7 @@ serve(async (req) => {
       throw new Error('JSON inválido recebido da API');
     }
 
-    console.log('Estrutura dos dados:', {
-      tipo: typeof bibleData,
-      eArray: Array.isArray(bibleData),
-      tamanho: Array.isArray(bibleData) ? bibleData.length : 0,
-      amostra: Array.isArray(bibleData) ? JSON.stringify(bibleData[0]).substring(0, 200) : null
-    });
+    console.log('Dados JSON parseados com sucesso');
 
     if (!Array.isArray(bibleData)) {
       throw new Error('Dados inválidos: não é um array');
@@ -66,7 +62,7 @@ serve(async (req) => {
 
     for (const book of bibleData) {
       try {
-        console.log(`\nProcessando livro:`, book.name);
+        console.log(`\nProcessando livro: ${book.name}`);
         
         if (!book || typeof book !== 'object') {
           errors.push({ error: 'Livro inválido', data: book });
@@ -134,33 +130,41 @@ serve(async (req) => {
             continue;
           }
 
-          // Processar versículos em lotes
           for (let i = 0; i < chapter.length; i += BATCH_SIZE) {
-            const verseBatch = chapter.slice(i, i + BATCH_SIZE);
-            const verses = verseBatch.map((text: string, index: number) => ({
-              chapter_id: chapterData.id,
-              verse_number: i + index + 1,
-              text: text || '',
-              version: 'AA'
-            }));
+            try {
+              const verseBatch = chapter.slice(i, i + BATCH_SIZE);
+              const verses = verseBatch.map((text: string, index: number) => ({
+                chapter_id: chapterData.id,
+                verse_number: i + index + 1,
+                text: text || '',
+                version: 'AA'
+              }));
 
-            console.log(`Inserindo lote de ${verses.length} versículos para ${book.name} ${chapterNumber}`);
+              console.log(`Inserindo lote ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(chapter.length / BATCH_SIZE)} (${verses.length} versículos) para ${book.name} ${chapterNumber}`);
 
-            const { error: versesError } = await supabaseClient
-              .from('bible_verses')
-              .insert(verses);
+              const { error: versesError } = await supabaseClient
+                .from('bible_verses')
+                .insert(verses);
 
-            if (versesError) {
-              console.error(`Erro ao inserir lote de versículos do capítulo ${chapterNumber}:`, versesError);
-              errors.push({ book: book.name, chapter: chapterNumber, error: versesError });
-              continue;
+              if (versesError) {
+                throw versesError;
+              }
+
+              totalVerses += verses.length;
+              console.log(`✓ Lote processado com sucesso`);
+              
+              await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
+            } catch (error) {
+              console.error(`Erro ao processar lote de versículos:`, error);
+              errors.push({ 
+                book: book.name, 
+                chapter: chapterNumber, 
+                batch: Math.floor(i / BATCH_SIZE) + 1,
+                error 
+              });
+              // Continua para o próximo lote mesmo com erro
+              await new Promise(resolve => setTimeout(resolve, BATCH_DELAY * 2));
             }
-
-            totalVerses += verses.length;
-            console.log(`✓ Lote de ${verses.length} versículos inseridos para ${book.name} ${chapterNumber}`);
-            
-            // Pequena pausa entre os lotes para evitar sobrecarga
-            await new Promise(resolve => setTimeout(resolve, 100));
           }
         }
 
