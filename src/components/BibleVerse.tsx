@@ -21,7 +21,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   useEffect(() => {
     const fetchVerses = async () => {
       try {
-        console.log("Fetching verses for:", { bookId, chapter, version });
+        console.log("Iniciando busca de versículos:", { bookId, chapter, version });
         
         // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
@@ -37,10 +37,12 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         }
 
         if (!chapterData) {
-          console.log('Capítulo não encontrado');
+          console.log('Capítulo não encontrado para:', { bookId, chapter });
           setVerses([]);
           return;
         }
+
+        console.log('Chapter ID encontrado:', chapterData.id);
 
         // Agora buscar os versículos usando o chapter_id
         const { data: versesData, error: versesError } = await supabase
@@ -51,15 +53,28 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             text
           `)
           .eq('version', version)
-          .eq('chapter_id', chapterData.id)
-          .order('verse_number');
+          .eq('chapter_id', chapterData.id);
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
           return;
         }
 
-        console.log("Verses found:", versesData?.length);
+        // Log detalhado dos versículos encontrados
+        console.log("Versículos encontrados:", {
+          quantidade: versesData?.length,
+          version,
+          chapterId: chapterData.id,
+          primeiroVersiculo: versesData?.[0]
+        });
+
+        if (!versesData || versesData.length === 0) {
+          console.log('Nenhum versículo encontrado para:', {
+            version,
+            chapterId: chapterData.id
+          });
+        }
+
         setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
