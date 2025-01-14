@@ -21,7 +21,7 @@ serve(async (req) => {
       )
     }
 
-    console.log(`Importing Bible version: ${version}`)
+    console.log(`Iniciando importação da versão: ${version}`)
 
     // Create Supabase client
     const supabaseClient = createClient(
@@ -30,14 +30,17 @@ serve(async (req) => {
     )
 
     // Fetch Bible data from GitHub
-    // Usando o caminho correto do repositório e o nome do arquivo em minúsculo
-    const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`)
+    const githubUrl = `https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`
+    console.log(`Buscando dados da Bíblia em: ${githubUrl}`)
+    
+    const response = await fetch(githubUrl)
     if (!response.ok) {
+      console.error(`Erro ao buscar dados: ${response.status} - ${response.statusText}`)
       throw new Error(`Failed to fetch Bible data: ${response.statusText}`)
     }
     
     const bibleData = await response.json()
-    console.log(`Bible data fetched successfully for version ${version}`)
+    console.log(`Dados da Bíblia obtidos com sucesso para versão ${version}`)
 
     let processedCount = 0
     
@@ -51,11 +54,11 @@ serve(async (req) => {
           .single()
 
         if (bookError) {
-          console.error(`Error finding book ${book.name}:`, bookError)
+          console.error(`Erro ao buscar livro ${book.name}:`, bookError)
           continue
         }
 
-        console.log(`Processing book: ${book.name}`)
+        console.log(`Processando livro: ${book.name}`)
 
         // Insert chapters and verses
         for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
@@ -68,11 +71,11 @@ serve(async (req) => {
             .single()
 
           if (chapterError) {
-            console.error(`Error finding chapter ${chapterIndex + 1} for book ${book.name}:`, chapterError)
+            console.error(`Erro ao buscar capítulo ${chapterIndex + 1} do livro ${book.name}:`, chapterError)
             continue
           }
 
-          console.log(`Processing chapter ${chapterIndex + 1} for book ${book.name}`)
+          console.log(`Processando capítulo ${chapterIndex + 1} do livro ${book.name}`)
 
           // Insert verses
           const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
@@ -87,16 +90,16 @@ serve(async (req) => {
             .insert(verses)
 
           if (versesError) {
-            console.error(`Error inserting verses for chapter ${chapterIndex + 1} of book ${book.name}:`, versesError)
+            console.error(`Erro ao inserir versículos do capítulo ${chapterIndex + 1} do livro ${book.name}:`, versesError)
             continue
           }
 
-          console.log(`Inserted verses for chapter ${chapterIndex + 1} of book ${book.name}`)
+          console.log(`Versículos inseridos para o capítulo ${chapterIndex + 1} do livro ${book.name}`)
         }
 
         processedCount++
       } catch (error) {
-        console.error(`Error processing book ${book.name}:`, error)
+        console.error(`Erro ao processar livro ${book.name}:`, error)
         continue
       }
     }
@@ -115,7 +118,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in import-github-bibles function:', error)
+    console.error('Erro na função import-github-bibles:', error)
     return new Response(
       JSON.stringify({ 
         success: false,
