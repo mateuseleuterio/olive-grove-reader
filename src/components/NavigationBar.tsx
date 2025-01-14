@@ -61,9 +61,9 @@ const NavigationBar = () => {
           Sermões
         </Button>
       </Link>
-      <Link to="/study" className="w-full">
+      <Link to="/blog" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
-          Estudo
+          Blog
         </Button>
       </Link>
     </>
