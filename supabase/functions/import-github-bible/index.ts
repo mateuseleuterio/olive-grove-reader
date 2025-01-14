@@ -13,6 +13,7 @@ const BATCH_SIZE = 100;
 const BATCH_DELAY = 50;
 
 serve(async (req) => {
+  // Always handle CORS preflight requests first
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -66,7 +67,11 @@ serve(async (req) => {
     }
 
     console.log(`Fetching Bible data from ${sourceUrl}`);
-    const response = await fetch(sourceUrl);
+    const response = await fetch(sourceUrl, { 
+      headers: { 'Accept': 'application/json' },
+      signal: AbortSignal.timeout(30000) // 30 second timeout
+    });
+    
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible data: ${response.statusText}`);
     }
