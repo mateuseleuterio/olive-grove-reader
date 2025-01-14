@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Settings, X, BookOpen, Brain, Puzzle, LogIn, UserCircle, LogOut } from "lucide-react";
+import { Menu, Search, Settings, X, BookOpen, Brain, Puzzle, LogIn, UserCircle, LogOut, Map } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -171,8 +171,8 @@ const NavigationBar = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
-            {/* Aqui você pode mudar o nome que aparece na barra de navegação */}
+          <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors flex items-center gap-2">
+            <Map className="h-6 w-6" />
             MyBibleMap
           </Link>
         </div>
