@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { SermonType, SermonInput } from "@/types/sermon";
+import type { Json } from "@/integrations/supabase/types";
 
 export const useSermonManagement = (id?: string) => {
   const navigate = useNavigate();
@@ -28,12 +29,13 @@ export const useSermonManagement = (id?: string) => {
 
       console.log('Current user:', user);
 
-      const finalSermonData: SermonInput = {
+      // Cast points to Json type for Supabase compatibility
+      const finalSermonData = {
         title: sermonData.title,
         user_id: user?.id || '00000000-0000-0000-0000-000000000000',
         bible_text: sermonData.bible_text,
         introduction: sermonData.introduction,
-        points: sermonData.points,
+        points: sermonData.points as unknown as Json,
         conclusion: sermonData.conclusion,
       };
 
@@ -55,7 +57,7 @@ export const useSermonManagement = (id?: string) => {
       } else {
         const { data, error } = await supabase
           .from('sermons')
-          .insert([finalSermonData])
+          .insert(finalSermonData)
           .select()
           .single();
 
