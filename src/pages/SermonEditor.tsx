@@ -1,32 +1,33 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { Json } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus as PlusIcon, Trash as TrashIcon } from "lucide-react";
-import type { SermonType, SermonPoint, Illustration } from "@/types/sermon";
+import type { SermonType } from "@/types/sermon";
+import { useSermonManagement } from "@/hooks/useSermonManagement";
 
 const SermonEditor = () => {
-  const { id, type } = useParams();
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
+  const { handleSaveSermon } = useSermonManagement();
   const [sermon, setSermon] = useState<SermonType>({
     title: "",
     bible_text: "",
     introduction: "",
     points: [],
     conclusion: "",
-    user_id: "user123" // TODO: Get from auth
+    user_id: "" // This will be set by the useSermonManagement hook
   });
 
-  const { data: existingSermon } = useQuery({
+  const { data: existingSermon, isLoading } = useQuery({
     queryKey: ['sermon', id],
     queryFn: async () => {
-      if (!id || type === 'new') return null;
+      if (!id || id === 'blank') return null;
+      
       const { data, error } = await supabase
         .from('sermons')
         .select('*')
@@ -34,14 +35,9 @@ const SermonEditor = () => {
         .maybeSingle();
 
       if (error) throw error;
-      if (!data) throw new Error('Sermão não encontrado');
-
-      return {
-        ...data,
-        points: data.points as unknown as SermonPoint[]
-      } as SermonType;
+      return data;
     },
-    enabled: !!id && type !== 'new'
+    enabled: !!id && id !== 'blank'
   });
 
   useEffect(() => {
@@ -49,40 +45,6 @@ const SermonEditor = () => {
       setSermon(existingSermon);
     }
   }, [existingSermon]);
-
-  const saveSermonMutation = useMutation({
-    mutationFn: async (newSermon: SermonType) => {
-      const dataToSave = {
-        ...newSermon,
-        points: newSermon.points as unknown as Json
-      };
-
-      if (id && type !== 'new') {
-        const { data, error } = await supabase
-          .from('sermons')
-          .update(dataToSave)
-          .eq('id', id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      } else {
-        const { data, error } = await supabase
-          .from('sermons')
-          .insert([dataToSave])
-          .select()
-          .single();
-
-        if (error) throw error;
-        return data;
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sermon'] });
-      navigate('/sermon-builder');
-    }
-  });
 
   const handleAddPoint = () => {
     setSermon(prev => ({
@@ -110,7 +72,7 @@ const SermonEditor = () => {
             ...point,
             illustrations: [
               ...point.illustrations,
-              { content: "", type: "text" } as Illustration
+              { content: "", type: "text" }
             ]
           };
         }
@@ -134,18 +96,22 @@ const SermonEditor = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    saveSermonMutation.mutate(sermon);
-  };
+  if (isLoading) {
+    return <div className="flex items-center justify-center min-h-screen">Carregando...</div>;
+  }
+
+  const isNewSermon = !id || id === 'blank';
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">
-        {id && type !== 'new' ? 'Editar Sermão' : 'Novo Sermão'}
+        {isNewSermon ? 'Novo Sermão' : 'Editar Sermão'}
       </h1>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={(e) => {
+        e.preventDefault();
+        handleSaveSermon(sermon);
+      }} className="space-y-6">
         <div>
           <Label htmlFor="title">Título</Label>
           <Input
@@ -162,7 +128,6 @@ const SermonEditor = () => {
             id="bible_text"
             value={sermon.bible_text}
             onChange={e => setSermon(prev => ({ ...prev, bible_text: e.target.value }))}
-            required
           />
         </div>
 
@@ -172,7 +137,6 @@ const SermonEditor = () => {
             id="introduction"
             value={sermon.introduction}
             onChange={e => setSermon(prev => ({ ...prev, introduction: e.target.value }))}
-            required
           />
         </div>
 
@@ -276,7 +240,6 @@ const SermonEditor = () => {
             id="conclusion"
             value={sermon.conclusion}
             onChange={e => setSermon(prev => ({ ...prev, conclusion: e.target.value }))}
-            required
           />
         </div>
 
@@ -289,7 +252,7 @@ const SermonEditor = () => {
             Cancelar
           </Button>
           <Button type="submit">
-            {id && type !== 'new' ? 'Salvar Alterações' : 'Criar Sermão'}
+            {isNewSermon ? 'Criar Sermão' : 'Salvar Alterações'}
           </Button>
         </div>
       </form>
