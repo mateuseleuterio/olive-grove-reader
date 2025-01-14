@@ -32,7 +32,6 @@ const BibleReader = () => {
   useEffect(() => {
     const fetchAvailableVersions = async () => {
       try {
-        // Using a different approach instead of .distinct()
         const { data, error } = await supabase
           .from('bible_verses')
           .select('version')
@@ -84,9 +83,20 @@ const BibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
+      // Get the current version
+      const currentVersion = versions[0]?.id;
+      
       const { data, error } = await supabase
         .from('bible_books')
-        .select('id, name, position')
+        .select(`
+          id,
+          name,
+          position,
+          bible_verses!inner (
+            version
+          )
+        `)
+        .eq('bible_verses.version', currentVersion)
         .order('position');
 
       if (error) {
@@ -110,8 +120,10 @@ const BibleReader = () => {
       }
     };
 
-    fetchBooks();
-  }, []); 
+    if (versions.length > 0) {
+      fetchBooks();
+    }
+  }, [versions]); 
 
   useEffect(() => {
     const fetchChapterCount = async () => {
@@ -184,13 +196,14 @@ const BibleReader = () => {
       return;
     }
 
-    // Adicionar a próxima versão disponível que ainda não está sendo exibida
+    // Add the next available version that isn't already being displayed
     const availableVersions = Object.entries(BIBLE_VERSIONS)
       .map(([id, name]) => ({ id: id as BibleVersion, name }))
       .filter(v => !versions.some(existing => existing.id === v.id));
 
     if (availableVersions.length > 0) {
-      setVersions([...versions, availableVersions[0]]);
+      const newVersions = [...versions, availableVersions[0]];
+      setVersions(newVersions);
       toast({
         title: "Versão adicionada",
         description: "Uma nova versão foi adicionada para comparação.",
