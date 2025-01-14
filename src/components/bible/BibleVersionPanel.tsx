@@ -35,6 +35,7 @@ const BibleVersionPanel = ({
 
   const handleVersionChange = async (newVersion: string) => {
     try {
+      console.log('Mudando para versão:', newVersion);
       onVersionChange(newVersion);
     } catch (error) {
       console.error('Erro ao mudar versão:', error);

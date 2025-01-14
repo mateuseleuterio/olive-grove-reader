@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "./WordDetails";
+import { useToast } from "@/hooks/use-toast";
 
 interface BibleVerseProps {
   bookId: number;
@@ -17,6 +18,7 @@ interface Verse {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -34,6 +36,11 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (chapterError) {
           console.error('Erro ao buscar capítulo:', chapterError);
+          toast({
+            title: "Erro ao carregar capítulo",
+            description: "Não foi possível encontrar o capítulo solicitado.",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -59,20 +66,38 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
+          toast({
+            title: "Erro ao carregar versículos",
+            description: "Não foi possível carregar os versículos desta versão.",
+            variant: "destructive",
+          });
           return;
+        }
+
+        if (!versesData || versesData.length === 0) {
+          toast({
+            title: "Versão não disponível",
+            description: `A versão ${version} não está disponível para este texto.`,
+            variant: "destructive",
+          });
         }
 
         console.log(`${versesData?.length || 0} versículos encontrados`);
         setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao carregar os versículos.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchVerses();
-  }, [bookId, chapter, version]); // Adicionado version como dependência
+  }, [bookId, chapter, version, toast]);
 
   const renderVerse = (text: string) => {
     return text.split(" ").map((word, index) => (
@@ -81,11 +106,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   };
 
   if (loading) {
-    return <div>Carregando...</div>;
+    return <div className="flex justify-center items-center p-4">Carregando...</div>;
   }
 
   if (verses.length === 0) {
-    return <div>Nenhum versículo encontrado</div>;
+    return (
+      <div className="flex justify-center items-center p-4 text-muted-foreground">
+        Nenhum versículo encontrado para esta versão
+      </div>
+    );
   }
 
   return (
