@@ -12,7 +12,8 @@ interface Book {
 }
 
 const BIBLE_VERSIONS = {
-  "ACF": "Almeida Corrigida Fiel"
+  "ACF": "Almeida Corrigida Fiel",
+  "BSB": "Berean Study Bible"
 } as const;
 
 type BibleVersion = keyof typeof BIBLE_VERSIONS;
