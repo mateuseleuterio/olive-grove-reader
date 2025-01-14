@@ -101,6 +101,11 @@ const NavigationBar = () => {
           Bíblia
         </Button>
       </Link>
+      <Link to="/hebrew-bible" className="w-full">
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
+          Bíblia Hebraica
+        </Button>
+      </Link>
       <Link to="/sermon-builder" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
           Sermões

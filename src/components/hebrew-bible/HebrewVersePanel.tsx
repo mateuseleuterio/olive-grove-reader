@@ -1,0 +1,63 @@
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import HebrewVerse from "./HebrewVerse";
+
+interface HebrewVersePanelProps {
+  selectedBook: number;
+  chapter: string;
+}
+
+const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
+  const { data: verses = [], isLoading } = useQuery({
+    queryKey: ["hebrew-verses", selectedBook, chapter],
+    queryFn: async () => {
+      // Primeiro, buscar o chapter_id
+      const { data: chapterData } = await supabase
+        .from('bible_chapters')
+        .select('id')
+        .eq('book_id', selectedBook)
+        .eq('chapter_number', parseInt(chapter))
+        .single();
+
+      if (!chapterData) return [];
+
+      // Agora buscar os versículos em hebraico
+      const { data, error } = await supabase
+        .from('hebrew_bible_verses')
+        .select(`
+          id,
+          verse_number,
+          hebrew_text,
+          transliteration,
+          hebrew_word_parsing (
+            hebrew_word,
+            transliteration,
+            morphology,
+            strong_number
+          )
+        `)
+        .eq('chapter_id', chapterData.id)
+        .order('verse_number');
+
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  if (isLoading) {
+    return <div>Carregando versículos...</div>;
+  }
+
+  return (
+    <div className="space-y-6 bg-white p-6 rounded-lg shadow">
+      {verses.map((verse) => (
+        <HebrewVerse
+          key={verse.id}
+          verse={verse}
+        />
+      ))}
+    </div>
+  );
+};
+
+export default HebrewVersePanel;
