@@ -28,40 +28,41 @@ const BibleReader = () => {
   const [maxChapters, setMaxChapters] = useState(50);
   const { toast } = useToast();
 
-  // Inicializar as versões disponíveis
+  // Initialize available versions
   useEffect(() => {
     const fetchAvailableVersions = async () => {
       try {
+        // Using a different approach instead of .distinct()
         const { data, error } = await supabase
           .from('bible_verses')
           .select('version')
-          .distinct();
+          .order('version');
 
         if (error) throw error;
 
-        const availableVersions = data
-          .map(v => v.version)
+        // Filter unique versions
+        const uniqueVersions = Array.from(new Set(data.map(v => v.version)))
           .filter(version => version in BIBLE_VERSIONS)
           .map(version => ({
             id: version as BibleVersion,
             name: BIBLE_VERSIONS[version as BibleVersion]
           }));
 
-        if (availableVersions.length > 0) {
-          setVersions([availableVersions[0]]);
+        if (uniqueVersions.length > 0) {
+          setVersions([uniqueVersions[0]]);
         } else {
-          console.error('Nenhuma versão disponível encontrada');
+          console.error('No available versions found');
           toast({
-            title: "Erro ao carregar versões",
-            description: "Não foi possível encontrar versões da Bíblia disponíveis.",
+            title: "Error loading versions",
+            description: "No Bible versions available were found.",
             variant: "destructive",
           });
         }
       } catch (error) {
-        console.error('Erro ao buscar versões:', error);
+        console.error('Error fetching versions:', error);
         toast({
-          title: "Erro ao carregar versões",
-          description: "Ocorreu um erro ao buscar as versões disponíveis.",
+          title: "Error loading versions",
+          description: "An error occurred while fetching available versions.",
           variant: "destructive",
         });
       }
@@ -85,14 +86,14 @@ const BibleReader = () => {
     const fetchBooks = async () => {
       const { data, error } = await supabase
         .from('bible_books')
-        .select('id, name')
+        .select('id, name, position')
         .order('position');
 
       if (error) {
-        console.error('Erro ao buscar livros:', error);
+        console.error('Error fetching books:', error);
         toast({
-          title: "Erro ao carregar livros",
-          description: "Não foi possível carregar a lista de livros.",
+          title: "Error loading books",
+          description: "Could not load the list of books.",
           variant: "destructive",
         });
         return;
