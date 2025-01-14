@@ -23,3 +23,13 @@ export interface SermonType {
 }
 
 export type SermonInput = Omit<SermonType, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>;
+
+// Tipo auxiliar para conversão entre SermonPoint e Json
+export type SermonPointJson = {
+  title: string;
+  content: string;
+  illustrations: Array<{
+    content: string;
+    type: string;
+  }>;
+};

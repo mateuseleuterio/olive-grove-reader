@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { SermonType, SermonInput } from "@/types/sermon";
+import type { SermonType, SermonInput, SermonPointJson } from "@/types/sermon";
 
 export const useSermonManagement = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -14,12 +14,20 @@ export const useSermonManagement = () => {
       setIsLoading(true);
       
       const { data: userData } = await supabase.auth.getUser();
-      const user_id = userData.user?.id || null;
+      const user_id = userData.user?.id;
 
       const dataToSave = {
         ...sermonData,
         user_id,
-        points: sermonData.points || []
+        // Convertendo o array de SermonPoint para um formato compatível com Json
+        points: sermonData.points.map(point => ({
+          title: point.title,
+          content: point.content,
+          illustrations: point.illustrations.map(ill => ({
+            content: ill.content,
+            type: ill.type
+          }))
+        })) as SermonPointJson[]
       };
 
       const { data, error } = await supabase

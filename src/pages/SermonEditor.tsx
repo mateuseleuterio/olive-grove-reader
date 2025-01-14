@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus as PlusIcon, Trash as TrashIcon } from "lucide-react";
-import type { SermonType, SermonPoint } from "@/types/sermon";
+import type { SermonType, SermonPoint, SermonPointJson } from "@/types/sermon";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -31,22 +31,32 @@ const SermonEditor = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data as SermonType | null;
+
+      if (data) {
+        // Convertendo os points de Json para SermonPoint[]
+        const points = (data.points as SermonPointJson[] || []).map(point => ({
+          title: point.title,
+          content: point.content,
+          illustrations: point.illustrations.map(ill => ({
+            content: ill.content,
+            type: ill.type as "text" | "image"
+          }))
+        }));
+
+        return {
+          ...data,
+          points
+        } as SermonType;
+      }
+
+      return null;
     },
     enabled: !!id && id !== 'blank'
   });
 
   useEffect(() => {
     if (existingSermon) {
-      setSermon({
-        ...existingSermon,
-        points: Array.isArray(existingSermon.points) 
-          ? existingSermon.points.map(point => ({
-              ...point,
-              illustrations: Array.isArray(point.illustrations) ? point.illustrations : []
-            }))
-          : []
-      });
+      setSermon(existingSermon);
     }
   }, [existingSermon]);
 
