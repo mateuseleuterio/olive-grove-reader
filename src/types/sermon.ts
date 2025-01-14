@@ -14,21 +14,12 @@ export interface SermonPoint {
 export interface SermonType {
   id?: string;
   title: string;
-  bible_text: string;
-  introduction: string;
+  bible_text?: string;
+  introduction?: string;
   points: SermonPoint[];
-  conclusion: string;
+  conclusion?: string;
   user_id: string;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
-}
-
-export interface SermonInput {
-  title: string;
-  bible_text?: string;
-  introduction?: string;
-  points?: SermonPoint[];
-  conclusion?: string;
-  user_id: string;
 }

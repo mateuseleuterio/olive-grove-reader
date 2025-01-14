@@ -11,12 +11,14 @@ interface BlankSermonContainerProps {
 const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: BlankSermonContainerProps) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const { handleSaveSermon, isLoading } = useSermonManagement(id);
+  const { handleSaveSermon } = useSermonManagement();
 
   const onSave = async () => {
     await handleSaveSermon({
       title,
       bible_text: content,
+      points: [],
+      user_id: '00000000-0000-0000-0000-000000000000'
     });
   };
 
@@ -27,7 +29,6 @@ const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: Bl
       onTitleChange={setTitle}
       onContentChange={setContent}
       onSave={onSave}
-      isLoading={isLoading}
     />
   );
 };

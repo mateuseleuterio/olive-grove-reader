@@ -20,7 +20,7 @@ const SermonEditor = () => {
     introduction: "",
     points: [],
     conclusion: "",
-    user_id: "" // This will be set by the useSermonManagement hook
+    user_id: '00000000-0000-0000-0000-000000000000'
   });
 
   const { data: existingSermon, isLoading } = useQuery({
@@ -45,7 +45,10 @@ const SermonEditor = () => {
       setSermon({
         ...existingSermon,
         points: Array.isArray(existingSermon.points) 
-          ? existingSermon.points 
+          ? existingSermon.points.map(point => ({
+              ...point,
+              illustrations: Array.isArray(point.illustrations) ? point.illustrations : []
+            }))
           : []
       });
     }

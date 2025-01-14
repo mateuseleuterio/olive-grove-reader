@@ -22,7 +22,7 @@ const StructuredSermonContainer = ({
   const [introduction, setIntroduction] = useState(initialIntroduction);
   const [points, setPoints] = useState<NonNullable<SermonType['points']>>(initialPoints);
   const [conclusion, setConclusion] = useState(initialConclusion);
-  const { handleSaveSermon, isLoading } = useSermonManagement(id);
+  const { handleSaveSermon } = useSermonManagement();
 
   const onSave = async () => {
     await handleSaveSermon({
@@ -30,6 +30,7 @@ const StructuredSermonContainer = ({
       introduction,
       points,
       conclusion,
+      user_id: '00000000-0000-0000-0000-000000000000'
     });
   };
 

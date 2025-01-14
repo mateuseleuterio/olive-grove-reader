@@ -41,6 +41,8 @@ const AISermonContainer = () => {
     await handleSaveSermon({
       title: "Sermão Gerado por IA",
       bible_text: generatedSermon,
+      points: [],
+      user_id: '00000000-0000-0000-0000-000000000000'
     });
   };
 
