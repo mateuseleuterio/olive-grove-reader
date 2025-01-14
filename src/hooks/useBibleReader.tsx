@@ -112,6 +112,25 @@ export const useBibleReader = () => {
     fetchChapterCount();
   }, [selectedBook]);
 
+  const addVersion = () => {
+    if (versions.length >= 4) {
+      toast({
+        title: "Limite atingido",
+        description: "Você pode comparar até 4 versões simultaneamente.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const defaultVersion: BibleVersion = "ACF";
+    setVersions([...versions, { id: defaultVersion, name: BIBLE_VERSIONS[defaultVersion] }]);
+    
+    toast({
+      title: "Versão adicionada",
+      description: "Uma nova versão foi adicionada para comparação.",
+    });
+  };
+
   const removeVersion = (index: number) => {
     if (versions.length <= 1) {
       toast({
@@ -148,6 +167,7 @@ export const useBibleReader = () => {
     maxChapters,
     setSelectedBook,
     setChapter,
+    addVersion,
     removeVersion,
     handleVersionChange,
   };
