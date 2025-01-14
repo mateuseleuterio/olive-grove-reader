@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "./WordDetails";
+import HebrewVerse from "./HebrewVerse";
 
 interface BibleVerseProps {
   bookId: number;
@@ -85,10 +86,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {verses.map((verse) => (
-        <p key={verse.id} className="break-words">
-          <span className="verse-number">{verse.verse_number}</span>
-          {renderVerse(verse.text)}
-        </p>
+        <div key={verse.id} className="space-y-2">
+          <HebrewVerse 
+            bookId={bookId}
+            chapter={chapter}
+            verseNumber={verse.verse_number}
+          />
+          <p className="break-words">
+            <span className="verse-number">{verse.verse_number}</span>
+            {renderVerse(verse.text)}
+          </p>
+        </div>
       ))}
     </div>
   );
