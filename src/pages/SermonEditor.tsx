@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Plus as PlusIcon, Trash as TrashIcon } from "lucide-react";
-import type { SermonType } from "@/types/sermon";
+import type { SermonType, SermonPoint } from "@/types/sermon";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -16,11 +16,7 @@ const SermonEditor = () => {
   const { handleSaveSermon } = useSermonManagement();
   const [sermon, setSermon] = useState<SermonType>({
     title: "",
-    bible_text: "",
-    introduction: "",
     points: [],
-    conclusion: "",
-    user_id: '00000000-0000-0000-0000-000000000000'
   });
 
   const { data: existingSermon, isLoading } = useQuery({
@@ -35,7 +31,7 @@ const SermonEditor = () => {
         .maybeSingle();
 
       if (error) throw error;
-      return data;
+      return data as SermonType | null;
     },
     enabled: !!id && id !== 'blank'
   });

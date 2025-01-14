@@ -1,25 +1,25 @@
-import type { Json } from "@/integrations/supabase/types";
-
-export interface Illustration {
-  content: string;
-  type: string;
-}
-
 export interface SermonPoint {
   title: string;
   content: string;
   illustrations: Illustration[];
 }
 
+export interface Illustration {
+  content: string;
+  type: "text" | "image";
+}
+
 export interface SermonType {
   id?: string;
+  user_id?: string | null;
   title: string;
   bible_text?: string;
   introduction?: string;
   points: SermonPoint[];
   conclusion?: string;
-  user_id: string;
   created_at?: string;
   updated_at?: string;
   deleted_at?: string | null;
 }
+
+export type SermonInput = Omit<SermonType, 'id' | 'created_at' | 'updated_at' | 'deleted_at'>;

@@ -2,73 +2,42 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { SermonType } from "@/types/sermon";
-import type { Json } from "@/integrations/supabase/types";
+import type { SermonType, SermonInput } from "@/types/sermon";
 
 export const useSermonManagement = () => {
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveSermon = async (sermonData: SermonType) => {
-    if (!sermonData.title) {
-      toast({
-        title: "Erro",
-        description: "O título do sermão é obrigatório",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setIsLoading(true);
+  const handleSaveSermon = async (sermonData: SermonInput) => {
     try {
-      console.log('Starting sermon save process...');
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      setIsLoading(true);
+      
+      const { data: userData } = await supabase.auth.getUser();
+      const user_id = userData.user?.id || null;
 
-      console.log('Current user:', user);
-
-      const finalSermonData = {
-        title: sermonData.title,
-        user_id: user?.id || '00000000-0000-0000-0000-000000000000',
-        bible_text: sermonData.bible_text,
-        introduction: sermonData.introduction,
-        points: sermonData.points as unknown as Json,
-        conclusion: sermonData.conclusion,
+      const dataToSave = {
+        ...sermonData,
+        user_id,
+        points: sermonData.points || []
       };
 
-      console.log('Saving sermon with data:', finalSermonData);
+      const { data, error } = await supabase
+        .from("sermons")
+        .insert([dataToSave])
+        .select()
+        .single();
 
-      if (sermonData.id && sermonData.id !== 'blank') {
-        const { data, error } = await supabase
-          .from('sermons')
-          .update(finalSermonData)
-          .eq('id', sermonData.id)
-          .select()
-          .single();
-
-        if (error) throw error;
-        console.log('Updated sermon:', data);
-        navigate(`/preaching-mode/${data.id}`);
-      } else {
-        const { data, error } = await supabase
-          .from('sermons')
-          .insert(finalSermonData)
-          .select()
-          .single();
-
-        if (error) throw error;
-        console.log('Created sermon:', data);
-        navigate(`/preaching-mode/${data.id}`);
-      }
+      if (error) throw error;
 
       toast({
         title: "Sucesso",
         description: "Sermão salvo com sucesso!",
       });
+
+      navigate(`/sermon-editor/${data.id}`);
     } catch (error) {
-      console.error('Error saving sermon:', error);
+      console.error('Erro ao salvar sermão:', error);
       toast({
         title: "Erro",
         description: "Erro ao salvar o sermão. Por favor, tente novamente.",
@@ -79,34 +48,8 @@ export const useSermonManagement = () => {
     }
   };
 
-  const handleDeleteSermon = async (sermonId: string) => {
-    try {
-      const { error } = await supabase
-        .from('sermons')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', sermonId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Sermão excluído com sucesso!",
-      });
-
-      navigate('/sermon-builder');
-    } catch (error) {
-      console.error('Error deleting sermon:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao excluir o sermão. Por favor, tente novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return {
-    handleSaveSermon,
-    handleDeleteSermon,
     isLoading,
+    handleSaveSermon,
   };
 };

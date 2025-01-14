@@ -467,7 +467,7 @@ export type Database = {
           points: Json | null
           title: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           bible_text?: string | null
@@ -479,7 +479,7 @@ export type Database = {
           points?: Json | null
           title: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           bible_text?: string | null
@@ -491,7 +491,7 @@ export type Database = {
           points?: Json | null
           title?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: []
       }
