@@ -6,7 +6,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BATCH_SIZE = 5; // Reduced batch size even more
+const BATCH_SIZE = 5; // Reduced batch size
 const BATCH_DELAY = 500; // Increased delay between batches
 
 serve(async (req) => {
@@ -23,14 +23,30 @@ serve(async (req) => {
       throw new Error('Version is required');
     }
 
+    // Create Supabase client at the start
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
+
     // Delete existing verses for this version before starting import
     if (bookIndex === 0) {
-      const supabaseClient = createClient(
-        Deno.env.get('SUPABASE_URL') ?? '',
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-      )
-
       console.log(`Deleting existing verses for version: ${version}`);
+      
+      // First, count existing verses
+      const { count, error: countError } = await supabaseClient
+        .from('bible_verses')
+        .select('*', { count: 'exact', head: true })
+        .eq('version', version);
+        
+      if (countError) {
+        console.error('Error counting existing verses:', countError);
+        throw countError;
+      }
+      
+      console.log(`Found ${count} existing verses for version ${version}`);
+
+      // Then delete them
       const { error: deleteError } = await supabaseClient
         .from('bible_verses')
         .delete()
@@ -40,7 +56,23 @@ serve(async (req) => {
         console.error('Error deleting existing verses:', deleteError);
         throw deleteError;
       }
-      console.log(`Successfully deleted existing verses for version: ${version}`);
+
+      // Verify deletion
+      const { count: remainingCount, error: verifyError } = await supabaseClient
+        .from('bible_verses')
+        .select('*', { count: 'exact', head: true })
+        .eq('version', version);
+
+      if (verifyError) {
+        console.error('Error verifying deletion:', verifyError);
+        throw verifyError;
+      }
+
+      if (remainingCount > 0) {
+        throw new Error(`Failed to delete all verses. ${remainingCount} verses remain.`);
+      }
+
+      console.log(`Successfully deleted all existing verses for version: ${version}`);
     }
 
     const BIBLE_SOURCES = {
@@ -76,12 +108,6 @@ serve(async (req) => {
 
     const book = bibleData[bookIndex];
     console.log(`Processing book: ${book.name} (${bookIndex + 1}/${bibleData.length})`);
-
-    // Create Supabase client
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
 
     // Get book ID
     const { data: bookData, error: bookError } = await supabaseClient
