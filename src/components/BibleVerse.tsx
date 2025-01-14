@@ -23,10 +23,15 @@ interface StrongWord {
   strong_number: string;
 }
 
+interface RenderedWord {
+  word: string;
+  strongNumber?: string;
+}
+
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [strongsData, setStrongsData] = useState<Record<number, StrongWord[]>>({});
+  const [renderedWords, setRenderedWords] = useState<Record<number, RenderedWord[]>>({});
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -71,7 +76,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         // Fetch Strong's numbers for each verse
         if (versesData) {
-          const strongsMap: Record<number, StrongWord[]> = {};
+          const wordsMap: Record<number, RenderedWord[]> = {};
           
           for (const verse of versesData) {
             const { data: strongsData, error: strongsError } = await supabase
@@ -81,11 +86,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
               .order('word_position');
 
             if (!strongsError && strongsData) {
-              strongsMap[verse.id] = strongsData;
+              const words = verse.text.split(" ");
+              wordsMap[verse.id] = words.map((word, index) => ({
+                word,
+                strongNumber: strongsData[index]?.strong_number
+              }));
+            } else {
+              wordsMap[verse.id] = verse.text.split(" ").map(word => ({ word }));
             }
           }
           
-          setStrongsData(strongsMap);
+          setRenderedWords(wordsMap);
         }
       } catch (error) {
         console.error('Erro:', error);
@@ -96,28 +107,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     fetchVerses();
   }, [bookId, chapter, version]);
-
-  const renderWord = async (word: string, verseId: number, index: number) => {
-    const strongWord = strongsData[verseId]?.[index];
-    
-    if (!strongWord) {
-      return <span key={`${verseId}-${index}`} className="mx-1">{word}</span>;
-    }
-
-    return (
-      <Popover key={`${verseId}-${index}`}>
-        <PopoverTrigger asChild>
-          <span className="cursor-pointer hover:text-bible-accent mx-1">
-            {word}
-            <sup className="text-xs text-gray-500">{strongWord.strong_number}</sup>
-          </span>
-        </PopoverTrigger>
-        <PopoverContent className="w-80">
-          <StrongDetails strongNumber={strongWord.strong_number} />
-        </PopoverContent>
-      </Popover>
-    );
-  };
 
   if (loading) {
     return <div>Carregando...</div>;
@@ -132,9 +121,23 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       {verses.map((verse) => (
         <p key={verse.id} className="break-words">
           <span className="verse-number">{verse.verse_number}</span>
-          {verse.text.split(" ").map((word, index) => 
-            renderWord(word, verse.id, index)
-          )}
+          {renderedWords[verse.id]?.map((wordData, index) => (
+            wordData.strongNumber ? (
+              <Popover key={`${verse.id}-${index}`}>
+                <PopoverTrigger asChild>
+                  <span className="cursor-pointer hover:text-bible-accent mx-1">
+                    {wordData.word}
+                    <sup className="text-xs text-gray-500">{wordData.strongNumber}</sup>
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent className="w-80">
+                  <StrongDetails strongNumber={wordData.strongNumber} />
+                </PopoverContent>
+              </Popover>
+            ) : (
+              <span key={`${verse.id}-${index}`} className="mx-1">{wordData.word}</span>
+            )
+          ))}
         </p>
       ))}
     </div>

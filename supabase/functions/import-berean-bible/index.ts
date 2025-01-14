@@ -1,21 +1,31 @@
-import { createClient } from '@supabase/supabase-js'
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL')
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
-Deno.serve(async (req) => {
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
   try {
-    if (!supabaseUrl || !supabaseServiceKey) {
-      throw new Error('Missing environment variables')
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    )
     
     // Fetch the Bible data from GitHub
     const response = await fetch('https://raw.githubusercontent.com/gapmiss/berean-study-bible-with-strongs/master/berean-study-bible.json')
     const data = await response.json()
 
+    console.log('Starting Bible import...')
+
     for (const book of data) {
+      console.log(`Processing book: ${book.name}`)
+      
       // Get or create book
       const { data: bookData, error: bookError } = await supabase
         .from('bible_books')
@@ -44,6 +54,8 @@ Deno.serve(async (req) => {
 
       // Process chapters
       for (const chapter of book.chapters) {
+        console.log(`Processing chapter ${chapter.number}`)
+        
         // Create chapter
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
@@ -58,6 +70,8 @@ Deno.serve(async (req) => {
 
         // Process verses
         for (const verse of chapter.verses) {
+          console.log(`Processing verse ${verse.number}`)
+          
           // Insert verse
           const { data: verseData, error: verseError } = await supabase
             .from('bible_verses')
@@ -91,12 +105,13 @@ Deno.serve(async (req) => {
 
     return new Response(
       JSON.stringify({ message: 'Bible imported successfully' }),
-      { headers: { 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {
+    console.error('Error:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   }
 })
