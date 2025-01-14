@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, BookOpen, Sparkles, Search, Trash2, Plus } from "lucide-react";
+import { FileText, BookOpen, Sparkles, Search, Trash2, Plus, LogIn } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,31 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
+import AuthModal from "@/components/Auth";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sermonToDelete, setSermonToDelete] = useState<string | null>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const { handleDeleteSermon } = useSermonManagement();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Check current auth status
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const { data: sermons = [], isLoading } = useQuery({
     queryKey: ['sermons'],
@@ -60,10 +77,18 @@ const SermonBuilder = () => {
   });
 
   const handleStart = (type: 'blank' | 'structure' | 'ai') => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     navigate(`/sermon-editor/${type}`);
   };
 
   const handleDelete = async (id: string) => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     setSermonToDelete(id);
   };
 
@@ -80,11 +105,19 @@ const SermonBuilder = () => {
   };
 
   const handleRowClick = (id: string) => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     navigate(`/preaching-mode/${id}`);
   };
 
   const handleEdit = (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
     navigate(`/sermon-editor/${id}`);
   };
 
@@ -97,63 +130,73 @@ const SermonBuilder = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif text-bible-navy">Meus Sermões</h1>
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button className="bg-bible-navy hover:bg-bible-accent">
-                <Plus className="mr-2 h-4 w-4" />
-                Novo Sermão
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <DialogHeader>
-                <DialogTitle>Escolha como começar seu sermão</DialogTitle>
-                <DialogDescription>
-                  Selecione uma das opções abaixo para começar a criar seu sermão.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <Button
-                  className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
-                  variant="outline"
-                  onClick={() => handleStart('blank')}
-                >
-                  <FileText className="h-6 w-6 text-bible-navy shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-bible-navy">Sermão em Branco</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Comece seu sermão do zero com total liberdade criativa
-                    </p>
-                  </div>
+          {user ? (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="bg-bible-navy hover:bg-bible-accent">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Novo Sermão
                 </Button>
-                <Button
-                  className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
-                  variant="outline"
-                  onClick={() => handleStart('structure')}
-                >
-                  <BookOpen className="h-6 w-6 text-bible-navy shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-bible-navy">Estrutura Comprovada</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Use uma estrutura testada e aprovada por pregadores experientes
-                    </p>
-                  </div>
-                </Button>
-                <Button
-                  className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
-                  variant="outline"
-                  onClick={() => handleStart('ai')}
-                >
-                  <Sparkles className="h-6 w-6 text-bible-navy shrink-0" />
-                  <div>
-                    <h3 className="font-semibold text-bible-navy">Sermão com IA</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Construa seu sermão com ajuda da Inteligência Artificial
-                    </p>
-                  </div>
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-[600px]">
+                <DialogHeader>
+                  <DialogTitle>Escolha como começar seu sermão</DialogTitle>
+                  <DialogDescription>
+                    Selecione uma das opções abaixo para começar a criar seu sermão.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <Button
+                    className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
+                    variant="outline"
+                    onClick={() => handleStart('blank')}
+                  >
+                    <FileText className="h-6 w-6 text-bible-navy shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-bible-navy">Sermão em Branco</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Comece seu sermão do zero com total liberdade criativa
+                      </p>
+                    </div>
+                  </Button>
+                  <Button
+                    className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
+                    variant="outline"
+                    onClick={() => handleStart('structure')}
+                  >
+                    <BookOpen className="h-6 w-6 text-bible-navy shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-bible-navy">Estrutura Comprovada</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Use uma estrutura testada e aprovada por pregadores experientes
+                      </p>
+                    </div>
+                  </Button>
+                  <Button
+                    className="flex items-center justify-start gap-2 p-6 bg-white hover:bg-gray-50 border text-left h-auto"
+                    variant="outline"
+                    onClick={() => handleStart('ai')}
+                  >
+                    <Sparkles className="h-6 w-6 text-bible-navy shrink-0" />
+                    <div>
+                      <h3 className="font-semibold text-bible-navy">Sermão com IA</h3>
+                      <p className="text-sm text-muted-foreground">
+                        Construa seu sermão com ajuda da Inteligência Artificial
+                      </p>
+                    </div>
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          ) : (
+            <Button 
+              onClick={() => setIsAuthModalOpen(true)}
+              className="bg-bible-navy hover:bg-bible-accent"
+            >
+              <LogIn className="mr-2 h-4 w-4" />
+              Entrar para criar sermão
+            </Button>
+          )}
         </div>
 
         <div className="flex justify-end mb-6">
@@ -193,7 +236,7 @@ const SermonBuilder = () => {
               ) : filteredSermons.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={3} className="text-center py-4">
-                    Nenhum sermão encontrado
+                    {user ? "Nenhum sermão encontrado" : "Faça login para ver seus sermões"}
                   </TableCell>
                 </TableRow>
               ) : (
@@ -250,6 +293,11 @@ const SermonBuilder = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 };
