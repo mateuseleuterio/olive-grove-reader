@@ -51,6 +51,7 @@ export type Database = {
           created_at: string
           id: number
           name: string
+          name_bsb: string | null
           position: number
           testament: string
         }
@@ -59,6 +60,7 @@ export type Database = {
           created_at?: string
           id?: number
           name: string
+          name_bsb?: string | null
           position: number
           testament: string
         }
@@ -67,6 +69,7 @@ export type Database = {
           created_at?: string
           id?: number
           name?: string
+          name_bsb?: string | null
           position?: number
           testament?: string
         }
