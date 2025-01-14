@@ -60,7 +60,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             verse_number,
             text
           `)
-          .eq('version', version)
+          .eq('version', version.toLowerCase()) // Convertendo para minúsculo
           .eq('chapter_id', chapterData.id)
           .order('verse_number');
 
@@ -75,6 +75,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         }
 
         if (!versesData || versesData.length === 0) {
+          console.log(`Nenhum versículo encontrado para versão ${version.toLowerCase()}`);
           toast({
             title: "Versão não disponível",
             description: `A versão ${version} não está disponível para este texto.`,
