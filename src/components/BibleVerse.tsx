@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "./WordDetails";
 import { useToast } from "@/hooks/use-toast";
@@ -120,14 +120,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     ));
   };
 
-  if (error) {
-    toast({
-      title: "Erro",
-      description: error instanceof Error ? error.message : "Erro ao carregar versículos",
-      variant: "destructive",
-    });
-    return <div>Erro ao carregar versículos</div>;
-  }
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao carregar versículos",
+        variant: "destructive",
+      });
+    }
+  }, [error, toast]);
 
   if (isLoading) {
     return (
