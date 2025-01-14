@@ -13,7 +13,11 @@ const SermonEditor = () => {
   const [sermon, setSermon] = useState({
     title: "",
     introduction: "",
-    points: [{ title: "Desenvolvimento", content: "" }],
+    points: [{
+      title: "Desenvolvimento",
+      content: "",
+      illustrations: [] // Adicionando o array de illustrations requerido
+    }],
     conclusion: "",
   });
 
