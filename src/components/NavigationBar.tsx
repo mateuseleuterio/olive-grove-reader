@@ -71,7 +71,7 @@ const NavigationBar = () => {
 
   const SideMenuItems = () => (
     <>
-      <Link to="/" className="w-full">
+      <Link to="/blog" className="w-full">
         <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent px-6 flex items-center gap-3">
           Blog
         </Button>
