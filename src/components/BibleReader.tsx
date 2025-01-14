@@ -12,7 +12,11 @@ interface Book {
 }
 
 const BIBLE_VERSIONS = {
-  "ACF": "Almeida Corrigida Fiel"
+  "ACF": "Almeida Corrigida Fiel",
+  "AA": "Almeida Atualizada",
+  "NVI": "Nova Versão Internacional",
+  "RA": "Almeida Revista e Atualizada",
+  "NTLH": "Nova Tradução na Linguagem de Hoje"
 } as const;
 
 type BibleVersion = keyof typeof BIBLE_VERSIONS;

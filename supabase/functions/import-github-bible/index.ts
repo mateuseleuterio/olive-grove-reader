@@ -19,8 +19,15 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    const { version } = await req.json()
+    if (!version) {
+      throw new Error('Version parameter is required')
+    }
+
+    console.log(`Importing Bible version: ${version}`)
+
     // Fetch Bible data from GitHub
-    const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json')
+    const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`)
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible data: ${response.statusText}`)
     }
@@ -75,7 +82,7 @@ serve(async (req) => {
             chapter_id: chapterData.id,
             verse_number: index + 1,
             text,
-            version: 'ACF'
+            version: version
           }))
 
           const { error: versesError } = await supabaseClient
