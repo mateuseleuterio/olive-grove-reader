@@ -60,7 +60,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             verse_number,
             text
           `)
-          .eq('version', version.toLowerCase()) // Convertendo para minúsculo
+          .eq('version', version.toLowerCase())
           .eq('chapter_id', chapterData.id)
           .order('verse_number');
 
@@ -76,11 +76,33 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (!versesData || versesData.length === 0) {
           console.log(`Nenhum versículo encontrado para versão ${version.toLowerCase()}`);
-          toast({
-            title: "Versão não disponível",
-            description: `A versão ${version} não está disponível para este texto.`,
-            variant: "destructive",
-          });
+          // Buscar o primeiro capítulo disponível para esta versão
+          const { data: firstVerseData } = await supabase
+            .from('bible_verses')
+            .select(`
+              chapter_id,
+              bible_chapters!inner(
+                chapter_number,
+                book_id
+              )
+            `)
+            .eq('version', version.toLowerCase())
+            .order('id')
+            .limit(1);
+
+          if (firstVerseData && firstVerseData.length > 0) {
+            toast({
+              title: "Versão não disponível neste capítulo",
+              description: "Redirecionando para o primeiro capítulo disponível nesta versão.",
+            });
+            // O redirecionamento será tratado no BibleVersionPanel
+          } else {
+            toast({
+              title: "Versão não disponível",
+              description: `A versão ${version} não está disponível.`,
+              variant: "destructive",
+            });
+          }
         }
 
         console.log(`${versesData?.length || 0} versículos encontrados`);
