@@ -68,8 +68,8 @@ const Index = () => {
         <BibleReader />
       </main>
       <AuthModal
-        open={isAuthModalOpen}
-        onOpenChange={setIsAuthModalOpen}
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
       />
     </div>
   );
