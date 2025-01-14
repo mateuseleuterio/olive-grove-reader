@@ -45,6 +45,7 @@ const StructuredSermonContainer = ({
 
   useEffect(() => {
     const fetchSermon = async () => {
+      // Skip fetching if id is not a valid UUID
       if (!id || !isValidUUID(id)) return;
 
       const { data: sermon, error } = await supabase
@@ -61,7 +62,13 @@ const StructuredSermonContainer = ({
       if (sermon) {
         setTitle(sermon.title);
         setIntroduction(sermon.introduction || "");
-        setPoints(sermon.points || [{ title: "", content: "", illustrations: [] }]);
+        // Ensure points is properly typed when setting state
+        const sermonPoints = sermon.points as NonNullable<SermonType['points']> || [{ 
+          title: "", 
+          content: "", 
+          illustrations: [] 
+        }];
+        setPoints(sermonPoints);
         setConclusion(sermon.conclusion || "");
       }
     };
