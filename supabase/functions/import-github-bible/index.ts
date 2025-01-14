@@ -6,8 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BATCH_SIZE = 10; // Reduced batch size
-const BATCH_DELAY = 300; // Increased delay between batches
+const BATCH_SIZE = 5; // Reduced batch size even more
+const BATCH_DELAY = 500; // Increased delay between batches
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -116,32 +116,38 @@ serve(async (req) => {
         chapterId = chapterData.id;
       }
 
-      // Process verses in batches
+      // Check existing verses
+      const { data: existingVerses, error: existingVersesError } = await supabaseClient
+        .from('bible_verses')
+        .select('verse_number')
+        .eq('chapter_id', chapterId)
+        .eq('version', version);
+
+      if (existingVersesError) {
+        throw existingVersesError;
+      }
+
+      const existingVerseNumbers = new Set(existingVerses.map(v => v.verse_number));
+
+      // Process verses in smaller batches
       const verses = book.chapters[chapterIndex];
       for (let i = 0; i < verses.length; i += BATCH_SIZE) {
         const verseBatch = verses.slice(i, i + BATCH_SIZE);
-        const versesData = verseBatch.map((text: string, index: number) => ({
-          chapter_id: chapterId,
-          verse_number: i + index + 1,
-          text: text || '',
-          version
-        }));
+        const versesData = verseBatch
+          .map((text: string, index: number) => ({
+            chapter_id: chapterId,
+            verse_number: i + index + 1,
+            text: text || '',
+            version
+          }))
+          .filter(verse => !existingVerseNumbers.has(verse.verse_number));
 
-        console.log(`Upserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
-
-        // Delete existing verses first to avoid conflicts
-        const { error: deleteError } = await supabaseClient
-          .from('bible_verses')
-          .delete()
-          .eq('chapter_id', chapterId)
-          .eq('version', version)
-          .gte('verse_number', i + 1)
-          .lte('verse_number', i + verseBatch.length);
-
-        if (deleteError) {
-          console.error('Error deleting existing verses:', deleteError);
-          throw deleteError;
+        if (versesData.length === 0) {
+          console.log(`Skipping verses ${i + 1} to ${i + verseBatch.length} as they already exist`);
+          continue;
         }
+
+        console.log(`Inserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
 
         // Insert new verses
         const { error: versesError } = await supabaseClient
