@@ -14,11 +14,13 @@ export const useSermonManagement = () => {
       setIsLoading(true);
       
       const { data: userData } = await supabase.auth.getUser();
-      const user_id = userData.user?.id || '00000000-0000-0000-0000-000000000000';
+      if (!userData.user) {
+        throw new Error("Usuário não autenticado");
+      }
 
       const dataToSave = {
         ...sermonData,
-        user_id,
+        user_id: userData.user.id,
         points: sermonData.points.map(point => ({
           title: point.title,
           content: point.content,
@@ -60,27 +62,17 @@ export const useSermonManagement = () => {
       setIsLoading(true);
       
       const { data: userData } = await supabase.auth.getUser();
-      const user_id = userData.user?.id || '00000000-0000-0000-0000-000000000000';
-      
-      // Primeiro, verificamos se o sermão pertence ao usuário
-      const { data: sermon, error: fetchError } = await supabase
-        .from("sermons")
-        .select()
-        .eq("id", id)
-        .eq("user_id", user_id)
-        .single();
+      if (!userData.user) {
+        throw new Error("Usuário não autenticado");
+      }
 
-      if (fetchError) throw fetchError;
-      if (!sermon) throw new Error("Sermão não encontrado");
-
-      // Se o sermão foi encontrado, podemos prosseguir com a deleção
-      const { error } = await supabase
+      // Primeiro, atualizamos o deleted_at
+      const { error: updateError } = await supabase
         .from("sermons")
         .update({ deleted_at: new Date().toISOString() })
-        .eq("id", id)
-        .eq("user_id", user_id);
+        .match({ id, user_id: userData.user.id });
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
       toast({
         title: "Sucesso",
