@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
+import ImportBibleVersions from "./bible/ImportBibleVersions";
 import { useToast } from "@/hooks/use-toast";
 
 interface Book {
@@ -22,14 +23,12 @@ const BIBLE_VERSIONS = {
 
 type BibleVersion = keyof typeof BIBLE_VERSIONS;
 
-// ... keep existing code (useState and useEffect hooks)
-
 const BibleReader = () => {
   const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<number>(1);
+  const [selectedBook, setSelectedBook] = useState<number>(1); // Alterado para 1 (Gênesis)
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -185,6 +184,7 @@ const BibleReader = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <ImportBibleVersions />
       <BibleControls
         books={books}
         selectedBook={selectedBook}

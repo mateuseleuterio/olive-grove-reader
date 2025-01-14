@@ -1,3 +1,4 @@
+import { ImportBibleVersions } from "@/components/bible/ImportBibleVersions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
@@ -15,7 +16,7 @@ const Settings = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Future Bible settings will go here */}
+            <ImportBibleVersions />
           </CardContent>
         </Card>
       </div>
