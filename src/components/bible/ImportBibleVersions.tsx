@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const VERSIONS = {
   "AA": "Almeida Atualizada",
@@ -16,6 +18,17 @@ const ImportBibleVersions = () => {
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<BibleVersion>("AA");
+  const [showImportSection, setShowImportSection] = useState(false);
+
+  useEffect(() => {
+    const savedPreference = localStorage.getItem("showBibleImportSection");
+    setShowImportSection(savedPreference === "true");
+  }, []);
+
+  const handleToggleImportSection = (checked: boolean) => {
+    setShowImportSection(checked);
+    localStorage.setItem("showBibleImportSection", checked.toString());
+  };
 
   const importNextBook = async (bookIndex: number) => {
     try {
@@ -74,27 +87,40 @@ const ImportBibleVersions = () => {
   };
 
   return (
-    <div className="flex gap-4 items-center mb-4">
-      <Select 
-        value={selectedVersion} 
-        onValueChange={(value: BibleVersion) => setSelectedVersion(value)}
-      >
-        <SelectTrigger className="w-[200px]">
-          <SelectValue placeholder="Selecione a versão" />
-        </SelectTrigger>
-        <SelectContent>
-          {Object.entries(VERSIONS).map(([id, name]) => (
-            <SelectItem key={id} value={id}>{name}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      
-      <Button 
-        onClick={handleImport}
-        disabled={isImporting}
-      >
-        {isImporting ? "Importando..." : "Importar Versão da Bíblia"}
-      </Button>
+    <div className="space-y-6">
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="show-import"
+          checked={showImportSection}
+          onCheckedChange={handleToggleImportSection}
+        />
+        <Label htmlFor="show-import">Mostrar seção de importação da Bíblia</Label>
+      </div>
+
+      {showImportSection && (
+        <div className="flex gap-4 items-center">
+          <Select 
+            value={selectedVersion} 
+            onValueChange={(value: BibleVersion) => setSelectedVersion(value)}
+          >
+            <SelectTrigger className="w-[200px]">
+              <SelectValue placeholder="Selecione a versão" />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(VERSIONS).map(([id, name]) => (
+                <SelectItem key={id} value={id}>{name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <Button 
+            onClick={handleImport}
+            disabled={isImporting}
+          >
+            {isImporting ? "Importando..." : "Importar Versão da Bíblia"}
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
