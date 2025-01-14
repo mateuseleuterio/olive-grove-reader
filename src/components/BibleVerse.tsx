@@ -31,6 +31,14 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const checkVersionStatus = async () => {
     try {
       const { data: session } = await supabase.auth.getSession();
+      
+      // Se for a versão ACF, considerar como já baixada
+      if (version.toLowerCase() === 'acf') {
+        setIsVersionDownloaded(true);
+        fetchVerses();
+        return;
+      }
+
       if (!session.session) {
         setIsVersionDownloaded(false);
         setLoading(false);
