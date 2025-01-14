@@ -1,4 +1,4 @@
-import { BookOpen, Plus } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,9 +15,7 @@ interface BibleControlsProps {
   maxChapters: number;
   onBookChange: (bookId: number) => void;
   onChapterChange: (chapter: string) => void;
-  onAddVersion: () => void;
   onCommentaryOpen: () => void;
-  versionsCount: number;
 }
 
 const BibleControls = ({
@@ -27,9 +25,7 @@ const BibleControls = ({
   maxChapters,
   onBookChange,
   onChapterChange,
-  onAddVersion,
   onCommentaryOpen,
-  versionsCount
 }: BibleControlsProps) => {
   const chapters = Array.from({ length: maxChapters }, (_, i) => (i + 1).toString());
 
@@ -71,16 +67,6 @@ const BibleControls = ({
       </div>
 
       <div className="flex items-center gap-4 w-full md:w-auto">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onAddVersion}
-          disabled={versionsCount >= 4}
-          className="relative hidden"
-          title="Adicionar versão"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
         <Button 
           variant="outline" 
           size="icon"
