@@ -41,7 +41,7 @@ const Login = () => {
     <div className="container max-w-md mx-auto pt-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-center">Bem-vindo ao BibleGuide</CardTitle>
+          <CardTitle className="text-center">Bem-vindo ao MyBibleMap</CardTitle>
         </CardHeader>
         <CardContent>
           {error && (

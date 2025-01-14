@@ -53,7 +53,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       <DialogContent className="sm:max-w-md">
         <Card className="border-0 shadow-none">
           <CardHeader>
-            <CardTitle className="text-center">Bem-vindo ao BibleGuide</CardTitle>
+            <CardTitle className="text-center">Bem-vindo ao MyBibleMap</CardTitle>
           </CardHeader>
           <CardContent>
             {error && (

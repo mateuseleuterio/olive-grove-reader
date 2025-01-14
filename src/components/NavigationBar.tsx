@@ -142,7 +142,7 @@ const NavigationBar = () => {
   return (
     <nav className="bg-bible-navy text-white py-6 fixed top-0 w-full z-50 shadow-lg">
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
           <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
