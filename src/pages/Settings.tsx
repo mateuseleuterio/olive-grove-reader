@@ -2,19 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 const Settings = () => {
   return (
-    <div className="container mx-auto max-w-4xl">
-      <h1 className="text-3xl font-bold mb-8">Configurações</h1>
-      
-      <div className="space-y-8">
+    <div className="container mx-auto py-8">
+      <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Bíblia</CardTitle>
+            <CardTitle>Configurações da Bíblia</CardTitle>
             <CardDescription>
-              Configurações relacionadas à Bíblia e suas versões
+              Gerencie suas configurações de leitura da Bíblia
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Bible settings content will go here */}
+            <p className="text-sm text-muted-foreground">
+              Suas versões da Bíblia são gerenciadas automaticamente.
+            </p>
           </CardContent>
         </Card>
       </div>
