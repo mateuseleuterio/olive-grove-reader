@@ -1,20 +1,22 @@
+import { ImportBibleVersions } from "@/components/bible/ImportBibleVersions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
   return (
-    <div className="container mx-auto py-8">
-      <div className="space-y-6">
+    <div className="container mx-auto max-w-4xl">
+      <h1 className="text-3xl font-bold mb-8">Configurações</h1>
+      
+      <div className="space-y-8">
         <Card>
           <CardHeader>
-            <CardTitle>Configurações da Bíblia</CardTitle>
+            <CardTitle>Bíblia</CardTitle>
             <CardDescription>
-              Gerencie suas configurações de leitura da Bíblia
+              Configurações relacionadas à Bíblia e suas versões
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
-              Suas versões da Bíblia são gerenciadas automaticamente.
-            </p>
+            <ImportBibleVersions />
           </CardContent>
         </Card>
       </div>

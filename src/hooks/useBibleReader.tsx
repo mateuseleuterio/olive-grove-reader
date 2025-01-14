@@ -56,6 +56,7 @@ export const useBibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
+      console.log("Fetching books...");
       const { data, error } = await supabase
         .from('bible_books')
         .select('id, name')
@@ -67,9 +68,11 @@ export const useBibleReader = () => {
       }
 
       if (data) {
+        console.log("Books data received:", data);
         const uniqueBooks = data.filter((book, index, self) =>
           index === self.findIndex((b) => b.name === book.name)
         );
+        console.log("Unique books:", uniqueBooks);
         setBooks(uniqueBooks);
       }
     };
@@ -81,6 +84,7 @@ export const useBibleReader = () => {
     const fetchChapterCount = async () => {
       if (!selectedBook) return;
       
+      console.log("Fetching chapter count for book:", selectedBook);
       const { data, error } = await supabase
         .from('bible_chapters')
         .select('chapter_number')
@@ -94,12 +98,32 @@ export const useBibleReader = () => {
       }
 
       if (data && data.length > 0) {
+        console.log("Max chapters for book:", data[0].chapter_number);
         setMaxChapters(data[0].chapter_number);
       }
     };
 
     fetchChapterCount();
   }, [selectedBook]);
+
+  const addVersion = () => {
+    if (versions.length >= 4) {
+      toast({
+        title: "Limite atingido",
+        description: "Você pode adicionar no máximo 4 versões para comparação.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
+    setVersions([...versions, newVersion]);
+    
+    toast({
+      title: "Versão adicionada",
+      description: "Uma nova versão foi adicionada para comparação.",
+    });
+  };
 
   const removeVersion = (index: number) => {
     if (versions.length <= 1) {
@@ -137,6 +161,7 @@ export const useBibleReader = () => {
     maxChapters,
     setSelectedBook,
     setChapter,
+    addVersion,
     removeVersion,
     handleVersionChange,
   };

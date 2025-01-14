@@ -14,6 +14,7 @@ const BibleReader = () => {
     maxChapters,
     setSelectedBook,
     setChapter,
+    addVersion,
     removeVersion,
     handleVersionChange,
   } = useBibleReader();
@@ -64,7 +65,9 @@ const BibleReader = () => {
         maxChapters={maxChapters}
         onBookChange={setSelectedBook}
         onChapterChange={setChapter}
+        onAddVersion={addVersion}
         onCommentaryOpen={() => setIsCommentaryOpen(true)}
+        versionsCount={versions.length}
       />
       
       <BibleLayout
