@@ -32,7 +32,6 @@ serve(async (req) => {
 
     console.log('Versículos AA anteriores removidos com sucesso');
     
-    // Fazer o fetch e logar a resposta bruta para debug
     const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json');
     if (!response.ok) {
       throw new Error(`Falha ao buscar dados: ${response.statusText}`);
@@ -66,14 +65,14 @@ serve(async (req) => {
 
     for (const book of bibleData) {
       try {
-        console.log(`\nProcessando livro:`, book);
+        console.log(`\nProcessando livro:`, book.name);
         
         if (!book || typeof book !== 'object') {
           errors.push({ error: 'Livro inválido', data: book });
           continue;
         }
 
-        // Buscar o livro existente
+        // Buscar o livro existente usando maybeSingle()
         const { data: bookData, error: bookError } = await supabaseClient
           .from('bible_books')
           .select('id, name')
@@ -94,7 +93,6 @@ serve(async (req) => {
         }
 
         console.log(`Livro encontrado: ${book.name} (ID: ${bookData.id})`);
-        console.log('Capítulos:', book.chapters);
 
         if (!Array.isArray(book.chapters)) {
           const error = `Estrutura inválida para o livro ${book.name}: chapters não é um array`;
@@ -108,7 +106,7 @@ serve(async (req) => {
           const chapterNumber = chapterIndex + 1;
           const chapter = book.chapters[chapterIndex];
           
-          console.log(`Processando ${book.name} ${chapterNumber}:`, chapter);
+          console.log(`Processando ${book.name} ${chapterNumber}`);
 
           if (!Array.isArray(chapter)) {
             const error = `Estrutura inválida para ${book.name} capítulo ${chapterNumber}: versículos não é um array`;
@@ -117,7 +115,7 @@ serve(async (req) => {
             continue;
           }
 
-          // Buscar o capítulo existente
+          // Buscar o capítulo existente usando maybeSingle()
           const { data: chapterData, error: chapterError } = await supabaseClient
             .from('bible_chapters')
             .select('id')
@@ -147,7 +145,6 @@ serve(async (req) => {
           }));
 
           console.log(`Inserindo ${verses.length} versículos para ${book.name} ${chapterNumber}`);
-          console.log('Primeiro versículo:', verses[0]);
 
           const { error: versesError } = await supabaseClient
             .from('bible_verses')
