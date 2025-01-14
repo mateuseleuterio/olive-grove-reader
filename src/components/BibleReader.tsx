@@ -22,12 +22,14 @@ const BIBLE_VERSIONS = {
 
 type BibleVersion = keyof typeof BIBLE_VERSIONS;
 
+// ... keep existing code (useState and useEffect hooks)
+
 const BibleReader = () => {
   const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<number>(1); // Alterado para 1 (Gênesis)
+  const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
