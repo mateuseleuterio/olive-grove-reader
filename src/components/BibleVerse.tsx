@@ -18,6 +18,7 @@ interface Verse {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -67,9 +68,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     fetchVerses();
   }, [bookId, chapter, version]);
 
-  const renderVerse = (text: string) => {
+  const renderVerse = (text: string, verseNumber: number) => {
     return text.split(" ").map((word, index) => (
-      <WordDetails key={`${text}-${index}`} word={word} />
+      <span 
+        key={`${text}-${index}`}
+        onClick={() => setSelectedVerse(verseNumber)}
+        className="cursor-pointer hover:text-bible-accent inline-block mx-1 transition-colors"
+      >
+        <WordDetails word={word} />
+      </span>
     ));
   };
 
@@ -85,16 +92,18 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     <div className="space-y-4">
       {verses.map((verse) => (
         <div key={verse.id} className="space-y-2">
-          <div className="mb-4 p-2 bg-gray-50 rounded-lg">
-            <HebrewVerse 
-              bookId={bookId}
-              chapter={chapter}
-              verseNumber={verse.verse_number}
-            />
-          </div>
+          {selectedVerse === verse.verse_number && (
+            <div className="mb-4 p-2 bg-gray-50 rounded-lg">
+              <HebrewVerse 
+                bookId={bookId}
+                chapter={chapter}
+                verseNumber={verse.verse_number}
+              />
+            </div>
+          )}
           <p className="break-words">
             <span className="verse-number font-semibold mr-2">{verse.verse_number}</span>
-            {renderVerse(verse.text)}
+            {renderVerse(verse.text, verse.verse_number)}
           </p>
         </div>
       ))}
