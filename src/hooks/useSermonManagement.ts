@@ -66,13 +66,12 @@ export const useSermonManagement = () => {
         throw new Error("Usuário não autenticado");
       }
 
-      // Primeiro, atualizamos o deleted_at
-      const { error: updateError } = await supabase
+      const { error } = await supabase
         .from("sermons")
-        .update({ deleted_at: new Date().toISOString() })
+        .delete()
         .match({ id, user_id: userData.user.id });
 
-      if (updateError) throw updateError;
+      if (error) throw error;
 
       toast({
         title: "Sucesso",

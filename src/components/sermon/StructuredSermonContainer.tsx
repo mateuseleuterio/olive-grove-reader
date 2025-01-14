@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import StructuredSermonForm from "./StructuredSermonForm";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 import type { SermonType } from "@/types/sermon";
 
 interface StructuredSermonContainerProps {
@@ -23,14 +25,32 @@ const StructuredSermonContainer = ({
   const [points, setPoints] = useState<NonNullable<SermonType['points']>>(initialPoints);
   const [conclusion, setConclusion] = useState(initialConclusion);
   const { handleSaveSermon } = useSermonManagement();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate('/login');
+      }
+    };
+    
+    checkAuth();
+  }, [navigate]);
 
   const onSave = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+
     await handleSaveSermon({
       title,
       introduction,
       points,
       conclusion,
-      user_id: '00000000-0000-0000-0000-000000000000'
+      user_id: user.id
     });
   };
 
