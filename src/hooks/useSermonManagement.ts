@@ -14,12 +14,11 @@ export const useSermonManagement = () => {
       setIsLoading(true);
       
       const { data: userData } = await supabase.auth.getUser();
-      const user_id = userData.user?.id;
+      const user_id = userData.user?.id || '00000000-0000-0000-0000-000000000000';
 
       const dataToSave = {
         ...sermonData,
         user_id,
-        // Convertendo o array de SermonPoint para um formato compatível com Json
         points: sermonData.points.map(point => ({
           title: point.title,
           content: point.content,
@@ -60,10 +59,17 @@ export const useSermonManagement = () => {
     try {
       setIsLoading(true);
       
+      const { data: userData } = await supabase.auth.getUser();
+      const user_id = userData.user?.id || '00000000-0000-0000-0000-000000000000';
+      
       const { error } = await supabase
         .from("sermons")
-        .update({ deleted_at: new Date().toISOString() })
-        .eq("id", id);
+        .update({ 
+          deleted_at: new Date().toISOString(),
+          user_id // Garantir que o user_id está correto na atualização
+        })
+        .eq("id", id)
+        .eq("user_id", user_id); // Adicionar condição para garantir que estamos atualizando o sermão correto
 
       if (error) throw error;
 
