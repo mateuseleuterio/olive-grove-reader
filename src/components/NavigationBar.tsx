@@ -173,7 +173,7 @@ const NavigationBar = () => {
           </Sheet>
           <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
             {/* Aqui você pode mudar o nome que aparece na barra de navegação */}
-            BibleGuide
+            MyBibleMap
           </Link>
         </div>
 
