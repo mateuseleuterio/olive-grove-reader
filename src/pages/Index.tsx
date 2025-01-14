@@ -1,73 +1,85 @@
 import BibleReader from "@/components/BibleReader";
-import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
 import AuthModal from "@/components/Auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
+import { UserCircle, Settings, LogOut } from "lucide-react";
 
 interface Profile {
   id: string;
-  username: string;
-  full_name: string;
-  avatar_url: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  updated_at: string;
 }
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
       if (session?.user) {
-        setUser(session.user);
+        getProfile(session.user.id);
       }
     });
 
-    // Listen for changes on auth state (login, signup, logout)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (session?.user) {
+        getProfile(session.user.id);
+      } else {
+        setProfile(null);
+      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (user?.id) {
-      fetchProfile();
-    }
-  }, [user?.id]);
-
-  const fetchProfile = async () => {
+  const getProfile = async (userId: string) => {
     try {
-      if (!user?.id) return;
-
       const { data, error } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
         .single();
 
       if (error) {
-        throw error;
+        console.error('Error fetching profile:', error);
+        return;
       }
 
-      if (data) {
-        setProfile(data);
-      }
+      setProfile(data);
     } catch (error) {
-      console.error("Error fetching profile:", error);
+      console.error('Error:', error);
     }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
   };
 
   return (
     <div className="min-h-screen bg-bible-gray">
-      <main className="space-y-8 p-4">
+      <main>
         <BibleReader />
       </main>
-      <AuthModal
+      <AuthModal 
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
       />
