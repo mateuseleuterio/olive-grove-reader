@@ -525,6 +525,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_bible_versions: {
+        Row: {
+          downloaded_at: string | null
+          id: string
+          user_id: string | null
+          version: string
+        }
+        Insert: {
+          downloaded_at?: string | null
+          id?: string
+          user_id?: string | null
+          version: string
+        }
+        Update: {
+          downloaded_at?: string | null
+          id?: string
+          user_id?: string | null
+          version?: string
+        }
+        Relationships: []
+      }
       user_reading_progress: {
         Row: {
           completed: boolean
