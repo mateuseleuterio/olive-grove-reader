@@ -192,9 +192,11 @@ const NavigationBar = () => {
             <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
               <Search className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
-              <Settings className="h-5 w-5" />
-            </Button>
+            <Link to="/settings">
+              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
+                <Settings className="h-5 w-5" />
+              </Button>
+            </Link>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

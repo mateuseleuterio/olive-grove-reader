@@ -14,7 +14,7 @@ const VERSIONS = {
 
 type BibleVersion = keyof typeof VERSIONS;
 
-const ImportBibleVersions = () => {
+export const ImportBibleVersions = () => {
   const { toast } = useToast();
   const [isImporting, setIsImporting] = useState(false);
   const [selectedVersion, setSelectedVersion] = useState<BibleVersion>("AA");

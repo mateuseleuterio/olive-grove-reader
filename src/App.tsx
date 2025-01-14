@@ -15,6 +15,7 @@ import StudyCategory from "./pages/StudyCategory";
 import ReadingPlans from "./pages/ReadingPlans";
 import MentalMaps from "./pages/MentalMaps";
 import CreateMentalMap from "./pages/CreateMentalMap";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -42,6 +43,7 @@ function App() {
                 <Route path="/reading-plans" element={<ReadingPlans />} />
                 <Route path="/mental-maps" element={<MentalMaps />} />
                 <Route path="/mental-maps/new" element={<CreateMentalMap />} />
+                <Route path="/settings" element={<Settings />} />
               </Routes>
             </div>
           </div>
