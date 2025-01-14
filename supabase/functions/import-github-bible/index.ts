@@ -24,7 +24,7 @@ serve(async (req) => {
     for (const version of versions) {
       console.log(`Iniciando importação da versão: ${version}`);
       
-      // Fetch Bible data from GitHub
+      // Fetch Bible data from GitHub - usando URL raw do GitHub
       const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`);
       if (!response.ok) {
         console.error(`Falha ao buscar dados da versão ${version}: ${response.statusText}`);
@@ -32,7 +32,7 @@ serve(async (req) => {
       }
       
       const bibleData = await response.json();
-      console.log(`Dados da versão ${version} obtidos com sucesso`);
+      console.log(`Dados da versão ${version} obtidos com sucesso. Total de livros:`, bibleData.length);
 
       for (const book of bibleData) {
         try {
@@ -70,6 +70,8 @@ serve(async (req) => {
             bookId = bookData.id;
           }
 
+          console.log(`Processando livro: ${book.name} (ID: ${bookId})`);
+
           // Process chapters and verses
           for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
             // Insert or get chapter
@@ -103,6 +105,18 @@ serve(async (req) => {
               chapterId = newChapter.id;
             } else {
               chapterId = chapterData.id;
+            }
+
+            // Verificar se já existem versículos para esta versão e capítulo
+            const { count: existingVerses } = await supabaseClient
+              .from('bible_verses')
+              .select('*', { count: 'exact', head: true })
+              .eq('chapter_id', chapterId)
+              .eq('version', version);
+
+            if (existingVerses && existingVerses > 0) {
+              console.log(`Versículos já existem para ${book.name} ${chapterIndex + 1} (${version}). Pulando...`);
+              continue;
             }
 
             // Insert verses
