@@ -16,6 +16,7 @@ interface Profile {
   bio: string | null;
   website: string | null;
   location: string | null;
+  updated_at: string;
 }
 
 const Profile = () => {
