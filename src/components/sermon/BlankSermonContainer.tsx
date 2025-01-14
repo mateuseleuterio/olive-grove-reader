@@ -27,6 +27,7 @@ const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: Bl
       onTitleChange={setTitle}
       onContentChange={setContent}
       onSave={onSave}
+      isLoading={isLoading}
     />
   );
 };

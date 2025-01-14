@@ -11,6 +11,7 @@ interface BlankSermonFormProps {
   onTitleChange: (value: string) => void;
   onContentChange: (value: string) => void;
   onSave: () => Promise<void>;
+  isLoading?: boolean;
 }
 
 const BlankSermonForm = ({
@@ -19,6 +20,7 @@ const BlankSermonForm = ({
   onTitleChange,
   onContentChange,
   onSave,
+  isLoading = false,
 }: BlankSermonFormProps) => {
   const { toast } = useToast();
 
@@ -55,6 +57,7 @@ const BlankSermonForm = ({
           placeholder="Título do sermão"
           value={title}
           onChange={(e) => onTitleChange(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div>
@@ -63,11 +66,12 @@ const BlankSermonForm = ({
           className="min-h-[400px]"
           value={content}
           onChange={(e) => onContentChange(e.target.value)}
+          disabled={isLoading}
         />
       </div>
       <div className="flex justify-end">
-        <Button onClick={handleSave}>
-          Salvar Sermão
+        <Button onClick={handleSave} disabled={isLoading}>
+          {isLoading ? "Salvando..." : "Salvar Sermão"}
         </Button>
       </div>
     </div>

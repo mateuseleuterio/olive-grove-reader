@@ -22,9 +22,12 @@ export const useSermonManagement = (id?: string) => {
 
     setIsLoading(true);
     try {
+      console.log('Starting sermon save process...');
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
+      console.log('Current user:', user);
 
       const finalSermonData: SermonInput = {
         title: sermonData.title,
@@ -39,6 +42,8 @@ export const useSermonManagement = (id?: string) => {
 
       const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       const result = await saveSermon(finalSermonData, isValidUUID, id);
+
+      console.log('Save result:', result);
 
       toast({
         title: "Sucesso",
