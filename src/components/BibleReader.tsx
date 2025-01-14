@@ -22,7 +22,7 @@ const BibleReader = () => {
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<number>(8); // ID do livro de Êxodo
+  const [selectedBook, setSelectedBook] = useState<number>(7); // ID do livro de Gênesis
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
