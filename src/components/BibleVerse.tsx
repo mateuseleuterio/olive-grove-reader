@@ -1,10 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import WordDetails from "./WordDetails";
 
 interface BibleVerseProps {
   bookId: number;
@@ -18,20 +14,9 @@ interface Verse {
   text: string;
 }
 
-interface StrongWord {
-  word: string;
-  strong_number: string;
-}
-
-interface RenderedWord {
-  word: string;
-  strongNumber?: string;
-}
-
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [renderedWords, setRenderedWords] = useState<Record<number, RenderedWord[]>>({});
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -73,31 +58,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         }
 
         setVerses(versesData || []);
-
-        // Fetch Strong's numbers for each verse
-        if (versesData) {
-          const wordsMap: Record<number, RenderedWord[]> = {};
-          
-          for (const verse of versesData) {
-            const { data: strongsData, error: strongsError } = await supabase
-              .from('bible_word_strongs')
-              .select('word, strong_number')
-              .eq('verse_id', verse.id)
-              .order('word_position');
-
-            if (!strongsError && strongsData) {
-              const words = verse.text.split(" ");
-              wordsMap[verse.id] = words.map((word, index) => ({
-                word,
-                strongNumber: strongsData[index]?.strong_number
-              }));
-            } else {
-              wordsMap[verse.id] = verse.text.split(" ").map(word => ({ word }));
-            }
-          }
-          
-          setRenderedWords(wordsMap);
-        }
       } catch (error) {
         console.error('Erro:', error);
       } finally {
@@ -107,6 +67,12 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     fetchVerses();
   }, [bookId, chapter, version]);
+
+  const renderVerse = (text: string) => {
+    return text.split(" ").map((word, index) => (
+      <WordDetails key={`${text}-${index}`} word={word} />
+    ));
+  };
 
   if (loading) {
     return <div>Carregando...</div>;
@@ -121,69 +87,9 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       {verses.map((verse) => (
         <p key={verse.id} className="break-words">
           <span className="verse-number">{verse.verse_number}</span>
-          {renderedWords[verse.id]?.map((wordData, index) => (
-            wordData.strongNumber ? (
-              <Popover key={`${verse.id}-${index}`}>
-                <PopoverTrigger asChild>
-                  <span className="cursor-pointer hover:text-bible-accent mx-1">
-                    {wordData.word}
-                    <sup className="text-xs text-gray-500">{wordData.strongNumber}</sup>
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent className="w-80">
-                  <StrongDetails strongNumber={wordData.strongNumber} />
-                </PopoverContent>
-              </Popover>
-            ) : (
-              <span key={`${verse.id}-${index}`} className="mx-1">{wordData.word}</span>
-            )
-          ))}
+          {renderVerse(verse.text)}
         </p>
       ))}
-    </div>
-  );
-};
-
-const StrongDetails = ({ strongNumber }: { strongNumber: string }) => {
-  const [strongDetails, setStrongDetails] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchStrongDetails = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('strongs_dictionary')
-          .select('*')
-          .eq('strong_number', strongNumber)
-          .maybeSingle();
-
-        if (error) throw error;
-        setStrongDetails(data);
-      } catch (error) {
-        console.error('Erro ao buscar detalhes do Strong:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStrongDetails();
-  }, [strongNumber]);
-
-  if (loading) {
-    return <p>Carregando...</p>;
-  }
-
-  if (!strongDetails) {
-    return <p>Nenhuma referência Strong encontrada.</p>;
-  }
-
-  return (
-    <div className="space-y-2">
-      <p><strong>Palavra Original:</strong> {strongDetails.hebrew_word}</p>
-      <p><strong>Transliteração:</strong> {strongDetails.transliteration}</p>
-      <p><strong>Significado:</strong> {strongDetails.meaning}</p>
-      <p><strong>Tradução:</strong> {strongDetails.portuguese_word}</p>
-      <p className="text-xs text-muted-foreground">Strong's #{strongNumber}</p>
     </div>
   );
 };

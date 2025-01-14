@@ -1,25 +1,33 @@
 import React, { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
-import BibleVersionManager from "./bible/BibleVersionManager";
-import { useBibleData, BIBLE_VERSIONS } from "@/hooks/useBibleData";
+import BibleVersionPanel from "./bible/BibleVersionPanel";
+import { useToast } from "@/hooks/use-toast";
+
+interface Book {
+  id: number;
+  name: string;
+}
+
+const BIBLE_VERSIONS = {
+  "ACF": "Almeida Corrigida Fiel"
+} as const;
+
+type BibleVersion = keyof typeof BIBLE_VERSIONS;
 
 const BibleReader = () => {
+  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
+    { id: "ACF", name: BIBLE_VERSIONS.ACF }
+  ]);
+  const [books, setBooks] = useState<Book[]>([]);
+  const [selectedBook, setSelectedBook] = useState<number>(1);
+  const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [maxChapters, setMaxChapters] = useState(50);
   const { toast } = useToast();
-  
-  const {
-    versions,
-    setVersions,
-    books,
-    selectedBook,
-    setSelectedBook,
-    chapter,
-    setChapter,
-    maxChapters
-  } = useBibleData();
 
   useEffect(() => {
     const checkMobile = () => {
@@ -31,6 +39,57 @@ const BibleReader = () => {
     
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const { data, error } = await supabase
+        .from('bible_books')
+        .select('id, name')
+        .order('position');
+
+      if (error) {
+        console.error('Erro ao buscar livros:', error);
+        return;
+      }
+
+      if (data) {
+        const uniqueBooks = data.filter((book, index, self) =>
+          index === self.findIndex((b) => b.name === book.name)
+        );
+        setBooks(uniqueBooks);
+        if (uniqueBooks.length > 0 && !selectedBook) {
+          setSelectedBook(uniqueBooks[0].id);
+        }
+      }
+    };
+
+    fetchBooks();
+  }, []); 
+
+  useEffect(() => {
+    const fetchChapterCount = async () => {
+      if (!selectedBook) return;
+      
+      const { data, error } = await supabase
+        .from('bible_chapters')
+        .select('chapter_number')
+        .eq('book_id', selectedBook)
+        .order('chapter_number', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Erro ao buscar número de capítulos:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setMaxChapters(data[0].chapter_number);
+        setChapter("1");
+      }
+    };
+
+    fetchChapterCount();
+  }, [selectedBook]);
 
   const handleNextChapter = () => {
     const currentChapter = parseInt(chapter);
@@ -48,9 +107,25 @@ const BibleReader = () => {
       setChapter((currentChapter - 1).toString());
     } else if (selectedBook > 1) {
       setSelectedBook(selectedBook - 1);
-      // Will automatically fetch and set the last chapter of the previous book
+      // Buscar o último capítulo do livro anterior
+      const fetchPreviousBookChapters = async () => {
+        const { data, error } = await supabase
+          .from('bible_chapters')
+          .select('chapter_number')
+          .eq('book_id', selectedBook - 1)
+          .order('chapter_number', { ascending: false })
+          .limit(1);
+
+        if (!error && data && data.length > 0) {
+          setChapter(data[0].chapter_number.toString());
+        }
+      };
+      fetchPreviousBookChapters();
     }
   };
+
+  const hasNextChapter = parseInt(chapter) < maxChapters || selectedBook < books.length;
+  const hasPreviousChapter = parseInt(chapter) > 1 || selectedBook > 1;
 
   const addVersion = () => {
     if (versions.length >= 4) {
@@ -62,24 +137,13 @@ const BibleReader = () => {
       return;
     }
 
-    const availableVersions = Object.entries(BIBLE_VERSIONS)
-      .map(([id, name]) => ({ id, name }))
-      .filter(v => !versions.some(existing => existing.id === v.id));
-
-    if (availableVersions.length > 0) {
-      const newVersions = [...versions, availableVersions[0]];
-      setVersions(newVersions);
-      toast({
-        title: "Versão adicionada",
-        description: "Uma nova versão foi adicionada para comparação.",
-      });
-    } else {
-      toast({
-        title: "Sem versões disponíveis",
-        description: "Não há mais versões disponíveis para adicionar.",
-        variant: "destructive",
-      });
-    }
+    const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
+    setVersions([...versions, newVersion]);
+    
+    toast({
+      title: "Versão adicionada",
+      description: "Uma nova versão foi adicionada para comparação.",
+    });
   };
 
   const removeVersion = (index: number) => {
@@ -100,21 +164,15 @@ const BibleReader = () => {
     });
   };
 
-  const handleVersionChange = (index: number, newVersion: string) => {
+  const handleVersionChange = (index: number, newVersion: BibleVersion) => {
     const newVersions = versions.map((v, i) => {
       if (i === index) {
-        return { 
-          id: newVersion, 
-          name: BIBLE_VERSIONS[newVersion as keyof typeof BIBLE_VERSIONS] 
-        };
+        return { id: newVersion, name: BIBLE_VERSIONS[newVersion] };
       }
       return v;
     });
     setVersions(newVersions);
   };
-
-  const hasNextChapter = parseInt(chapter) < maxChapters || selectedBook < books.length;
-  const hasPreviousChapter = parseInt(chapter) > 1 || selectedBook > 1;
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
@@ -130,18 +188,55 @@ const BibleReader = () => {
         versionsCount={versions.length}
       />
       
-      <BibleVersionManager
-        versions={versions}
-        onVersionChange={handleVersionChange}
-        onRemoveVersion={removeVersion}
-        selectedBook={selectedBook}
-        chapter={chapter}
-        isMobile={isMobile}
-        onNextChapter={handleNextChapter}
-        onPreviousChapter={handlePreviousChapter}
-        hasNextChapter={hasNextChapter}
-        hasPreviousChapter={hasPreviousChapter}
-      />
+      {isMobile ? (
+        <div className="flex flex-col gap-4">
+          {versions.map((version, index) => (
+            <div key={`mobile-version-${version.id}-${index}`} className="border rounded-lg bg-white">
+              <BibleVersionPanel
+                version={version}
+                onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
+                onRemove={() => removeVersion(index)}
+                canRemove={versions.length > 1}
+                selectedBook={selectedBook}
+                chapter={chapter}
+                versions={BIBLE_VERSIONS}
+                onNextChapter={handleNextChapter}
+                onPreviousChapter={handlePreviousChapter}
+                hasNextChapter={hasNextChapter}
+                hasPreviousChapter={hasPreviousChapter}
+              />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <ResizablePanelGroup 
+          direction="horizontal" 
+          className="min-h-[400px] w-full rounded-lg border"
+        >
+          {versions.map((version, index) => (
+            <React.Fragment key={`panel-${version.id}-${index}`}>
+              <ResizablePanel defaultSize={100 / versions.length}>
+                <BibleVersionPanel
+                  version={version}
+                  onVersionChange={(newVersion) => handleVersionChange(index, newVersion as BibleVersion)}
+                  onRemove={() => removeVersion(index)}
+                  canRemove={versions.length > 1}
+                  selectedBook={selectedBook}
+                  chapter={chapter}
+                  versions={BIBLE_VERSIONS}
+                  onNextChapter={handleNextChapter}
+                  onPreviousChapter={handlePreviousChapter}
+                  hasNextChapter={hasNextChapter}
+                  hasPreviousChapter={hasPreviousChapter}
+                />
+              </ResizablePanel>
+              {index < versions.length - 1 && (
+                <ResizableHandle withHandle />
+              )}
+            </React.Fragment>
+          ))}
+        </ResizablePanelGroup>
+      )}
 
       <CommentaryDrawer 
         isOpen={isCommentaryOpen}
