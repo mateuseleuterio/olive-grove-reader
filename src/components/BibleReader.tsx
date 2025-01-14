@@ -19,9 +19,7 @@ const BIBLE_VERSIONS = {
 type BibleVersion = keyof typeof BIBLE_VERSIONS;
 
 const BibleReader = () => {
-  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
-    { id: "ACF", name: BIBLE_VERSIONS.ACF }
-  ]);
+  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
@@ -29,6 +27,48 @@ const BibleReader = () => {
   const [isMobile, setIsMobile] = useState(false);
   const [maxChapters, setMaxChapters] = useState(50);
   const { toast } = useToast();
+
+  // Inicializar as versões disponíveis
+  useEffect(() => {
+    const fetchAvailableVersions = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('bible_verses')
+          .select('version')
+          .distinct();
+
+        if (error) throw error;
+
+        const availableVersions = data
+          .map(v => v.version)
+          .filter(version => version in BIBLE_VERSIONS)
+          .map(version => ({
+            id: version as BibleVersion,
+            name: BIBLE_VERSIONS[version as BibleVersion]
+          }));
+
+        if (availableVersions.length > 0) {
+          setVersions([availableVersions[0]]);
+        } else {
+          console.error('Nenhuma versão disponível encontrada');
+          toast({
+            title: "Erro ao carregar versões",
+            description: "Não foi possível encontrar versões da Bíblia disponíveis.",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao buscar versões:', error);
+        toast({
+          title: "Erro ao carregar versões",
+          description: "Ocorreu um erro ao buscar as versões disponíveis.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchAvailableVersions();
+  }, []);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -143,13 +183,24 @@ const BibleReader = () => {
       return;
     }
 
-    const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
-    setVersions([...versions, newVersion]);
-    
-    toast({
-      title: "Versão adicionada",
-      description: "Uma nova versão foi adicionada para comparação.",
-    });
+    // Adicionar a próxima versão disponível que ainda não está sendo exibida
+    const availableVersions = Object.entries(BIBLE_VERSIONS)
+      .map(([id, name]) => ({ id: id as BibleVersion, name }))
+      .filter(v => !versions.some(existing => existing.id === v.id));
+
+    if (availableVersions.length > 0) {
+      setVersions([...versions, availableVersions[0]]);
+      toast({
+        title: "Versão adicionada",
+        description: "Uma nova versão foi adicionada para comparação.",
+      });
+    } else {
+      toast({
+        title: "Sem versões disponíveis",
+        description: "Não há mais versões disponíveis para adicionar.",
+        variant: "destructive",
+      });
+    }
   };
 
   const removeVersion = (index: number) => {
