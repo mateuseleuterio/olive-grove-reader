@@ -2,7 +2,6 @@ import { BookOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
 
 interface Book {
   id: number;
@@ -32,7 +31,6 @@ const BibleControls = ({
   onCommentaryOpen,
   versionsCount
 }: BibleControlsProps) => {
-  const { toast } = useToast();
   const chapters = Array.from({ length: maxChapters }, (_, i) => (i + 1).toString());
 
   return (
