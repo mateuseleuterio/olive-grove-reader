@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { SermonType, SermonPoint } from "@/types/sermon";
 import SermonContent from "@/components/sermon/SermonContent";
+import PreachingToolbar from "@/components/sermon/PreachingToolbar";
 
 const PreachingMode = () => {
   const { id } = useParams<{ id: string }>();
@@ -47,9 +48,12 @@ const PreachingMode = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <SermonContent sermon={sermon} />
-    </div>
+    <>
+      <PreachingToolbar />
+      <div className="max-w-4xl mx-auto p-6 mt-16">
+        <SermonContent sermon={sermon} />
+      </div>
+    </>
   );
 };
 
