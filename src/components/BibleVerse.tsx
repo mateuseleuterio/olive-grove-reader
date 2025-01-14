@@ -25,20 +25,49 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       try {
         console.log("Iniciando busca de versículos:", { bookId, chapter, version });
         
-        // Primeiro, buscar o chapter_id
+        // Primeiro, verificar se o livro existe
+        const { data: bookData, error: bookError } = await supabase
+          .from('bible_books')
+          .select('id, name')
+          .eq('id', bookId)
+          .maybeSingle();
+
+        if (bookError) {
+          console.error('Erro ao buscar livro:', bookError);
+          toast({
+            title: "Erro ao buscar livro",
+            description: `Erro ao buscar livro ${bookId}`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (!bookData) {
+          console.error('Livro não encontrado:', bookId);
+          toast({
+            title: "Livro não encontrado",
+            description: `O livro com ID ${bookId} não foi encontrado`,
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log('Livro encontrado:', bookData);
+        
+        // Buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
           .eq('book_id', bookId)
           .eq('chapter_number', parseInt(chapter))
-          .single();
+          .maybeSingle();
 
         if (chapterError) {
           console.error('Erro ao buscar capítulo:', chapterError);
           console.log('Detalhes da busca do capítulo:', { bookId, chapter });
           toast({
             title: "Erro ao buscar capítulo",
-            description: `Erro ao buscar capítulo ${chapter} do livro ${bookId}`,
+            description: `Erro ao buscar capítulo ${chapter} do livro ${bookData.name}`,
             variant: "destructive",
           });
           return;
@@ -46,6 +75,11 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (!chapterData) {
           console.log('Capítulo não encontrado:', { bookId, chapter });
+          toast({
+            title: "Capítulo não encontrado",
+            description: `O capítulo ${chapter} do livro ${bookData.name} não foi encontrado`,
+            variant: "destructive",
+          });
           setVerses([]);
           return;
         }
