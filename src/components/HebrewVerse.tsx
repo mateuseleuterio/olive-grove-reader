@@ -29,6 +29,7 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
   useEffect(() => {
     const fetchHebrewVerse = async () => {
       try {
+        console.log('Fetching Hebrew verse for:', { bookId, chapter, verseNumber });
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
@@ -46,6 +47,8 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
           return;
         }
 
+        console.log('Chapter data:', chapterData);
+
         const { data: verseData, error: verseError } = await supabase
           .from('hebrew_bible_verses')
           .select('*')
@@ -57,6 +60,8 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
           console.error('Erro ao buscar versículo em hebraico:', verseError);
           return;
         }
+
+        console.log('Verse data:', verseData);
 
         if (verseData) {
           setVerse(verseData);
@@ -72,6 +77,7 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
             return;
           }
 
+          console.log('Parsing data:', parsingData);
           setWordParsing(parsingData || []);
         }
       } catch (error) {
@@ -89,36 +95,42 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
   }
 
   if (!verse) {
-    return null;
+    return <div className="text-center text-gray-500">Texto hebraico não encontrado.</div>;
   }
 
   return (
-    <div className="hebrew-text text-right" dir="rtl">
-      {wordParsing.map((word, index) => (
-        <Popover key={index}>
-          <PopoverTrigger asChild>
-            <span 
-              className="cursor-pointer hover:text-bible-accent mx-1 text-lg font-hebrew transition-colors"
-              style={{ fontFamily: 'Times New Roman, serif' }}
-            >
-              {word.hebrew_word}
-            </span>
-          </PopoverTrigger>
-          <PopoverContent className="w-80 bg-white">
-            <div className="space-y-2">
-              {word.transliteration && (
-                <p><strong>Transliteração:</strong> {word.transliteration}</p>
-              )}
-              {word.morphology && (
-                <p><strong>Morfologia:</strong> {word.morphology}</p>
-              )}
-              {word.strong_number && (
-                <p className="text-xs text-muted-foreground">Strong's #{word.strong_number}</p>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
-      ))}
+    <div className="hebrew-text text-right p-4" dir="rtl">
+      {wordParsing.length > 0 ? (
+        wordParsing.map((word, index) => (
+          <Popover key={index}>
+            <PopoverTrigger asChild>
+              <span 
+                className="cursor-pointer hover:text-bible-accent mx-1 text-xl font-hebrew transition-colors"
+                style={{ fontFamily: 'Times New Roman, serif' }}
+              >
+                {word.hebrew_word}
+              </span>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 bg-white">
+              <div className="space-y-2">
+                {word.transliteration && (
+                  <p><strong>Transliteração:</strong> {word.transliteration}</p>
+                )}
+                {word.morphology && (
+                  <p><strong>Morfologia:</strong> {word.morphology}</p>
+                )}
+                {word.strong_number && (
+                  <p className="text-xs text-muted-foreground">Strong's #{word.strong_number}</p>
+                )}
+              </div>
+            </PopoverContent>
+          </Popover>
+        ))
+      ) : (
+        <div className="text-center text-gray-500">
+          Nenhuma análise de palavras disponível para este versículo.
+        </div>
+      )}
     </div>
   );
 };
