@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleLayout from "./bible/BibleLayout";

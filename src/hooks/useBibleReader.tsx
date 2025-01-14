@@ -15,6 +15,14 @@ export const BIBLE_VERSIONS = {
   "KJF": "King James 1611"
 } as const;
 
+const STORAGE_KEY = "bible_reader_state";
+
+interface StoredState {
+  selectedBook: number;
+  chapter: string;
+  versions: Array<{ id: BibleVersion; name: string }>;
+}
+
 export const useBibleReader = () => {
   const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
@@ -24,6 +32,27 @@ export const useBibleReader = () => {
   const [chapter, setChapter] = useState("1");
   const [maxChapters, setMaxChapters] = useState(50);
   const { toast } = useToast();
+
+  // Load saved state on initial mount
+  useEffect(() => {
+    const savedState = localStorage.getItem(STORAGE_KEY);
+    if (savedState) {
+      const state: StoredState = JSON.parse(savedState);
+      setSelectedBook(state.selectedBook);
+      setChapter(state.chapter);
+      setVersions(state.versions);
+    }
+  }, []);
+
+  // Save state changes to localStorage
+  useEffect(() => {
+    const state: StoredState = {
+      selectedBook,
+      chapter,
+      versions
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }, [selectedBook, chapter, versions]);
 
   useEffect(() => {
     const fetchBooks = async () => {
@@ -71,7 +100,6 @@ export const useBibleReader = () => {
       if (data && data.length > 0) {
         console.log("Max chapters for book:", data[0].chapter_number);
         setMaxChapters(data[0].chapter_number);
-        setChapter("1");
       }
     };
 
