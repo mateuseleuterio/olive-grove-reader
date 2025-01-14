@@ -115,11 +115,12 @@ const BibleReader = () => {
       if (data) {
         const uniqueBooks = data
           .filter((book, index, self) =>
-            index === self.findIndex((b) => b.name === book.name)
+            index === self.findIndex((b) => b.id === book.id)
           )
           .map(book => ({
-            ...book,
-            name: currentVersion === 'BSB' && book.name_bsb ? book.name_bsb : book.name
+            id: book.id,
+            name: currentVersion === 'BSB' && book.name_bsb ? book.name_bsb : book.name,
+            name_bsb: book.name_bsb
           }));
 
         setBooks(uniqueBooks);
