@@ -1,15 +1,17 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const ArticleEditor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const { canManageArticles, isLoading } = useUserRole();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -17,6 +19,17 @@ const ArticleEditor = () => {
     category: "",
     image: null as File | null,
   });
+
+  useEffect(() => {
+    if (!isLoading && !canManageArticles()) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para criar ou editar artigos.",
+        variant: "destructive",
+      });
+      navigate("/");
+    }
+  }, [isLoading, canManageArticles, navigate, toast]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -26,7 +39,16 @@ const ArticleEditor = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
+    if (!canManageArticles()) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para criar ou editar artigos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       let imageUrl = null;
@@ -47,12 +69,14 @@ const ArticleEditor = () => {
         imageUrl = publicUrl;
       }
 
+      const { data: session } = await supabase.auth.getSession();
       const { error } = await supabase.from("articles").insert({
         title: formData.title,
         description: formData.description,
         content: formData.content,
         category: formData.category,
         image_url: imageUrl,
+        user_id: session?.user?.id
       });
 
       if (error) throw error;
@@ -62,7 +86,7 @@ const ArticleEditor = () => {
         description: "Seu artigo foi publicado.",
       });
 
-      navigate("/");
+      navigate("/blog");
     } catch (error) {
       console.error("Error:", error);
       toast({
@@ -71,9 +95,13 @@ const ArticleEditor = () => {
         variant: "destructive",
       });
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return <div className="container mx-auto py-8 px-4">Carregando...</div>;
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -119,8 +147,8 @@ const ArticleEditor = () => {
             required
           />
         </div>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? "Publicando..." : "Publicar Artigo"}
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? "Publicando..." : "Publicar Artigo"}
         </Button>
       </form>
     </div>
