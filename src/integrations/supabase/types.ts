@@ -441,6 +441,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sermons: {
+        Row: {
+          bible_text: string | null
+          conclusion: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          introduction: string | null
+          points: Json | null
+          title: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          bible_text?: string | null
+          conclusion?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          introduction?: string | null
+          points?: Json | null
+          title: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          bible_text?: string | null
+          conclusion?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          introduction?: string | null
+          points?: Json | null
+          title?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       strongs_dictionary: {
         Row: {
           created_at: string

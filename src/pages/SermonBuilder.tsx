@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Search, Trash2, FileText, LogIn } from "lucide-react";
+import { Search, Trash2, FileText, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
@@ -66,6 +66,14 @@ const SermonBuilder = () => {
     },
   });
 
+  const handleNewSermon = () => {
+    if (!user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+    navigate('/sermon-editor');
+  };
+
   const handleDelete = async (id: string) => {
     if (!user) {
       setIsAuthModalOpen(true);
@@ -94,15 +102,6 @@ const SermonBuilder = () => {
     navigate(`/preaching-mode/${id}`);
   };
 
-  const handleEdit = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    if (!user) {
-      setIsAuthModalOpen(true);
-      return;
-    }
-    navigate(`/sermon-editor/${id}`);
-  };
-
   const filteredSermons = sermons.filter(sermon => 
     sermon.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -112,6 +111,10 @@ const SermonBuilder = () => {
       <div className="max-w-6xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-serif text-bible-navy">Meus Sermões</h1>
+          <Button onClick={handleNewSermon} className="bg-bible-navy hover:bg-bible-navy/90">
+            <Plus className="h-4 w-4 mr-2" />
+            Novo Sermão
+          </Button>
         </div>
 
         <div className="flex justify-end mb-6">
@@ -165,14 +168,6 @@ const SermonBuilder = () => {
                     <TableCell>{new Date(sermon.created_at).toLocaleDateString('pt-BR')}</TableCell>
                     <TableCell>
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={(e) => handleEdit(e, sermon.id)}
-                          className="text-bible-navy hover:bg-bible-gray/10"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
                         <Button
                           variant="ghost"
                           size="icon"
