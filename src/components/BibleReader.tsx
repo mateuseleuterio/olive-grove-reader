@@ -42,6 +42,7 @@ const BibleReader = () => {
 
   useEffect(() => {
     const fetchBooks = async () => {
+      console.log("Fetching books...");
       const { data, error } = await supabase
         .from('bible_books')
         .select('id, name')
@@ -53,9 +54,11 @@ const BibleReader = () => {
       }
 
       if (data) {
+        console.log("Books data received:", data);
         const uniqueBooks = data.filter((book, index, self) =>
           index === self.findIndex((b) => b.name === book.name)
         );
+        console.log("Unique books:", uniqueBooks);
         setBooks(uniqueBooks);
       }
     };
@@ -67,6 +70,7 @@ const BibleReader = () => {
     const fetchChapterCount = async () => {
       if (!selectedBook) return;
       
+      console.log("Fetching chapter count for book:", selectedBook);
       const { data, error } = await supabase
         .from('bible_chapters')
         .select('chapter_number')
@@ -80,6 +84,7 @@ const BibleReader = () => {
       }
 
       if (data && data.length > 0) {
+        console.log("Max chapters for book:", data[0].chapter_number);
         setMaxChapters(data[0].chapter_number);
         setChapter("1");
       }
