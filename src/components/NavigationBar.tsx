@@ -140,53 +140,42 @@ const NavigationBar = () => {
   };
 
   return (
-    <nav className="bg-bible-navy text-white py-6 fixed top-0 w-full z-50 shadow-lg">
-      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        <div className="flex items-center gap-6">
-          <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent">
-                {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
-              <SheetHeader className="p-6 border-b border-bible-accent">
-                <SheetTitle className="text-white text-xl">Menu</SheetTitle>
-              </SheetHeader>
-              <div className="py-4 flex flex-col gap-2">
-                <MainMenuItems />
-                <div className="border-t border-bible-accent my-4" />
-                <SideMenuItems />
-                <div className="border-t border-bible-accent my-4" />
-                <div className="px-6 flex flex-col gap-2">
-                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
-                    <Search className="h-5 w-5" />
-                    Pesquisar
-                  </Button>
-                  <Button variant="ghost" size="icon" className="w-full justify-start text-white hover:bg-bible-accent flex items-center gap-3">
-                    <Settings className="h-5 w-5" />
-                    Configurações
-                  </Button>
+    <nav className="bg-bible-navy text-white fixed top-0 w-full z-50 shadow-lg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <div className="flex items-center gap-4">
+            <Sheet open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent lg:hidden">
+                  {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] bg-bible-navy p-0">
+                <SheetHeader className="p-6 border-b border-bible-accent">
+                  <SheetTitle className="text-white text-xl">Menu</SheetTitle>
+                </SheetHeader>
+                <div className="py-4 flex flex-col gap-2">
+                  <MainMenuItems />
+                  <div className="border-t border-bible-accent my-4" />
+                  <SideMenuItems />
                 </div>
-              </div>
-            </SheetContent>
-          </Sheet>
-          <Link to="/" className="text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors flex items-center gap-2">
-            <Map className="h-6 w-6" />
-            MyBibleMap
-          </Link>
-        </div>
+              </SheetContent>
+            </Sheet>
+            <Link to="/" className="flex items-center gap-2 text-2xl font-bold whitespace-nowrap hover:text-white/90 transition-colors">
+              <Map className="h-7 w-7" />
+              <span className="hidden sm:inline">MyBibleMap</span>
+            </Link>
+          </div>
 
-        <NavigationMenu className="hidden md:flex">
-          <NavigationMenuList className="flex gap-4">
-            <NavigationMenuItem className="flex">
-              <MainMenuItems />
-            </NavigationMenuItem>
-          </NavigationMenuList>
-        </NavigationMenu>
+          <NavigationMenu className="hidden lg:flex mx-4 flex-1 justify-center">
+            <NavigationMenuList className="flex gap-2">
+              <NavigationMenuItem>
+                <MainMenuItems />
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
 
-        <div className="flex items-center gap-4">
-          <div className="flex">
+          <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
               <Search className="h-5 w-5" />
             </Button>
