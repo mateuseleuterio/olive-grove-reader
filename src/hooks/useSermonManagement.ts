@@ -44,7 +44,7 @@ export const useSermonManagement = () => {
         description: "Sermão salvo com sucesso!",
       });
 
-      navigate(`/sermon-editor/${data.id}`);
+      return data.id;
     } catch (error) {
       console.error('Erro ao salvar sermão:', error);
       toast({
@@ -52,6 +52,7 @@ export const useSermonManagement = () => {
         description: "Erro ao salvar o sermão. Por favor, tente novamente.",
         variant: "destructive",
       });
+      throw error;
     } finally {
       setIsLoading(false);
     }

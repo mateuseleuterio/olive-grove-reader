@@ -34,12 +34,19 @@ const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: Bl
       return;
     }
 
-    await handleSaveSermon({
-      title,
-      bible_text: content,
-      points: [],
-      user_id: user.id
-    });
+    try {
+      const sermonId = await handleSaveSermon({
+        title,
+        bible_text: content,
+        points: [],
+        user_id: user.id
+      });
+      
+      // Redireciona para o modo de pregação com o ID do sermão
+      navigate(`/preaching-mode/${sermonId}`);
+    } catch (error) {
+      console.error('Error saving sermon:', error);
+    }
   };
 
   return (
