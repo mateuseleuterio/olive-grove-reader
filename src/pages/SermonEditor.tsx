@@ -49,7 +49,12 @@ const SermonEditor = () => {
   const removePoint = (index: number) => {
     setSermon(prev => ({
       ...prev,
-      points: prev.points.filter((_, i) => i !== index)
+      points: prev.points
+        .filter((_, i) => i !== index)
+        .map((point, newIndex) => ({
+          ...point,
+          title: `Ponto ${newIndex + 1}`
+        }))
     }));
   };
 
