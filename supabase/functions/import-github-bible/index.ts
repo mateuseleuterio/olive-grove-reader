@@ -18,14 +18,14 @@ serve(async (req) => {
     )
 
     // Lista de versões a serem importadas
-    const versions = ['ACF', 'AA', 'NVI', 'RA', 'NTLH'];
+    const versions = ['AA', 'NVI', 'RA', 'NTLH'];
     let totalProcessed = 0;
 
     for (const version of versions) {
       console.log(`Iniciando importação da versão: ${version}`);
       
-      // Fetch Bible data from GitHub - usando URL raw do GitHub
-      const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`);
+      // Usando um repositório alternativo
+      const response = await fetch(`https://raw.githubusercontent.com/marciovsena/abibliadigital/master/bibles/${version.toLowerCase()}.json`);
       if (!response.ok) {
         console.error(`Falha ao buscar dados da versão ${version}: ${response.statusText}`);
         continue;
@@ -36,82 +36,40 @@ serve(async (req) => {
 
       for (const book of bibleData) {
         try {
-          // Insert or get book
-          const { data: bookData, error: bookError } = await supabaseClient
+          // Buscar o livro existente
+          const { data: bookData } = await supabaseClient
             .from('bible_books')
-            .select('id')
+            .select('id, name')
             .eq('name', book.name)
             .maybeSingle();
 
-          if (bookError) {
-            console.error(`Erro ao buscar livro ${book.name}:`, bookError);
+          if (!bookData) {
+            console.error(`Livro não encontrado: ${book.name}`);
             continue;
           }
 
-          let bookId;
-          if (!bookData) {
-            const { data: newBook, error: newBookError } = await supabaseClient
-              .from('bible_books')
-              .insert({
-                name: book.name,
-                abbreviation: book.abbrev,
-                testament: book.testament || 'old',
-                position: totalProcessed + 1
-              })
-              .select()
-              .single();
-
-            if (newBookError) {
-              console.error(`Erro ao inserir livro ${book.name}:`, newBookError);
-              continue;
-            }
-            bookId = newBook.id;
-          } else {
-            bookId = bookData.id;
-          }
-
-          console.log(`Processando livro: ${book.name} (ID: ${bookId})`);
+          console.log(`Processando livro: ${book.name} (ID: ${bookData.id})`);
 
           // Process chapters and verses
           for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
-            // Insert or get chapter
-            const { data: chapterData, error: chapterError } = await supabaseClient
+            // Buscar o capítulo existente
+            const { data: chapterData } = await supabaseClient
               .from('bible_chapters')
               .select('id')
-              .eq('book_id', bookId)
+              .eq('book_id', bookData.id)
               .eq('chapter_number', chapterIndex + 1)
               .maybeSingle();
 
-            if (chapterError) {
-              console.error(`Erro ao buscar capítulo ${chapterIndex + 1}:`, chapterError);
-              continue;
-            }
-
-            let chapterId;
             if (!chapterData) {
-              const { data: newChapter, error: newChapterError } = await supabaseClient
-                .from('bible_chapters')
-                .insert({
-                  book_id: bookId,
-                  chapter_number: chapterIndex + 1
-                })
-                .select()
-                .single();
-
-              if (newChapterError) {
-                console.error(`Erro ao inserir capítulo ${chapterIndex + 1}:`, newChapterError);
-                continue;
-              }
-              chapterId = newChapter.id;
-            } else {
-              chapterId = chapterData.id;
+              console.error(`Capítulo não encontrado: ${chapterIndex + 1} do livro ${book.name}`);
+              continue;
             }
 
             // Verificar se já existem versículos para esta versão e capítulo
             const { count: existingVerses } = await supabaseClient
               .from('bible_verses')
               .select('*', { count: 'exact', head: true })
-              .eq('chapter_id', chapterId)
+              .eq('chapter_id', chapterData.id)
               .eq('version', version);
 
             if (existingVerses && existingVerses > 0) {
@@ -121,7 +79,7 @@ serve(async (req) => {
 
             // Insert verses
             const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
-              chapter_id: chapterId,
+              chapter_id: chapterData.id,
               verse_number: index + 1,
               text,
               version: version
