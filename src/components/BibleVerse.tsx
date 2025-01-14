@@ -21,6 +21,8 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   useEffect(() => {
     const fetchVerses = async () => {
       try {
+        console.log("Fetching verses for:", { bookId, chapter, version });
+        
         // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
@@ -57,6 +59,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           return;
         }
 
+        console.log("Verses found:", versesData?.length);
         setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
