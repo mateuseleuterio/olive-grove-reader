@@ -22,7 +22,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   useEffect(() => {
     const fetchVerses = async () => {
       try {
-        // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
@@ -41,7 +40,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           return;
         }
 
-        // Agora buscar os versículos usando o chapter_id
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
           .select(`
@@ -87,13 +85,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     <div className="space-y-4">
       {verses.map((verse) => (
         <div key={verse.id} className="space-y-2">
-          <HebrewVerse 
-            bookId={bookId}
-            chapter={chapter}
-            verseNumber={verse.verse_number}
-          />
+          <div className="mb-4 p-2 bg-gray-50 rounded-lg">
+            <HebrewVerse 
+              bookId={bookId}
+              chapter={chapter}
+              verseNumber={verse.verse_number}
+            />
+          </div>
           <p className="break-words">
-            <span className="verse-number">{verse.verse_number}</span>
+            <span className="verse-number font-semibold mr-2">{verse.verse_number}</span>
             {renderVerse(verse.text)}
           </p>
         </div>

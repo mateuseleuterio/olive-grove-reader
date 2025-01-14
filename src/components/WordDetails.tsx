@@ -49,13 +49,13 @@ const WordDetails = ({ word }: WordDetailsProps) => {
     <Popover>
       <PopoverTrigger asChild>
         <span 
-          className="cursor-pointer hover:text-bible-accent inline-block mx-1"
+          className="cursor-pointer hover:text-bible-accent inline-block mx-1 transition-colors"
           onClick={fetchStrongDetails}
         >
           {word}
         </span>
       </PopoverTrigger>
-      <PopoverContent className="w-80">
+      <PopoverContent className="w-80 bg-white">
         {loading ? (
           <p>Carregando...</p>
         ) : strongDetails ? (

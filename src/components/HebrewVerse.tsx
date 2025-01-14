@@ -29,7 +29,6 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
   useEffect(() => {
     const fetchHebrewVerse = async () => {
       try {
-        // Primeiro, buscar o chapter_id
         const { data: chapterData, error: chapterError } = await supabase
           .from('bible_chapters')
           .select('id')
@@ -47,7 +46,6 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
           return;
         }
 
-        // Buscar o versículo em hebraico
         const { data: verseData, error: verseError } = await supabase
           .from('hebrew_bible_verses')
           .select('*')
@@ -63,7 +61,6 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
         if (verseData) {
           setVerse(verseData);
           
-          // Buscar o parsing das palavras
           const { data: parsingData, error: parsingError } = await supabase
             .from('hebrew_word_parsing')
             .select('*')
@@ -88,7 +85,7 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
   }, [bookId, chapter, verseNumber]);
 
   if (loading) {
-    return null;
+    return <div className="text-center text-gray-500">Carregando texto hebraico...</div>;
   }
 
   if (!verse) {
@@ -100,11 +97,14 @@ const HebrewVerse = ({ bookId, chapter, verseNumber }: HebrewVerseProps) => {
       {wordParsing.map((word, index) => (
         <Popover key={index}>
           <PopoverTrigger asChild>
-            <span className="cursor-pointer hover:text-bible-accent mx-1">
+            <span 
+              className="cursor-pointer hover:text-bible-accent mx-1 text-lg font-hebrew transition-colors"
+              style={{ fontFamily: 'Times New Roman, serif' }}
+            >
               {word.hebrew_word}
             </span>
           </PopoverTrigger>
-          <PopoverContent className="w-80">
+          <PopoverContent className="w-80 bg-white">
             <div className="space-y-2">
               {word.transliteration && (
                 <p><strong>Transliteração:</strong> {word.transliteration}</p>
