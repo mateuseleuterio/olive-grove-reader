@@ -9,8 +9,8 @@ const corsHeaders = {
 }
 
 // Aumentando o tamanho do lote e reduzindo o delay
-const BATCH_SIZE = 50;
-const BATCH_DELAY = 100;
+const BATCH_SIZE = 100;
+const BATCH_DELAY = 50;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -33,13 +33,11 @@ serve(async (req) => {
           persistSession: false,
           autoRefreshToken: false,
           detectSessionInUrl: false
-        },
-        global: {
-          headers: { 'x-my-custom-header': 'bible-import' }
         }
       }
     )
 
+    // Deletando versículos existentes em lotes maiores
     if (bookIndex === 0) {
       console.log(`Deleting existing verses for version: ${version}`);
       
@@ -99,8 +97,8 @@ serve(async (req) => {
     if (bookError) throw bookError;
     if (!bookData) throw new Error(`Book not found: ${book.name}`);
 
-    // Processando todos os capítulos do livro em lotes maiores
-    for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
+    // Processando capítulos em paralelo com Promise.all
+    const chapterPromises = book.chapters.map(async (verses: string[], chapterIndex: number) => {
       const { data: chapterData, error: chapterError } = await supabaseClient
         .from('bible_chapters')
         .select('id')
@@ -128,7 +126,6 @@ serve(async (req) => {
       }
 
       // Preparando todos os versículos do capítulo
-      const verses = book.chapters[chapterIndex];
       const allVerses = verses.map((text: string, index: number) => ({
         chapter_id: chapterId,
         verse_number: index + 1,
@@ -145,12 +142,13 @@ serve(async (req) => {
 
         if (versesError) throw versesError;
 
-        // Pequena pausa entre os lotes para evitar sobrecarga
         if (i + BATCH_SIZE < allVerses.length) {
           await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
         }
       }
-    }
+    });
+
+    await Promise.all(chapterPromises);
 
     return new Response(
       JSON.stringify({ 
