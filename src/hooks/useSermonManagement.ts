@@ -2,15 +2,15 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import type { SermonType, SermonInput } from "@/types/sermon";
+import type { SermonType } from "@/types/sermon";
 import type { Json } from "@/integrations/supabase/types";
 
-export const useSermonManagement = (id?: string) => {
+export const useSermonManagement = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSaveSermon = async (sermonData: Partial<SermonType>) => {
+  const handleSaveSermon = async (sermonData: SermonType) => {
     if (!sermonData.title) {
       toast({
         title: "Erro",
@@ -29,7 +29,6 @@ export const useSermonManagement = (id?: string) => {
 
       console.log('Current user:', user);
 
-      // Cast points to Json type for Supabase compatibility
       const finalSermonData = {
         title: sermonData.title,
         user_id: user?.id || '00000000-0000-0000-0000-000000000000',
@@ -41,13 +40,11 @@ export const useSermonManagement = (id?: string) => {
 
       console.log('Saving sermon with data:', finalSermonData);
 
-      const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      
-      if (isValidUUID) {
+      if (sermonData.id && sermonData.id !== 'blank') {
         const { data, error } = await supabase
           .from('sermons')
           .update(finalSermonData)
-          .eq('id', id)
+          .eq('id', sermonData.id)
           .select()
           .single();
 

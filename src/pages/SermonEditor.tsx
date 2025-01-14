@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Plus as PlusIcon, Trash as TrashIcon } from "lucide-react";
 import type { SermonType } from "@/types/sermon";
 import { useSermonManagement } from "@/hooks/useSermonManagement";
+import { supabase } from "@/integrations/supabase/client";
 
 const SermonEditor = () => {
   const { id } = useParams<{ id: string }>();
@@ -42,7 +42,12 @@ const SermonEditor = () => {
 
   useEffect(() => {
     if (existingSermon) {
-      setSermon(existingSermon);
+      setSermon({
+        ...existingSermon,
+        points: Array.isArray(existingSermon.points) 
+          ? existingSermon.points 
+          : []
+      });
     }
   }, [existingSermon]);
 
