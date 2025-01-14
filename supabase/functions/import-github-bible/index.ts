@@ -31,7 +31,9 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
       {
         auth: {
-          persistSession: false
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false
         },
         global: {
           headers: { 'x-my-custom-header': 'bible-import' }
@@ -44,20 +46,6 @@ serve(async (req) => {
       console.log(`Deleting existing verses for version: ${version}`);
       
       try {
-        // First, count existing verses
-        const { count, error: countError } = await supabaseClient
-          .from('bible_verses')
-          .select('*', { count: 'exact', head: true })
-          .eq('version', version);
-          
-        if (countError) {
-          console.error('Error counting existing verses:', countError);
-          throw countError;
-        }
-        
-        console.log(`Found ${count} existing verses for version ${version}`);
-
-        // Then delete them
         const { error: deleteError } = await supabaseClient
           .from('bible_verses')
           .delete()
@@ -68,28 +56,10 @@ serve(async (req) => {
           throw deleteError;
         }
 
-        // Verify deletion
-        const { count: remainingCount, error: verifyError } = await supabaseClient
-          .from('bible_verses')
-          .select('*', { count: 'exact', head: true })
-          .eq('version', version);
-
-        if (verifyError) {
-          console.error('Error verifying deletion:', verifyError);
-          throw verifyError;
-        }
-
-        if (remainingCount > 0) {
-          throw new Error(`Failed to delete all verses. ${remainingCount} verses remain.`);
-        }
-
-        console.log(`Successfully deleted all existing verses for version: ${version}`);
+        console.log(`Successfully deleted existing verses for version: ${version}`);
       } catch (error) {
         console.error('Error in deletion process:', error);
-        return new Response(
-          JSON.stringify({ success: false, error: error.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
+        throw error;
       }
     }
 
@@ -163,7 +133,6 @@ serve(async (req) => {
 
         let chapterId;
         if (!chapterData) {
-          console.log(`Creating chapter ${chapterIndex + 1}`);
           const { data: newChapter, error: newChapterError } = await supabaseClient
             .from('bible_chapters')
             .insert({
@@ -177,12 +146,11 @@ serve(async (req) => {
             throw newChapterError;
           }
           chapterId = newChapter.id;
-          console.log(`Chapter ${chapterIndex + 1} created successfully`);
         } else {
           chapterId = chapterData.id;
         }
 
-        // Process verses in smaller batches
+        // Process verses in batches
         const verses = book.chapters[chapterIndex];
         for (let i = 0; i < verses.length; i += BATCH_SIZE) {
           const verseBatch = verses.slice(i, i + BATCH_SIZE);
@@ -192,8 +160,6 @@ serve(async (req) => {
             text: text || '',
             version
           }));
-
-          console.log(`Inserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
 
           const { error: versesError } = await supabaseClient
             .from('bible_verses')
@@ -209,17 +175,7 @@ serve(async (req) => {
         }
       } catch (error) {
         console.error(`Error processing chapter ${chapterIndex + 1}:`, error);
-        return new Response(
-          JSON.stringify({ 
-            success: false, 
-            error: error.message,
-            context: {
-              book: book.name,
-              chapter: chapterIndex + 1
-            }
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        )
+        throw error;
       }
     }
 
