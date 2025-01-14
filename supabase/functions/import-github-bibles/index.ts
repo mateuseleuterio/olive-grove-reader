@@ -21,6 +21,8 @@ serve(async (req) => {
       )
     }
 
+    console.log(`Importing Bible version: ${version}`)
+
     // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -28,7 +30,8 @@ serve(async (req) => {
     )
 
     // Fetch Bible data from GitHub
-    const response = await fetch(`https://raw.githubusercontent.com/damarals/biblias/main/json/${version}.json`)
+    // Usando o caminho correto do repositório e o nome do arquivo em minúsculo
+    const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`)
     if (!response.ok) {
       throw new Error(`Failed to fetch Bible data: ${response.statusText}`)
     }
