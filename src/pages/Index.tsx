@@ -1,19 +1,9 @@
 import BibleReader from "@/components/BibleReader";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import BibleImporter from "@/components/bible/BibleImporter";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/Auth";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
-import { UserCircle, Settings, LogOut } from "lucide-react";
 
 interface Profile {
   id: string;
@@ -26,7 +16,7 @@ const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const navigate = useNavigate();
+  const [showImporter, setShowImporter] = useState(true);
 
   useEffect(() => {
     // Check current session
@@ -69,14 +59,20 @@ const Index = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/");
-  };
-
   return (
     <div className="min-h-screen bg-bible-gray">
-      <main>
+      <main className="space-y-8 p-4">
+        {showImporter && (
+          <div className="mb-8">
+            <BibleImporter />
+            <button 
+              onClick={() => setShowImporter(false)}
+              className="mt-4 text-sm text-gray-500 hover:text-gray-700"
+            >
+              Ocultar importador
+            </button>
+          </div>
+        )}
         <BibleReader />
       </main>
       <AuthModal 
