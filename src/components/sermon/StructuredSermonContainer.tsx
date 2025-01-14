@@ -63,7 +63,7 @@ const StructuredSermonContainer = ({
         setTitle(sermon.title);
         setIntroduction(sermon.introduction || "");
         // Ensure points is properly typed when setting state
-        const sermonPoints = sermon.points as NonNullable<SermonType['points']> || [{ 
+        const sermonPoints = (sermon.points as unknown as SermonType['points']) || [{ 
           title: "", 
           content: "", 
           illustrations: [] 
