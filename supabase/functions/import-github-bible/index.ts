@@ -7,107 +7,135 @@ const corsHeaders = {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    // Create Supabase client
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    const { version } = await req.json()
-    if (!version) {
-      throw new Error('Version parameter is required')
-    }
+    // Lista de versões a serem importadas
+    const versions = ['ACF', 'AA', 'NVI', 'RA', 'NTLH'];
+    let totalProcessed = 0;
 
-    console.log(`Importing Bible version: ${version}`)
+    for (const version of versions) {
+      console.log(`Iniciando importação da versão: ${version}`);
+      
+      // Fetch Bible data from GitHub
+      const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`);
+      if (!response.ok) {
+        console.error(`Falha ao buscar dados da versão ${version}: ${response.statusText}`);
+        continue;
+      }
+      
+      const bibleData = await response.json();
+      console.log(`Dados da versão ${version} obtidos com sucesso`);
 
-    // Fetch Bible data from GitHub
-    const response = await fetch(`https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch Bible data: ${response.statusText}`)
-    }
-    
-    const bibleData = await response.json()
-    console.log('Bible data fetched successfully')
+      for (const book of bibleData) {
+        try {
+          // Insert or get book
+          const { data: bookData, error: bookError } = await supabaseClient
+            .from('bible_books')
+            .select('id')
+            .eq('name', book.name)
+            .maybeSingle();
 
-    let processedCount = 0
-    
-    for (const book of bibleData) {
-      try {
-        // Insert book
-        const { data: bookData, error: bookError } = await supabaseClient
-          .from('bible_books')
-          .insert({
-            name: book.name,
-            abbreviation: book.abbrev,
-            testament: book.testament || 'old',
-            position: processedCount + 1
-          })
-          .select()
-          .single()
-
-        if (bookError) {
-          console.error(`Error inserting book ${book.name}:`, bookError)
-          throw bookError
-        }
-
-        console.log(`Inserted book: ${book.name}`)
-
-        // Insert chapters and verses
-        for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
-          // Insert chapter
-          const { data: chapterData, error: chapterError } = await supabaseClient
-            .from('bible_chapters')
-            .insert({
-              book_id: bookData.id,
-              chapter_number: chapterIndex + 1
-            })
-            .select()
-            .single()
-
-          if (chapterError) {
-            console.error(`Error inserting chapter ${chapterIndex + 1} for book ${book.name}:`, chapterError)
-            throw chapterError
+          if (bookError) {
+            console.error(`Erro ao buscar livro ${book.name}:`, bookError);
+            continue;
           }
 
-          console.log(`Inserted chapter ${chapterIndex + 1} for book ${book.name}`)
+          let bookId;
+          if (!bookData) {
+            const { data: newBook, error: newBookError } = await supabaseClient
+              .from('bible_books')
+              .insert({
+                name: book.name,
+                abbreviation: book.abbrev,
+                testament: book.testament || 'old',
+                position: totalProcessed + 1
+              })
+              .select()
+              .single();
 
-          // Insert verses
-          const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
-            chapter_id: chapterData.id,
-            verse_number: index + 1,
-            text,
-            version: version
-          }))
-
-          const { error: versesError } = await supabaseClient
-            .from('bible_verses')
-            .insert(verses)
-
-          if (versesError) {
-            console.error(`Error inserting verses for chapter ${chapterIndex + 1} of book ${book.name}:`, versesError)
-            throw versesError
+            if (newBookError) {
+              console.error(`Erro ao inserir livro ${book.name}:`, newBookError);
+              continue;
+            }
+            bookId = newBook.id;
+          } else {
+            bookId = bookData.id;
           }
 
-          console.log(`Inserted verses for chapter ${chapterIndex + 1} of book ${book.name}`)
-        }
+          // Process chapters and verses
+          for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
+            // Insert or get chapter
+            const { data: chapterData, error: chapterError } = await supabaseClient
+              .from('bible_chapters')
+              .select('id')
+              .eq('book_id', bookId)
+              .eq('chapter_number', chapterIndex + 1)
+              .maybeSingle();
 
-        processedCount++
-      } catch (error) {
-        console.error(`Error processing book ${book.name}:`, error)
-        throw error
+            if (chapterError) {
+              console.error(`Erro ao buscar capítulo ${chapterIndex + 1}:`, chapterError);
+              continue;
+            }
+
+            let chapterId;
+            if (!chapterData) {
+              const { data: newChapter, error: newChapterError } = await supabaseClient
+                .from('bible_chapters')
+                .insert({
+                  book_id: bookId,
+                  chapter_number: chapterIndex + 1
+                })
+                .select()
+                .single();
+
+              if (newChapterError) {
+                console.error(`Erro ao inserir capítulo ${chapterIndex + 1}:`, newChapterError);
+                continue;
+              }
+              chapterId = newChapter.id;
+            } else {
+              chapterId = chapterData.id;
+            }
+
+            // Insert verses
+            const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
+              chapter_id: chapterId,
+              verse_number: index + 1,
+              text,
+              version: version
+            }));
+
+            const { error: versesError } = await supabaseClient
+              .from('bible_verses')
+              .insert(verses);
+
+            if (versesError) {
+              console.error(`Erro ao inserir versículos do capítulo ${chapterIndex + 1}:`, versesError);
+              continue;
+            }
+
+            console.log(`Versículos do capítulo ${chapterIndex + 1} do livro ${book.name} (${version}) inseridos com sucesso`);
+          }
+
+          totalProcessed++;
+        } catch (error) {
+          console.error(`Erro ao processar livro ${book.name}:`, error);
+        }
       }
     }
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Importação concluída! ${processedCount} livros processados.` 
+        message: `Importação concluída! ${totalProcessed} livros processados.` 
       }),
       { 
         headers: { 
@@ -118,7 +146,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Error in import-github-bible function:', error)
+    console.error('Erro na função de importação:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
