@@ -2,6 +2,9 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
+import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface BibleVersionPanelProps {
   version: { id: string; name: string };
@@ -30,16 +33,57 @@ const BibleVersionPanel = ({
   hasNextChapter,
   hasPreviousChapter
 }: BibleVersionPanelProps) => {
+  const [isImporting, setIsImporting] = useState(false);
+  const { toast } = useToast();
+
+  const handleVersionChange = async (newVersion: string) => {
+    // Primeiro, verificar se a versão já existe no banco de dados
+    const { data: existingVerses } = await supabase
+      .from('bible_verses')
+      .select('id')
+      .eq('version', newVersion)
+      .limit(1);
+
+    if (!existingVerses?.length) {
+      setIsImporting(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('import-github-bibles', {
+          body: { version: newVersion.toLowerCase() }
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Sucesso!",
+          description: `Versão ${newVersion} importada com sucesso!`,
+        });
+      } catch (error) {
+        console.error('Erro ao importar versão:', error);
+        toast({
+          title: "Erro",
+          description: `Erro ao importar versão ${newVersion}. Por favor, tente novamente.`,
+          variant: "destructive",
+        });
+        setIsImporting(false);
+        return;
+      }
+    }
+
+    setIsImporting(false);
+    onVersionChange(newVersion);
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b bg-white">
         <div className="flex items-center gap-2">
           <Select 
             value={version.id} 
-            onValueChange={onVersionChange}
+            onValueChange={handleVersionChange}
+            disabled={isImporting}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Selecione a versão" />
+              <SelectValue placeholder={isImporting ? "Importando..." : "Selecione a versão"} />
             </SelectTrigger>
             <SelectContent>
               {Object.entries(versions).map(([id, name]) => (

@@ -1,5 +1,4 @@
 import BibleReader from "@/components/BibleReader";
-import BibleImporter from "@/components/bible/BibleImporter";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import AuthModal from "@/components/Auth";
@@ -7,77 +6,70 @@ import { User } from "@supabase/supabase-js";
 
 interface Profile {
   id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  updated_at: string;
+  username: string;
+  full_name: string;
+  avatar_url: string;
 }
 
 const Index = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [showImporter, setShowImporter] = useState(true);
 
   useEffect(() => {
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
       if (session?.user) {
-        getProfile(session.user.id);
+        setUser(session.user);
       }
     });
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Listen for changes on auth state (login, signup, logout)
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      if (session?.user) {
-        getProfile(session.user.id);
-      } else {
-        setProfile(null);
-      }
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const getProfile = async (userId: string) => {
+  useEffect(() => {
+    if (user?.id) {
+      fetchProfile();
+    }
+  }, [user?.id]);
+
+  const fetchProfile = async () => {
     try {
+      if (!user?.id) return;
+
       const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
         .single();
 
       if (error) {
-        console.error('Error fetching profile:', error);
-        return;
+        throw error;
       }
 
-      setProfile(data);
+      if (data) {
+        setProfile(data);
+      }
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error fetching profile:", error);
     }
   };
 
   return (
     <div className="min-h-screen bg-bible-gray">
       <main className="space-y-8 p-4">
-        {showImporter && (
-          <div className="mb-8">
-            <BibleImporter />
-            <button 
-              onClick={() => setShowImporter(false)}
-              className="mt-4 text-sm text-gray-500 hover:text-gray-700"
-            >
-              Ocultar importador
-            </button>
-          </div>
-        )}
         <BibleReader />
       </main>
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+      <AuthModal
+        open={isAuthModalOpen}
+        onOpenChange={setIsAuthModalOpen}
       />
     </div>
   );
