@@ -111,7 +111,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     queryKey: ['verses', bookId, chapter, version],
     queryFn: fetchVerses,
     staleTime: 1000 * 60 * 60, // Cache por 1 hora
-    cacheTime: 1000 * 60 * 60 * 24, // Manter no cache por 24 horas
+    gcTime: 1000 * 60 * 60 * 24, // Manter no cache por 24 horas
   });
 
   const renderVerse = (text: string) => {
