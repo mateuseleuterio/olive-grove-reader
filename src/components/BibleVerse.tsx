@@ -31,56 +31,44 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           .select('id')
           .eq('book_id', bookId)
           .eq('chapter_number', parseInt(chapter))
-          .maybeSingle();
+          .single();
 
         if (chapterError) {
           console.error('Erro ao buscar capítulo:', chapterError);
+          console.log('Detalhes da busca do capítulo:', { bookId, chapter });
           toast({
             title: "Erro ao buscar capítulo",
-            description: chapterError.message,
+            description: `Erro ao buscar capítulo ${chapter} do livro ${bookId}`,
             variant: "destructive",
           });
           return;
         }
 
         if (!chapterData) {
-          console.log('Capítulo não encontrado para:', { bookId, chapter });
+          console.log('Capítulo não encontrado:', { bookId, chapter });
           setVerses([]);
           return;
         }
 
         console.log('Chapter ID encontrado:', chapterData.id);
 
-        // Verificar se existem versículos para esta versão
-        const { count: verseCount, error: countError } = await supabase
-          .from('bible_verses')
-          .select('*', { count: 'exact', head: true })
-          .eq('version', version);
-
-        if (countError) {
-          console.error('Erro ao contar versículos:', countError);
-          return;
-        }
-
-        console.log(`Total de versículos para versão ${version}:`, verseCount);
-
-        // Agora buscar os versículos usando o chapter_id
+        // Buscar versículos
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
-          .select(`
-            id,
-            verse_number,
-            text
-          `)
+          .select('id, verse_number, text')
           .eq('version', version)
           .eq('chapter_id', chapterData.id)
           .order('verse_number');
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
+          console.log('Detalhes da busca de versículos:', { 
+            chapterId: chapterData.id, 
+            version 
+          });
           toast({
             title: "Erro ao buscar versículos",
-            description: versesError.message,
+            description: "Ocorreu um erro ao carregar os versículos.",
             variant: "destructive",
           });
           return;
@@ -91,6 +79,8 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           quantidade: versesData?.length,
           version,
           chapterId: chapterData.id,
+          bookId,
+          chapter,
           primeiroVersiculo: versesData?.[0],
           ultimoVersiculo: versesData?.[versesData.length - 1]
         });
@@ -102,6 +92,18 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             bookId,
             chapter
           });
+          
+          // Verificar se existem versículos para esta versão
+          const { count, error: countError } = await supabase
+            .from('bible_verses')
+            .select('*', { count: 'exact', head: true })
+            .eq('version', version);
+
+          if (countError) {
+            console.error('Erro ao contar versículos:', countError);
+          } else {
+            console.log(`Total de versículos para versão ${version}:`, count);
+          }
           
           toast({
             title: "Versão não disponível",
