@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 interface Article {
@@ -71,10 +73,17 @@ const PLACEHOLDER_ARTICLES = [
 
 const Home = () => {
   const [articles, setArticles] = useState<Article[]>([]);
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
 
   useEffect(() => {
     fetchArticles();
+    checkCurrentUser();
   }, []);
+
+  const checkCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setCurrentUser(session?.user?.id || null);
+  };
 
   const fetchArticles = async () => {
     try {
@@ -106,9 +115,18 @@ const Home = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-[85rem] mx-auto">
-        <div className="mb-12">
-          <h1 className="text-4xl font-serif font-bold text-bible-navy mb-2">A Corça Blog</h1>
-          <p className="text-bible-text text-lg">Reflexões e estudos bíblicos para edificação da igreja</p>
+        <div className="flex justify-between items-center mb-12">
+          <div>
+            <h1 className="text-4xl font-serif font-bold text-bible-navy mb-2">A Corça Blog</h1>
+            <p className="text-bible-text text-lg">Reflexões e estudos bíblicos para edificação da igreja</p>
+          </div>
+          {currentUser === '5e475092-3de0-47b8-8543-c62450e07bbd' && (
+            <Link to="/new-article">
+              <Button className="bg-bible-navy hover:bg-bible-accent">
+                Criar Novo Artigo
+              </Button>
+            </Link>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -139,6 +157,12 @@ const Home = () => {
                   <span className="text-sm text-bible-verse">
                     {formatDate(article.created_at)}
                   </span>
+                  <Link
+                    to={`/article/${article.id}`}
+                    className="text-bible-accent hover:text-bible-navy font-medium transition-colors"
+                  >
+                    Ler mais →
+                  </Link>
                 </div>
               </CardContent>
             </Card>
