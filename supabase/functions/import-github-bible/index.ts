@@ -8,11 +8,11 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 }
 
-const BATCH_SIZE = 5;
-const BATCH_DELAY = 500;
+// Aumentando o tamanho do lote e reduzindo o delay
+const BATCH_SIZE = 50;
+const BATCH_DELAY = 100;
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -25,7 +25,6 @@ serve(async (req) => {
       throw new Error('Version is required');
     }
 
-    // Create Supabase client with timeout
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -41,26 +40,20 @@ serve(async (req) => {
       }
     )
 
-    // Delete existing verses for this version before starting import
     if (bookIndex === 0) {
       console.log(`Deleting existing verses for version: ${version}`);
       
-      try {
-        const { error: deleteError } = await supabaseClient
-          .from('bible_verses')
-          .delete()
-          .eq('version', version);
+      const { error: deleteError } = await supabaseClient
+        .from('bible_verses')
+        .delete()
+        .eq('version', version);
 
-        if (deleteError) {
-          console.error('Error deleting existing verses:', deleteError);
-          throw deleteError;
-        }
-
-        console.log(`Successfully deleted existing verses for version: ${version}`);
-      } catch (error) {
-        console.error('Error in deletion process:', error);
-        throw error;
+      if (deleteError) {
+        console.error('Error deleting existing verses:', deleteError);
+        throw deleteError;
       }
+
+      console.log(`Successfully deleted existing verses for version: ${version}`);
     }
 
     const BIBLE_SOURCES = {
@@ -97,85 +90,65 @@ serve(async (req) => {
     const book = bibleData[bookIndex];
     console.log(`Processing book: ${book.name} (${bookIndex + 1}/${bibleData.length})`);
 
-    // Get book ID
     const { data: bookData, error: bookError } = await supabaseClient
       .from('bible_books')
       .select('id, name')
       .eq('name', book.name)
       .maybeSingle();
 
-    if (bookError) {
-      throw bookError;
-    }
+    if (bookError) throw bookError;
+    if (!bookData) throw new Error(`Book not found: ${book.name}`);
 
-    if (!bookData) {
-      throw new Error(`Book not found: ${book.name}`);
-    }
-
-    console.log(`Book found: ${book.name} (ID: ${bookData.id})`);
-
-    // Process chapters
+    // Processando todos os capítulos do livro em lotes maiores
     for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
-      console.log(`Processing chapter ${chapterIndex + 1}/${book.chapters.length}`);
+      const { data: chapterData, error: chapterError } = await supabaseClient
+        .from('bible_chapters')
+        .select('id')
+        .eq('book_id', bookData.id)
+        .eq('chapter_number', chapterIndex + 1)
+        .maybeSingle();
 
-      try {
-        // Get or create chapter
-        const { data: chapterData, error: chapterError } = await supabaseClient
+      if (chapterError) throw chapterError;
+
+      let chapterId;
+      if (!chapterData) {
+        const { data: newChapter, error: newChapterError } = await supabaseClient
           .from('bible_chapters')
-          .select('id')
-          .eq('book_id', bookData.id)
-          .eq('chapter_number', chapterIndex + 1)
-          .maybeSingle();
+          .insert({
+            book_id: bookData.id,
+            chapter_number: chapterIndex + 1
+          })
+          .select()
+          .single();
 
-        if (chapterError) {
-          throw chapterError;
-        }
+        if (newChapterError) throw newChapterError;
+        chapterId = newChapter.id;
+      } else {
+        chapterId = chapterData.id;
+      }
 
-        let chapterId;
-        if (!chapterData) {
-          const { data: newChapter, error: newChapterError } = await supabaseClient
-            .from('bible_chapters')
-            .insert({
-              book_id: bookData.id,
-              chapter_number: chapterIndex + 1
-            })
-            .select()
-            .single();
+      // Preparando todos os versículos do capítulo
+      const verses = book.chapters[chapterIndex];
+      const allVerses = verses.map((text: string, index: number) => ({
+        chapter_id: chapterId,
+        verse_number: index + 1,
+        text: text || '',
+        version
+      }));
 
-          if (newChapterError) {
-            throw newChapterError;
-          }
-          chapterId = newChapter.id;
-        } else {
-          chapterId = chapterData.id;
-        }
+      // Inserindo versículos em lotes maiores
+      for (let i = 0; i < allVerses.length; i += BATCH_SIZE) {
+        const verseBatch = allVerses.slice(i, i + BATCH_SIZE);
+        const { error: versesError } = await supabaseClient
+          .from('bible_verses')
+          .insert(verseBatch);
 
-        // Process verses in batches
-        const verses = book.chapters[chapterIndex];
-        for (let i = 0; i < verses.length; i += BATCH_SIZE) {
-          const verseBatch = verses.slice(i, i + BATCH_SIZE);
-          const versesData = verseBatch.map((text: string, index: number) => ({
-            chapter_id: chapterId,
-            verse_number: i + index + 1,
-            text: text || '',
-            version
-          }));
+        if (versesError) throw versesError;
 
-          const { error: versesError } = await supabaseClient
-            .from('bible_verses')
-            .insert(versesData);
-
-          if (versesError) {
-            console.error('Error inserting verses:', versesError);
-            throw versesError;
-          }
-
-          // Add delay between batches
+        // Pequena pausa entre os lotes para evitar sobrecarga
+        if (i + BATCH_SIZE < allVerses.length) {
           await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
         }
-      } catch (error) {
-        console.error(`Error processing chapter ${chapterIndex + 1}:`, error);
-        throw error;
       }
     }
 
