@@ -19,8 +19,9 @@ export const useSermonManagement = () => {
       }
 
       const dataToSave = {
-        ...sermonData,
-        user_id: userData.user.id,
+        title: sermonData.title,
+        bible_text: sermonData.bible_text,
+        introduction: sermonData.introduction,
         points: sermonData.points.map(point => ({
           title: point.title,
           content: point.content,
@@ -28,7 +29,9 @@ export const useSermonManagement = () => {
             content: ill.content,
             type: ill.type
           }))
-        })) as SermonPointJson[]
+        })) as SermonPointJson[],
+        conclusion: sermonData.conclusion,
+        user_id: userData.user.id
       };
 
       const { data, error } = await supabase

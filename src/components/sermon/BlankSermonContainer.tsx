@@ -13,7 +13,7 @@ interface BlankSermonContainerProps {
 const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: BlankSermonContainerProps) => {
   const [title, setTitle] = useState(initialTitle);
   const [content, setContent] = useState(initialContent);
-  const { handleSaveSermon } = useSermonManagement();
+  const { handleSaveSermon, isLoading } = useSermonManagement();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -39,11 +39,14 @@ const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: Bl
         title,
         bible_text: content,
         points: [],
-        user_id: user.id
+        user_id: user.id,
+        introduction: "",
+        conclusion: ""
       });
       
-      // Redireciona para o modo de pregação com o ID do sermão
-      navigate(`/preaching-mode/${sermonId}`);
+      if (sermonId) {
+        navigate(`/preaching-mode/${sermonId}`);
+      }
     } catch (error) {
       console.error('Error saving sermon:', error);
     }
@@ -56,6 +59,7 @@ const BlankSermonContainer = ({ initialTitle = "", initialContent = "", id }: Bl
       onTitleChange={setTitle}
       onContentChange={setContent}
       onSave={onSave}
+      isLoading={isLoading}
     />
   );
 };
