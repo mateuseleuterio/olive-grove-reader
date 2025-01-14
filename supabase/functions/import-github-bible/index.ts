@@ -83,7 +83,7 @@ serve(async (req) => {
     for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
       console.log(`Processing chapter ${chapterIndex + 1}/${book.chapters.length}`);
 
-      // Insert chapter
+      // Get or create chapter
       const { data: chapterData, error: chapterError } = await supabaseClient
         .from('bible_chapters')
         .select('id')
@@ -95,6 +95,7 @@ serve(async (req) => {
         throw chapterError;
       }
 
+      let chapterId;
       if (!chapterData) {
         console.log(`Creating chapter ${chapterIndex + 1}`);
         const { data: newChapter, error: newChapterError } = await supabaseClient
@@ -109,8 +110,10 @@ serve(async (req) => {
         if (newChapterError) {
           throw newChapterError;
         }
-
+        chapterId = newChapter.id;
         console.log(`Chapter ${chapterIndex + 1} created successfully`);
+      } else {
+        chapterId = chapterData.id;
       }
 
       // Process verses in batches
@@ -118,19 +121,24 @@ serve(async (req) => {
       for (let i = 0; i < verses.length; i += BATCH_SIZE) {
         const verseBatch = verses.slice(i, i + BATCH_SIZE);
         const versesData = verseBatch.map((text: string, index: number) => ({
-          chapter_id: chapterData.id,
+          chapter_id: chapterId,
           verse_number: i + index + 1,
           text: text || '',
           version
         }));
 
-        console.log(`Inserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
+        console.log(`Upserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
 
+        // Usar upsert em vez de insert
         const { error: versesError } = await supabaseClient
           .from('bible_verses')
-          .upsert(versesData);
+          .upsert(versesData, {
+            onConflict: 'chapter_id,verse_number,version',
+            ignoreDuplicates: false
+          });
 
         if (versesError) {
+          console.error('Error upserting verses:', versesError);
           throw versesError;
         }
 
