@@ -2,8 +2,6 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 interface BibleVersionPanelProps {
   version: { id: string; name: string };
@@ -32,78 +30,13 @@ const BibleVersionPanel = ({
   hasNextChapter,
   hasPreviousChapter
 }: BibleVersionPanelProps) => {
-  const { toast } = useToast();
-
-  const handleVersionChange = async (newVersion: string) => {
-    try {
-      console.log('Mudando para versão:', newVersion);
-      
-      // Primeiro, verificar se existem versículos para esta versão no capítulo atual
-      const { data: chapterData } = await supabase
-        .from('bible_chapters')
-        .select('id')
-        .eq('book_id', selectedBook)
-        .eq('chapter_number', parseInt(chapter))
-        .maybeSingle();
-
-      if (chapterData) {
-        const { data: versesData } = await supabase
-          .from('bible_verses')
-          .select('id')
-          .eq('version', newVersion.toLowerCase())
-          .eq('chapter_id', chapterData.id)
-          .limit(1);
-
-        if (!versesData || versesData.length === 0) {
-          // Se não encontrar versículos, buscar o primeiro capítulo disponível para esta versão
-          const { data: firstVerseData } = await supabase
-            .from('bible_verses')
-            .select(`
-              chapter_id,
-              bible_chapters!inner(
-                chapter_number,
-                book_id
-              )
-            `)
-            .eq('version', newVersion.toLowerCase())
-            .order('id')
-            .limit(1);
-
-          if (firstVerseData && firstVerseData.length > 0) {
-            const firstVerse = firstVerseData[0];
-            const bookId = firstVerse.bible_chapters.book_id;
-            const chapterNumber = firstVerse.bible_chapters.chapter_number;
-            
-            // Atualizar o estado global com o novo livro e capítulo
-            // Isso requer modificações no BibleReader para aceitar estas atualizações
-            window.location.href = `/bible?book=${bookId}&chapter=${chapterNumber}&version=${newVersion}`;
-            
-            toast({
-              title: "Versão alterada",
-              description: `Redirecionando para o primeiro capítulo disponível na versão ${versions[newVersion]}.`,
-            });
-          }
-        }
-      }
-
-      onVersionChange(newVersion);
-    } catch (error) {
-      console.error('Erro ao mudar versão:', error);
-      toast({
-        title: "Erro ao mudar versão",
-        description: "Não foi possível carregar a versão selecionada.",
-        variant: "destructive",
-      });
-    }
-  };
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b bg-white">
         <div className="flex items-center gap-2">
           <Select 
             value={version.id} 
-            onValueChange={handleVersionChange}
+            onValueChange={onVersionChange}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Selecione a versão" />
