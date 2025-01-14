@@ -6,8 +6,14 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const BATCH_SIZE = 25; // Reduzido para 25 versículos por vez
-const BATCH_DELAY = 200; // Reduzido para 200ms para evitar timeout
+const BATCH_SIZE = 25;
+const BATCH_DELAY = 200;
+
+const BIBLE_SOURCES = {
+  'AA': 'https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json',
+  'ACF': 'https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/acf.json',
+  'KJF': 'https://raw.githubusercontent.com/damarals/biblias/refs/heads/master/inst/json/KJF.json'
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -20,12 +26,11 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    // Receber o índice do livro a ser importado
-    const { bookIndex = 0 } = await req.json();
+    const { bookIndex = 0, version = 'AA' } = await req.json();
     
-    console.log(`Iniciando importação do livro índice ${bookIndex}`);
+    console.log(`Iniciando importação do livro índice ${bookIndex} da versão ${version}`);
 
-    const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json');
+    const response = await fetch(BIBLE_SOURCES[version] || BIBLE_SOURCES.AA);
     if (!response.ok) {
       throw new Error(`Falha ao buscar dados: ${response.statusText}`);
     }
@@ -110,7 +115,7 @@ serve(async (req) => {
               chapter_id: chapterData.id,
               verse_number: i + index + 1,
               text: text || '',
-              version: 'AA'
+              version: version
             }));
 
             console.log(`Inserindo lote ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(chapter.length / BATCH_SIZE)} (${verses.length} versículos)`);
