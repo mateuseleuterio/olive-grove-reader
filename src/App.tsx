@@ -4,7 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import NavigationBar from "./components/NavigationBar";
 import Home from "./pages/Home";
 import BibleReader from "./components/BibleReader";
-import HebrewBible from "./pages/HebrewBible";
 import SermonBuilder from "./pages/SermonBuilder";
 import SermonEditor from "./pages/SermonEditor";
 import PreachingMode from "./pages/PreachingMode";
@@ -31,7 +30,6 @@ function App() {
                 <Route path="/" element={<Navigate to="/bible" replace />} />
                 <Route path="/blog" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
-                <Route path="/hebrew-bible" element={<HebrewBible />} />
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor/:id" element={<SermonEditor />} />
                 <Route path="/sermon-editor/:type" element={<SermonEditor />} />
