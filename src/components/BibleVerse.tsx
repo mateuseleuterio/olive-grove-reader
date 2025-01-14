@@ -44,6 +44,14 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         console.log('Chapter ID encontrado:', chapterData.id);
 
+        // Verificar se existem versículos para esta versão
+        const { count: verseCount, error: countError } = await supabase
+          .from('bible_verses')
+          .select('*', { count: 'exact', head: true })
+          .eq('version', version);
+
+        console.log(`Total de versículos para versão ${version}:`, verseCount);
+
         // Agora buscar os versículos usando o chapter_id
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
@@ -53,7 +61,8 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             text
           `)
           .eq('version', version)
-          .eq('chapter_id', chapterData.id);
+          .eq('chapter_id', chapterData.id)
+          .order('verse_number');
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
