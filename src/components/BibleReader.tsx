@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import CommentaryDrawer from "./CommentaryDrawer";
 import BibleControls from "./bible/BibleControls";
 import BibleVersionPanel from "./bible/BibleVersionPanel";
+import ImportBibleVersions from "./bible/ImportBibleVersions";
 import { useToast } from "@/hooks/use-toast";
 
 interface Book {
@@ -182,6 +183,7 @@ const BibleReader = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
+      <ImportBibleVersions />
       <BibleControls
         books={books}
         selectedBook={selectedBook}
