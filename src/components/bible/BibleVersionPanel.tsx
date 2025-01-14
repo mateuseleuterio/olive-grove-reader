@@ -2,6 +2,7 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
+import { useToast } from "@/hooks/use-toast";
 
 interface BibleVersionPanelProps {
   version: { id: string; name: string };
@@ -30,13 +31,28 @@ const BibleVersionPanel = ({
   hasNextChapter,
   hasPreviousChapter
 }: BibleVersionPanelProps) => {
+  const { toast } = useToast();
+
+  const handleVersionChange = async (newVersion: string) => {
+    try {
+      onVersionChange(newVersion);
+    } catch (error) {
+      console.error('Erro ao mudar versão:', error);
+      toast({
+        title: "Erro ao mudar versão",
+        description: "Não foi possível carregar a versão selecionada.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b bg-white">
         <div className="flex items-center gap-2">
           <Select 
             value={version.id} 
-            onValueChange={onVersionChange}
+            onValueChange={handleVersionChange}
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Selecione a versão" />
