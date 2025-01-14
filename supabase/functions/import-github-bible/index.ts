@@ -79,7 +79,7 @@ serve(async (req) => {
 
     console.log(`Book found: ${book.name} (ID: ${bookData.id})`);
 
-    // Process chapters in smaller batches
+    // Process chapters
     for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
       console.log(`Processing chapter ${chapterIndex + 1}/${book.chapters.length}`);
 
@@ -129,16 +129,27 @@ serve(async (req) => {
 
         console.log(`Upserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
 
-        // Usar upsert em vez de insert
+        // Delete existing verses first to avoid conflicts
+        const { error: deleteError } = await supabaseClient
+          .from('bible_verses')
+          .delete()
+          .eq('chapter_id', chapterId)
+          .eq('version', version)
+          .gte('verse_number', i + 1)
+          .lte('verse_number', i + verseBatch.length);
+
+        if (deleteError) {
+          console.error('Error deleting existing verses:', deleteError);
+          throw deleteError;
+        }
+
+        // Insert new verses
         const { error: versesError } = await supabaseClient
           .from('bible_verses')
-          .upsert(versesData, {
-            onConflict: 'chapter_id,verse_number,version',
-            ignoreDuplicates: false
-          });
+          .insert(versesData);
 
         if (versesError) {
-          console.error('Error upserting verses:', versesError);
+          console.error('Error inserting verses:', versesError);
           throw versesError;
         }
 
