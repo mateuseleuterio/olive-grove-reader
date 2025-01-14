@@ -1,20 +1,7 @@
 import { Link } from "react-router-dom";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Settings, User, Puzzle, BookOpen, Brain, X, LogIn } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Menu, Search, Settings, X, BookOpen, Brain, Puzzle } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -22,77 +9,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import AuthModal from "@/components/Auth";
-
-interface Profile {
-  id: string;
-  full_name: string | null;
-  avatar_url: string | null;
-  updated_at: string;
-}
+import { useState } from "react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const NavigationBar = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const isMobile = useIsMobile();
-
-  useEffect(() => {
-    const getProfile = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .maybeSingle();
-
-          if (error) {
-            console.error('Error fetching profile:', error);
-            toast({
-              variant: "destructive",
-              title: "Erro",
-              description: "Não foi possível carregar seu perfil.",
-            });
-            return;
-          }
-
-          setProfile(data);
-        }
-      } catch (error) {
-        console.error('Error:', error);
-        toast({
-          variant: "destructive",
-          title: "Erro",
-          description: "Ocorreu um erro ao carregar seu perfil.",
-        });
-      }
-    };
-
-    getProfile();
-  }, [toast]);
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-      setProfile(null);
-      navigate("/");
-      toast({
-        title: "Logout realizado",
-        description: "Você foi desconectado com sucesso.",
-      });
-    } catch (error) {
-      console.error('Error signing out:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: "Não foi possível realizar o logout.",
-      });
-    }
-  };
 
   const MainMenuItems = () => (
     <>
@@ -188,7 +110,7 @@ const NavigationBar = () => {
         </NavigationMenu>
 
         <div className="flex items-center gap-4">
-          <div className="hidden md:flex">
+          <div className="flex">
             <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
               <Search className="h-5 w-5" />
             </Button>
@@ -198,47 +120,8 @@ const NavigationBar = () => {
               </Button>
             </Link>
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white hover:bg-bible-accent w-10 h-10">
-                <User className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              {profile ? (
-                <>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">{profile?.full_name || 'Minha Conta'}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer">Perfil</DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">Configurações</DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer" onClick={handleLogout}>Sair</DropdownMenuItem>
-                </>
-              ) : (
-                <>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">Minha Conta</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="cursor-pointer" onClick={() => setIsAuthModalOpen(true)}>
-                    <LogIn className="mr-2 h-4 w-4" />
-                    Entrar
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
     </nav>
   );
 };
