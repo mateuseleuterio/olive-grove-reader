@@ -29,8 +29,20 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
+    // Primeiro, limpar os versículos existentes da versão
+    console.log(`Removendo versículos existentes da versão ${version}...`)
+    const { error: deleteError } = await supabaseClient
+      .from('bible_verses')
+      .delete()
+      .eq('version', version.toUpperCase())
+
+    if (deleteError) {
+      console.error(`Erro ao deletar versículos existentes:`, deleteError)
+      throw deleteError
+    }
+
     // Fetch Bible data from GitHub
-    const githubUrl = `https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/${version.toLowerCase()}.json`
+    const githubUrl = `https://raw.githubusercontent.com/damarals/biblias/32e9176727c73518b7055a1df5d5045df71de496/inst/usx/traducao/${version.toLowerCase()}.json`
     console.log(`Buscando dados da Bíblia em: ${githubUrl}`)
     
     const response = await fetch(githubUrl)
@@ -78,10 +90,10 @@ serve(async (req) => {
           console.log(`Processando capítulo ${chapterIndex + 1} do livro ${book.name}`)
 
           // Insert verses
-          const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
+          const verses = book.chapters[chapterIndex].map((verse: any, index: number) => ({
             chapter_id: chapterData.id,
             verse_number: index + 1,
-            text,
+            text: verse.text,
             version: version.toUpperCase()
           }))
 
