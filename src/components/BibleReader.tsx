@@ -22,7 +22,7 @@ const BibleReader = () => {
     { id: "ACF", name: BIBLE_VERSIONS.ACF }
   ]);
   const [books, setBooks] = useState<Book[]>([]);
-  const [selectedBook, setSelectedBook] = useState<number>(1);
+  const [selectedBook, setSelectedBook] = useState<number>(41); // ID do livro de Marcos
   const [chapter, setChapter] = useState("1");
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -57,9 +57,6 @@ const BibleReader = () => {
           index === self.findIndex((b) => b.name === book.name)
         );
         setBooks(uniqueBooks);
-        if (uniqueBooks.length > 0 && !selectedBook) {
-          setSelectedBook(uniqueBooks[0].id);
-        }
       }
     };
 
