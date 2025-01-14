@@ -32,25 +32,33 @@ serve(async (req) => {
 
     console.log('Versículos AA anteriores removidos com sucesso');
     
+    // Fazer o fetch e logar a resposta bruta para debug
     const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json');
     if (!response.ok) {
       throw new Error(`Falha ao buscar dados: ${response.statusText}`);
     }
     
-    const bibleData = await response.json();
-    console.log(`Dados obtidos com sucesso. Total de livros:`, bibleData.length);
+    const responseText = await response.text();
+    console.log('Resposta bruta do GitHub:', responseText.substring(0, 500) + '...');
+    
+    let bibleData;
+    try {
+      bibleData = JSON.parse(responseText);
+    } catch (error) {
+      console.error('Erro ao fazer parse do JSON:', error);
+      throw new Error('JSON inválido recebido da API');
+    }
 
-    // Verificar a estrutura dos dados
+    console.log('Estrutura dos dados:', {
+      tipo: typeof bibleData,
+      eArray: Array.isArray(bibleData),
+      tamanho: Array.isArray(bibleData) ? bibleData.length : 0,
+      amostra: Array.isArray(bibleData) ? JSON.stringify(bibleData[0]).substring(0, 200) : null
+    });
+
     if (!Array.isArray(bibleData)) {
       throw new Error('Dados inválidos: não é um array');
     }
-
-    const firstBook = bibleData[0];
-    console.log('Estrutura do primeiro livro:', {
-      name: firstBook.name,
-      totalChapters: firstBook.chapters?.length,
-      firstChapterVerses: firstBook.chapters?.[0]?.length
-    });
 
     let totalProcessed = 0;
     let totalVerses = 0;
@@ -58,8 +66,13 @@ serve(async (req) => {
 
     for (const book of bibleData) {
       try {
-        console.log(`\nProcessando livro: ${book.name}`);
+        console.log(`\nProcessando livro:`, book);
         
+        if (!book || typeof book !== 'object') {
+          errors.push({ error: 'Livro inválido', data: book });
+          continue;
+        }
+
         // Buscar o livro existente
         const { data: bookData, error: bookError } = await supabaseClient
           .from('bible_books')
@@ -81,6 +94,7 @@ serve(async (req) => {
         }
 
         console.log(`Livro encontrado: ${book.name} (ID: ${bookData.id})`);
+        console.log('Capítulos:', book.chapters);
 
         if (!Array.isArray(book.chapters)) {
           const error = `Estrutura inválida para o livro ${book.name}: chapters não é um array`;
@@ -92,9 +106,11 @@ serve(async (req) => {
         // Process chapters and verses
         for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
           const chapterNumber = chapterIndex + 1;
-          console.log(`Processando ${book.name} ${chapterNumber}`);
+          const chapter = book.chapters[chapterIndex];
+          
+          console.log(`Processando ${book.name} ${chapterNumber}:`, chapter);
 
-          if (!Array.isArray(book.chapters[chapterIndex])) {
+          if (!Array.isArray(chapter)) {
             const error = `Estrutura inválida para ${book.name} capítulo ${chapterNumber}: versículos não é um array`;
             console.error(error);
             errors.push({ book: book.name, chapter: chapterNumber, error });
@@ -123,12 +139,15 @@ serve(async (req) => {
           }
 
           // Insert verses
-          const verses = book.chapters[chapterIndex].map((text: string, index: number) => ({
+          const verses = chapter.map((text: string, index: number) => ({
             chapter_id: chapterData.id,
             verse_number: index + 1,
             text: text || '',
             version: 'AA'
           }));
+
+          console.log(`Inserindo ${verses.length} versículos para ${book.name} ${chapterNumber}`);
+          console.log('Primeiro versículo:', verses[0]);
 
           const { error: versesError } = await supabaseClient
             .from('bible_verses')
