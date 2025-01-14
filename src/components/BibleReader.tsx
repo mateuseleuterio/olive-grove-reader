@@ -111,7 +111,6 @@ const BibleReader = () => {
       setChapter((currentChapter - 1).toString());
     } else if (selectedBook > 1) {
       setSelectedBook(selectedBook - 1);
-      // Buscar o último capítulo do livro anterior
       const fetchPreviousBookChapters = async () => {
         const { data, error } = await supabase
           .from('bible_chapters')
