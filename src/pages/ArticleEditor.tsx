@@ -4,8 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Upload } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2 } from "lucide-react";
 
 const ArticleEditor = () => {
   const navigate = useNavigate();
@@ -82,17 +82,11 @@ const ArticleEditor = () => {
     setIsGenerating(true);
 
     try {
-      const response = await fetch("/api/generate-article", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ prompt }),
+      const { data, error } = await supabase.functions.invoke('generate-article', {
+        body: { prompt }
       });
 
-      if (!response.ok) throw new Error('Erro ao gerar conteúdo');
-
-      const data = await response.json();
+      if (error) throw error;
       
       if (data.content) {
         setTitle(data.content.title || title);
