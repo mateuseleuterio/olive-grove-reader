@@ -92,11 +92,13 @@ const BibleReader = () => {
           id,
           name,
           position,
-          bible_verses!inner (
-            version
+          bible_chapters!inner (
+            bible_verses!inner (
+              version
+            )
           )
         `)
-        .eq('bible_verses.version', currentVersion)
+        .eq('bible_chapters.bible_verses.version', currentVersion)
         .order('position');
 
       if (error) {
