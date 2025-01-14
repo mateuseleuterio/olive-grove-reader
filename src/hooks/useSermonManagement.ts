@@ -62,14 +62,23 @@ export const useSermonManagement = () => {
       const { data: userData } = await supabase.auth.getUser();
       const user_id = userData.user?.id || '00000000-0000-0000-0000-000000000000';
       
+      // Primeiro, verificamos se o sermão pertence ao usuário
+      const { data: sermon, error: fetchError } = await supabase
+        .from("sermons")
+        .select()
+        .eq("id", id)
+        .eq("user_id", user_id)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!sermon) throw new Error("Sermão não encontrado");
+
+      // Se o sermão foi encontrado, podemos prosseguir com a deleção
       const { error } = await supabase
         .from("sermons")
-        .update({ 
-          deleted_at: new Date().toISOString(),
-          user_id // Garantir que o user_id está correto na atualização
-        })
+        .update({ deleted_at: new Date().toISOString() })
         .eq("id", id)
-        .eq("user_id", user_id); // Adicionar condição para garantir que estamos atualizando o sermão correto
+        .eq("user_id", user_id);
 
       if (error) throw error;
 
