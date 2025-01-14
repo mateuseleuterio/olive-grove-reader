@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "./WordDetails";
+import { useToast } from "@/hooks/use-toast";
 
 interface BibleVerseProps {
   bookId: number;
@@ -17,6 +18,7 @@ interface Verse {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchVerses = async () => {
@@ -33,6 +35,11 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (chapterError) {
           console.error('Erro ao buscar capítulo:', chapterError);
+          toast({
+            title: "Erro ao buscar capítulo",
+            description: chapterError.message,
+            variant: "destructive",
+          });
           return;
         }
 
@@ -50,6 +57,11 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           .select('*', { count: 'exact', head: true })
           .eq('version', version);
 
+        if (countError) {
+          console.error('Erro ao contar versículos:', countError);
+          return;
+        }
+
         console.log(`Total de versículos para versão ${version}:`, verseCount);
 
         // Agora buscar os versículos usando o chapter_id
@@ -66,6 +78,11 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         if (versesError) {
           console.error('Erro ao buscar versículos:', versesError);
+          toast({
+            title: "Erro ao buscar versículos",
+            description: versesError.message,
+            variant: "destructive",
+          });
           return;
         }
 
@@ -74,26 +91,40 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           quantidade: versesData?.length,
           version,
           chapterId: chapterData.id,
-          primeiroVersiculo: versesData?.[0]
+          primeiroVersiculo: versesData?.[0],
+          ultimoVersiculo: versesData?.[versesData.length - 1]
         });
 
         if (!versesData || versesData.length === 0) {
           console.log('Nenhum versículo encontrado para:', {
             version,
-            chapterId: chapterData.id
+            chapterId: chapterData.id,
+            bookId,
+            chapter
+          });
+          
+          toast({
+            title: "Versão não disponível",
+            description: `A versão ${version} ainda não está disponível para este capítulo.`,
+            variant: "destructive",
           });
         }
 
         setVerses(versesData || []);
       } catch (error) {
         console.error('Erro:', error);
+        toast({
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao carregar os versículos.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
     fetchVerses();
-  }, [bookId, chapter, version]);
+  }, [bookId, chapter, version, toast]);
 
   const renderVerse = (text: string) => {
     return text.split(" ").map((word, index) => (
