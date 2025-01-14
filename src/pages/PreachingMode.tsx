@@ -65,7 +65,7 @@ const PreachingMode = () => {
 
         {sermon.points && sermon.points.length > 0 && (
           <section>
-            <h2 className="text-xl font-semibold mb-2">Pontos</h2>
+            <h2 className="text-xl font-semibold mb-2">Desenvolvimento</h2>
             <div className="space-y-4">
               {sermon.points.map((point, index) => (
                 <div key={index} className="bg-gray-50 p-4 rounded-lg">
