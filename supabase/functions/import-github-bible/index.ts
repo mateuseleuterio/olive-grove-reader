@@ -16,6 +16,7 @@ const BIBLE_SOURCES = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -28,24 +29,30 @@ serve(async (req) => {
 
     const { bookIndex = 0, version = 'AA' } = await req.json();
     
-    console.log(`Iniciando importação do livro índice ${bookIndex} da versão ${version}`);
+    console.log(`Starting import of book index ${bookIndex} for version ${version}`);
 
-    const response = await fetch(BIBLE_SOURCES[version] || BIBLE_SOURCES.AA);
+    // Validate version
+    if (!BIBLE_SOURCES[version]) {
+      throw new Error(`Invalid version: ${version}`);
+    }
+
+    // Fetch Bible data with error handling
+    const response = await fetch(BIBLE_SOURCES[version]);
     if (!response.ok) {
-      throw new Error(`Falha ao buscar dados: ${response.statusText}`);
+      throw new Error(`Failed to fetch Bible data: ${response.statusText}`);
     }
     
     const bibleData = await response.json();
     
     if (!Array.isArray(bibleData)) {
-      throw new Error('Dados inválidos: não é um array');
+      throw new Error('Invalid Bible data format: not an array');
     }
 
     if (bookIndex >= bibleData.length) {
       return new Response(
         JSON.stringify({ 
           success: true,
-          message: 'Importação concluída! Todos os livros foram processados.',
+          message: 'Import completed! All books processed.',
           totalBooks: bibleData.length
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -57,10 +64,10 @@ serve(async (req) => {
     let errors = [];
 
     try {
-      console.log(`\nProcessando livro: ${book.name}`);
+      console.log(`Processing book: ${book.name}`);
       
       if (!book || typeof book !== 'object') {
-        throw new Error('Livro inválido');
+        throw new Error('Invalid book data');
       }
 
       const { data: bookData, error: bookError } = await supabaseClient
@@ -74,23 +81,23 @@ serve(async (req) => {
       }
 
       if (!bookData) {
-        throw new Error(`Livro não encontrado: ${book.name}`);
+        throw new Error(`Book not found: ${book.name}`);
       }
 
-      console.log(`Livro encontrado: ${book.name} (ID: ${bookData.id})`);
+      console.log(`Book found: ${book.name} (ID: ${bookData.id})`);
 
       if (!Array.isArray(book.chapters)) {
-        throw new Error(`Estrutura inválida para o livro ${book.name}: chapters não é um array`);
+        throw new Error(`Invalid structure for book ${book.name}: chapters not an array`);
       }
 
       for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
         const chapterNumber = chapterIndex + 1;
         const chapter = book.chapters[chapterIndex];
         
-        console.log(`Processando ${book.name} ${chapterNumber}`);
+        console.log(`Processing ${book.name} ${chapterNumber}`);
 
         if (!Array.isArray(chapter)) {
-          throw new Error(`Estrutura inválida para ${book.name} capítulo ${chapterNumber}`);
+          throw new Error(`Invalid structure for ${book.name} chapter ${chapterNumber}`);
         }
 
         const { data: chapterData, error: chapterError } = await supabaseClient
@@ -105,7 +112,7 @@ serve(async (req) => {
         }
 
         if (!chapterData) {
-          throw new Error(`Capítulo não encontrado: ${chapterNumber} do livro ${book.name}`);
+          throw new Error(`Chapter not found: ${chapterNumber} of book ${book.name}`);
         }
 
         for (let i = 0; i < chapter.length; i += BATCH_SIZE) {
@@ -118,43 +125,43 @@ serve(async (req) => {
               version: version
             }));
 
-            console.log(`Inserindo lote ${Math.floor(i / BATCH_SIZE) + 1} de ${Math.ceil(chapter.length / BATCH_SIZE)} (${verses.length} versículos)`);
+            console.log(`Inserting batch ${Math.floor(i / BATCH_SIZE) + 1} of ${Math.ceil(chapter.length / BATCH_SIZE)} (${verses.length} verses)`);
 
             const { error: versesError } = await supabaseClient
               .from('bible_verses')
-              .insert(verses);
+              .upsert(verses);
 
             if (versesError) {
               throw versesError;
             }
 
             totalVerses += verses.length;
-            console.log(`✓ Lote processado com sucesso`);
+            console.log(`✓ Batch processed successfully`);
             
+            // Add delay between batches
             await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
           } catch (error) {
-            console.error(`Erro ao processar lote de versículos:`, error);
+            console.error(`Error processing verse batch:`, error);
             errors.push({ 
               book: book.name, 
               chapter: chapterNumber, 
               batch: Math.floor(i / BATCH_SIZE) + 1,
-              error 
+              error: error.message 
             });
-            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
           }
         }
       }
 
-      console.log(`✓ Livro ${book.name} processado com sucesso`);
+      console.log(`✓ Book ${book.name} processed successfully`);
     } catch (error) {
-      console.error(`Erro ao processar livro ${book.name}:`, error);
-      errors.push({ book: book.name, error });
+      console.error(`Error processing book ${book.name}:`, error);
+      errors.push({ book: book.name, error: error.message });
     }
 
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Livro ${book.name} processado`,
+        message: `Book ${book.name} processed`,
         stats: {
           bookIndex,
           nextBookIndex: bookIndex + 1,
@@ -168,7 +175,7 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('Erro na função de importação:', error);
+    console.error('Error in import function:', error);
     return new Response(
       JSON.stringify({ 
         success: false,
