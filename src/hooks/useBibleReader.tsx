@@ -24,9 +24,7 @@ interface StoredState {
 }
 
 export const useBibleReader = () => {
-  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([
-    { id: "ACF", name: BIBLE_VERSIONS.ACF }
-  ]);
+  const [versions, setVersions] = useState<Array<{ id: BibleVersion; name: string }>>([]);
   const [books, setBooks] = useState<Book[]>([]);
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
@@ -37,26 +35,38 @@ export const useBibleReader = () => {
   useEffect(() => {
     const savedState = localStorage.getItem(STORAGE_KEY);
     if (savedState) {
-      const state: StoredState = JSON.parse(savedState);
-      setSelectedBook(state.selectedBook);
-      setChapter(state.chapter);
-      setVersions(state.versions);
+      try {
+        const state: StoredState = JSON.parse(savedState);
+        setSelectedBook(state.selectedBook);
+        setChapter(state.chapter);
+        if (state.versions && state.versions.length > 0) {
+          setVersions(state.versions);
+        } else {
+          setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
+        }
+      } catch (error) {
+        console.error('Error loading saved state:', error);
+        setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
+      }
+    } else {
+      setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
     }
   }, []);
 
   // Save state changes to localStorage
   useEffect(() => {
-    const state: StoredState = {
-      selectedBook,
-      chapter,
-      versions
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    if (versions.length > 0) {
+      const state: StoredState = {
+        selectedBook,
+        chapter,
+        versions
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
   }, [selectedBook, chapter, versions]);
 
   useEffect(() => {
     const fetchBooks = async () => {
-      console.log("Fetching books...");
       const { data, error } = await supabase
         .from('bible_books')
         .select('id, name')
@@ -68,11 +78,9 @@ export const useBibleReader = () => {
       }
 
       if (data) {
-        console.log("Books data received:", data);
         const uniqueBooks = data.filter((book, index, self) =>
           index === self.findIndex((b) => b.name === book.name)
         );
-        console.log("Unique books:", uniqueBooks);
         setBooks(uniqueBooks);
       }
     };
@@ -84,7 +92,6 @@ export const useBibleReader = () => {
     const fetchChapterCount = async () => {
       if (!selectedBook) return;
       
-      console.log("Fetching chapter count for book:", selectedBook);
       const { data, error } = await supabase
         .from('bible_chapters')
         .select('chapter_number')
@@ -98,32 +105,12 @@ export const useBibleReader = () => {
       }
 
       if (data && data.length > 0) {
-        console.log("Max chapters for book:", data[0].chapter_number);
         setMaxChapters(data[0].chapter_number);
       }
     };
 
     fetchChapterCount();
   }, [selectedBook]);
-
-  const addVersion = () => {
-    if (versions.length >= 4) {
-      toast({
-        title: "Limite atingido",
-        description: "Você pode adicionar no máximo 4 versões para comparação.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newVersion = { id: "ACF" as BibleVersion, name: BIBLE_VERSIONS.ACF };
-    setVersions([...versions, newVersion]);
-    
-    toast({
-      title: "Versão adicionada",
-      description: "Uma nova versão foi adicionada para comparação.",
-    });
-  };
 
   const removeVersion = (index: number) => {
     if (versions.length <= 1) {
@@ -161,7 +148,6 @@ export const useBibleReader = () => {
     maxChapters,
     setSelectedBook,
     setChapter,
-    addVersion,
     removeVersion,
     handleVersionChange,
   };
