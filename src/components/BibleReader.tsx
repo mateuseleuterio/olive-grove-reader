@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Book {
   id: number;
   name: string;
+  name_bsb?: string;
 }
 
 const BIBLE_VERSIONS = {
@@ -28,7 +29,6 @@ const BibleReader = () => {
   const [maxChapters, setMaxChapters] = useState(50);
   const { toast } = useToast();
 
-  // Initialize available versions
   useEffect(() => {
     const fetchAvailableVersions = async () => {
       try {
@@ -91,6 +91,7 @@ const BibleReader = () => {
         .select(`
           id,
           name,
+          name_bsb,
           position,
           bible_chapters!inner (
             bible_verses!inner (
@@ -112,9 +113,15 @@ const BibleReader = () => {
       }
 
       if (data) {
-        const uniqueBooks = data.filter((book, index, self) =>
-          index === self.findIndex((b) => b.name === book.name)
-        );
+        const uniqueBooks = data
+          .filter((book, index, self) =>
+            index === self.findIndex((b) => b.name === book.name)
+          )
+          .map(book => ({
+            ...book,
+            name: currentVersion === 'BSB' && book.name_bsb ? book.name_bsb : book.name
+          }));
+
         setBooks(uniqueBooks);
         if (uniqueBooks.length > 0 && !selectedBook) {
           setSelectedBook(uniqueBooks[0].id);
@@ -125,7 +132,7 @@ const BibleReader = () => {
     if (versions.length > 0) {
       fetchBooks();
     }
-  }, [versions]); 
+  }, [versions, toast]); 
 
   useEffect(() => {
     const fetchChapterCount = async () => {
