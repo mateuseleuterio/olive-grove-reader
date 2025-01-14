@@ -14,7 +14,7 @@ const HebrewBible = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bible_books")
-        .select("*")
+        .select("id, name, position, testament")
         .order('position');
 
       if (error) {
@@ -22,8 +22,13 @@ const HebrewBible = () => {
         throw error;
       }
 
-      console.log("Fetched books:", data);
-      return data;
+      // Remove duplicates based on book id
+      const uniqueBooks = data.filter((book, index, self) =>
+        index === self.findIndex((b) => b.id === book.id)
+      );
+
+      console.log("Fetched unique books:", uniqueBooks);
+      return uniqueBooks;
     },
   });
 
