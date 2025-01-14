@@ -27,6 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useSermonManagement } from "@/hooks/useSermonManagement";
 
 const SermonBuilder = () => {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ const SermonBuilder = () => {
   const [sermonToDelete, setSermonToDelete] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { handleDeleteSermon } = useSermonManagement();
 
   const { data: sermons = [], isLoading } = useQuery({
     queryKey: ['sermons'],
@@ -67,23 +69,11 @@ const SermonBuilder = () => {
 
   const confirmDelete = async () => {
     if (sermonToDelete) {
-      const { error } = await supabase
-        .from('sermons')
-        .update({ deleted_at: new Date().toISOString() })
-        .eq('id', sermonToDelete);
-
-      if (error) {
-        toast({
-          title: "Erro ao excluir sermão",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Sermão excluído",
-          description: "O sermão foi excluído com sucesso.",
-        });
+      try {
+        await handleDeleteSermon(sermonToDelete);
         queryClient.invalidateQueries({ queryKey: ['sermons'] });
+      } catch (error) {
+        console.error('Error in confirmDelete:', error);
       }
       setSermonToDelete(null);
     }

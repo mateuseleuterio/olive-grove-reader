@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { SermonType, SermonInput } from "@/types/sermon";
-import { saveSermon } from "@/utils/sermonUtils";
 
 export const useSermonManagement = (id?: string) => {
   const navigate = useNavigate();
@@ -41,16 +40,34 @@ export const useSermonManagement = (id?: string) => {
       console.log('Saving sermon with data:', finalSermonData);
 
       const isValidUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      const result = await saveSermon(finalSermonData, isValidUUID, id);
+      
+      if (isValidUUID) {
+        const { data, error } = await supabase
+          .from('sermons')
+          .update(finalSermonData)
+          .eq('id', id)
+          .select()
+          .single();
 
-      console.log('Save result:', result);
+        if (error) throw error;
+        console.log('Updated sermon:', data);
+        navigate(`/preaching-mode/${data.id}`);
+      } else {
+        const { data, error } = await supabase
+          .from('sermons')
+          .insert([finalSermonData])
+          .select()
+          .single();
+
+        if (error) throw error;
+        console.log('Created sermon:', data);
+        navigate(`/preaching-mode/${data.id}`);
+      }
 
       toast({
         title: "Sucesso",
         description: "Sermão salvo com sucesso!",
       });
-
-      navigate(`/preaching-mode/${result.id}`);
     } catch (error) {
       console.error('Error saving sermon:', error);
       toast({
@@ -63,8 +80,34 @@ export const useSermonManagement = (id?: string) => {
     }
   };
 
+  const handleDeleteSermon = async (sermonId: string) => {
+    try {
+      const { error } = await supabase
+        .from('sermons')
+        .update({ deleted_at: new Date().toISOString() })
+        .eq('id', sermonId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Sermão excluído com sucesso!",
+      });
+
+      navigate('/sermon-builder');
+    } catch (error) {
+      console.error('Error deleting sermon:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir o sermão. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     handleSaveSermon,
+    handleDeleteSermon,
     isLoading,
   };
 };
