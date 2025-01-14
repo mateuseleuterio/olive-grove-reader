@@ -11,15 +11,27 @@ const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
   const { data: verses = [], isLoading } = useQuery({
     queryKey: ["hebrew-verses", selectedBook, chapter],
     queryFn: async () => {
+      console.log("Fetching verses for book:", selectedBook, "chapter:", chapter);
+      
       // Primeiro, buscar o chapter_id
-      const { data: chapterData } = await supabase
+      const { data: chapterData, error: chapterError } = await supabase
         .from('bible_chapters')
         .select('id')
         .eq('book_id', selectedBook)
         .eq('chapter_number', parseInt(chapter))
         .single();
 
-      if (!chapterData) return [];
+      if (chapterError) {
+        console.error('Error fetching chapter:', chapterError);
+        return [];
+      }
+
+      if (!chapterData) {
+        console.log('No chapter found');
+        return [];
+      }
+
+      console.log("Found chapter_id:", chapterData.id);
 
       // Agora buscar os versículos em hebraico com o parsing completo
       const { data, error } = await supabase
@@ -51,7 +63,8 @@ const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
         console.error('Error fetching verses:', error);
         throw error;
       }
-      
+
+      console.log("Fetched verses:", data);
       return data || [];
     },
   });
@@ -73,7 +86,7 @@ const HebrewVersePanel = ({ selectedBook, chapter }: HebrewVersePanelProps) => {
   }
 
   return (
-    <div className="space-y-6 bg-white p-6 rounded-lg shadow">
+    <div className="space-y-6">
       {verses.map((verse) => (
         <HebrewVerse
           key={verse.id}

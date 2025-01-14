@@ -15,9 +15,14 @@ const HebrewBible = () => {
       const { data, error } = await supabase
         .from("bible_books")
         .select("*")
-        .order("position");
+        .order('position');
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching books:', error);
+        throw error;
+      }
+
+      console.log("Fetched books:", data);
       return data;
     },
   });
@@ -33,18 +38,25 @@ const HebrewBible = () => {
         .limit(1)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching max chapters:', error);
+        throw error;
+      }
+
+      console.log("Max chapters for book", selectedBook, ":", data.chapter_number);
       return data.chapter_number;
     },
     enabled: !!selectedBook,
   });
 
   const handleBookChange = (bookId: number) => {
+    console.log("Changing book to:", bookId);
     setSelectedBook(bookId);
     setChapter("1");
   };
 
   const handleChapterChange = (newChapter: string) => {
+    console.log("Changing chapter to:", newChapter);
     setChapter(newChapter);
   };
 
