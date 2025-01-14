@@ -12,7 +12,7 @@ const BATCH_DELAY = 200;
 const BIBLE_SOURCES = {
   'AA': 'https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json',
   'ACF': 'https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/acf.json',
-  'KJF': 'https://raw.githubusercontent.com/damarals/biblias/refs/heads/master/inst/json/KJF.json'
+  'KJF': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/KJF.json'
 };
 
 serve(async (req) => {
