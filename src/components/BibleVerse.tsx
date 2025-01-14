@@ -30,10 +30,18 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   const checkVersionStatus = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        setIsVersionDownloaded(false);
+        setLoading(false);
+        return;
+      }
+
       const { data: versionData, error: versionError } = await supabase
         .from('user_bible_versions')
         .select('version')
         .eq('version', version.toLowerCase())
+        .eq('user_id', session.session.user.id)
         .maybeSingle();
 
       if (versionError) throw versionError;
@@ -52,13 +60,26 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   const handleDownloadVersion = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        toast({
+          title: "Erro ao baixar versão",
+          description: "Você precisa estar logado para baixar uma versão da Bíblia.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setDownloadLoading(true);
       
       // Registrar o download da versão
       const { error: downloadError } = await supabase
         .from('user_bible_versions')
         .insert([
-          { version: version.toLowerCase() }
+          { 
+            version: version.toLowerCase(),
+            user_id: session.session.user.id
+          }
         ]);
 
       if (downloadError) throw downloadError;
