@@ -86,6 +86,20 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
         console.log('Chapter ID encontrado:', chapterData.id);
 
+        // Verificar se existem versículos para esta versão
+        const { count: verseCount, error: countError } = await supabase
+          .from('bible_verses')
+          .select('*', { count: 'exact', head: true })
+          .eq('version', version)
+          .eq('chapter_id', chapterData.id);
+
+        if (countError) {
+          console.error('Erro ao contar versículos:', countError);
+          return;
+        }
+
+        console.log(`Total de versículos encontrados para capítulo ${chapterData.id}, versão ${version}:`, verseCount);
+
         // Buscar versículos
         const { data: versesData, error: versesError } = await supabase
           .from('bible_verses')
@@ -126,18 +140,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             bookId,
             chapter
           });
-          
-          // Verificar se existem versículos para esta versão
-          const { count, error: countError } = await supabase
-            .from('bible_verses')
-            .select('*', { count: 'exact', head: true })
-            .eq('version', version);
-
-          if (countError) {
-            console.error('Erro ao contar versículos:', countError);
-          } else {
-            console.log(`Total de versículos para versão ${version}:`, count);
-          }
           
           toast({
             title: "Versão não disponível",
