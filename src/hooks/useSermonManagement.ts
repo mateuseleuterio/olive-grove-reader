@@ -48,8 +48,38 @@ export const useSermonManagement = () => {
     }
   };
 
+  const handleDeleteSermon = async (id: string) => {
+    try {
+      setIsLoading(true);
+      
+      const { error } = await supabase
+        .from("sermons")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Sermão excluído com sucesso!",
+      });
+
+      navigate("/sermon-builder");
+    } catch (error) {
+      console.error('Erro ao excluir sermão:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir o sermão. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     isLoading,
     handleSaveSermon,
+    handleDeleteSermon,
   };
 };
