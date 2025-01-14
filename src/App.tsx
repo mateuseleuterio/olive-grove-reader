@@ -1,6 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import NavigationBar from "./components/NavigationBar";
 import Home from "./pages/Home";
 import BibleReader from "./components/BibleReader";
@@ -17,10 +19,37 @@ import MentalMaps from "./pages/MentalMaps";
 import CreateMentalMap from "./pages/CreateMentalMap";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
+import ComingSoon from "./pages/ComingSoon";
 
 const queryClient = new QueryClient();
 
+const ADMIN_UID = '5e475092-3de0-47b8-8543-c62450e07bbd';
+
 function App() {
+  const [currentUser, setCurrentUser] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setCurrentUser(session?.user?.id || null);
+    };
+
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user?.id || null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (currentUser !== ADMIN_UID) {
+      return <ComingSoon />;
+    }
+    return <>{children}</>;
+  };
+
   return (
     <Router>
       <QueryClientProvider client={queryClient}>
@@ -36,14 +65,56 @@ function App() {
                 <Route path="/sermon-builder" element={<SermonBuilder />} />
                 <Route path="/sermon-editor" element={<SermonEditor />} />
                 <Route path="/preaching-mode/:id" element={<PreachingMode />} />
-                <Route path="/bible-challenge" element={<BibleChallenge />} />
+                <Route 
+                  path="/bible-challenge" 
+                  element={
+                    <ProtectedRoute>
+                      <BibleChallenge />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="/article/:id" element={<ArticleView />} />
                 <Route path="/new-article" element={<ArticleEditor />} />
-                <Route path="/study" element={<Study />} />
-                <Route path="/study/:category" element={<StudyCategory />} />
-                <Route path="/reading-plans" element={<ReadingPlans />} />
-                <Route path="/mental-maps" element={<MentalMaps />} />
-                <Route path="/mental-maps/new" element={<CreateMentalMap />} />
+                <Route 
+                  path="/study" 
+                  element={
+                    <ProtectedRoute>
+                      <Study />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/study/:category" 
+                  element={
+                    <ProtectedRoute>
+                      <StudyCategory />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/reading-plans" 
+                  element={
+                    <ProtectedRoute>
+                      <ReadingPlans />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/mental-maps" 
+                  element={
+                    <ProtectedRoute>
+                      <MentalMaps />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/mental-maps/new" 
+                  element={
+                    <ProtectedRoute>
+                      <CreateMentalMap />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="/settings" element={<Settings />} />
               </Routes>
             </div>
