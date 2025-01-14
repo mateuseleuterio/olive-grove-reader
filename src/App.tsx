@@ -16,6 +16,7 @@ import ReadingPlans from "./pages/ReadingPlans";
 import MentalMaps from "./pages/MentalMaps";
 import CreateMentalMap from "./pages/CreateMentalMap";
 import Settings from "./pages/Settings";
+import Login from "./pages/Login";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,7 @@ function App() {
             <div className="pt-24 px-4 md:px-6 lg:px-8">
               <Routes>
                 <Route path="/" element={<Navigate to="/bible" replace />} />
+                <Route path="/login" element={<Login />} />
                 <Route path="/blog" element={<Home />} />
                 <Route path="/bible" element={<BibleReader />} />
                 <Route path="/sermon-builder" element={<SermonBuilder />} />

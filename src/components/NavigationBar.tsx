@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { NavigationMenu, NavigationMenuList, NavigationMenuItem } from "@/components/ui/navigation-menu";
 import { Button } from "@/components/ui/button";
-import { Menu, Search, Settings, X, BookOpen, Brain, Puzzle } from "lucide-react";
+import { Menu, Search, Settings, X, BookOpen, Brain, Puzzle, LogIn } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const NavigationBar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
   const MainMenuItems = () => (
     <>
@@ -119,6 +120,14 @@ const NavigationBar = () => {
                 <Settings className="h-5 w-5" />
               </Button>
             </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-white hover:bg-bible-accent w-10 h-10"
+              onClick={() => navigate('/login')}
+            >
+              <LogIn className="h-5 w-5" />
+            </Button>
           </div>
         </div>
       </div>
