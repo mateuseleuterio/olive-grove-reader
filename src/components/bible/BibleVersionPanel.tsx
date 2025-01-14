@@ -2,15 +2,15 @@ import { ArrowLeft, ArrowRight, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
+import { BibleVersion, BIBLE_VERSIONS } from "@/hooks/useBibleReader";
 
 interface BibleVersionPanelProps {
-  version: { id: string; name: string };
+  version: { id: BibleVersion; name: string };
   onVersionChange: (newVersion: string) => void;
   onRemove: () => void;
   canRemove: boolean;
   selectedBook: number;
   chapter: string;
-  versions: Record<string, string>;
   onPreviousChapter: () => void;
   onNextChapter: () => void;
   hasNextChapter: boolean;
@@ -24,7 +24,6 @@ const BibleVersionPanel = ({
   canRemove,
   selectedBook,
   chapter,
-  versions,
   onPreviousChapter,
   onNextChapter,
   hasNextChapter,
@@ -42,7 +41,7 @@ const BibleVersionPanel = ({
               <SelectValue placeholder="Selecione a versão" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(versions).map(([id, name]) => (
+              {Object.entries(BIBLE_VERSIONS).map(([id, name]) => (
                 <SelectItem key={id} value={id}>{name}</SelectItem>
               ))}
             </SelectContent>
