@@ -19,6 +19,19 @@ serve(async (req) => {
 
     console.log('Iniciando importação da versão AA');
     
+    // Primeiro, vamos limpar os versículos AA existentes
+    const { error: deleteError } = await supabaseClient
+      .from('bible_verses')
+      .delete()
+      .eq('version', 'AA');
+
+    if (deleteError) {
+      console.error('Erro ao limpar versículos AA:', deleteError);
+      throw deleteError;
+    }
+
+    console.log('Versículos AA anteriores removidos com sucesso');
+    
     const response = await fetch('https://raw.githubusercontent.com/thiagobodruk/biblia/refs/heads/master/json/aa.json');
     if (!response.ok) {
       throw new Error(`Falha ao buscar dados: ${response.statusText}`);
@@ -28,47 +41,51 @@ serve(async (req) => {
     console.log(`Dados obtidos com sucesso. Total de livros:`, bibleData.length);
 
     let totalProcessed = 0;
+    let totalVerses = 0;
 
     for (const book of bibleData) {
       try {
+        console.log(`\nProcessando livro: ${book.name}`);
+        
         // Buscar o livro existente
-        const { data: bookData } = await supabaseClient
+        const { data: bookData, error: bookError } = await supabaseClient
           .from('bible_books')
           .select('id, name')
           .eq('name', book.name)
           .maybeSingle();
+
+        if (bookError) {
+          console.error(`Erro ao buscar livro ${book.name}:`, bookError);
+          continue;
+        }
 
         if (!bookData) {
           console.error(`Livro não encontrado: ${book.name}`);
           continue;
         }
 
-        console.log(`Processando livro: ${book.name} (ID: ${bookData.id})`);
+        console.log(`Livro encontrado: ${book.name} (ID: ${bookData.id})`);
 
         // Process chapters and verses
         for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
+          const chapterNumber = chapterIndex + 1;
+          console.log(`Processando ${book.name} ${chapterNumber}`);
+
           // Buscar o capítulo existente
-          const { data: chapterData } = await supabaseClient
+          const { data: chapterData, error: chapterError } = await supabaseClient
             .from('bible_chapters')
             .select('id')
             .eq('book_id', bookData.id)
-            .eq('chapter_number', chapterIndex + 1)
+            .eq('chapter_number', chapterNumber)
             .maybeSingle();
 
-          if (!chapterData) {
-            console.error(`Capítulo não encontrado: ${chapterIndex + 1} do livro ${book.name}`);
+          if (chapterError) {
+            console.error(`Erro ao buscar capítulo ${chapterNumber}:`, chapterError);
             continue;
           }
 
-          // Verificar se já existem versículos para esta versão e capítulo
-          const { count: existingVerses } = await supabaseClient
-            .from('bible_verses')
-            .select('*', { count: 'exact', head: true })
-            .eq('chapter_id', chapterData.id)
-            .eq('version', 'AA');
-
-          if (existingVerses && existingVerses > 0) {
-            console.log(`Versículos já existem para ${book.name} ${chapterIndex + 1} (AA). Pulando...`);
+          if (!chapterData) {
+            console.error(`Capítulo não encontrado: ${chapterNumber} do livro ${book.name}`);
             continue;
           }
 
@@ -85,23 +102,28 @@ serve(async (req) => {
             .insert(verses);
 
           if (versesError) {
-            console.error(`Erro ao inserir versículos do capítulo ${chapterIndex + 1}:`, versesError);
+            console.error(`Erro ao inserir versículos do capítulo ${chapterNumber}:`, versesError);
             continue;
           }
 
-          console.log(`Versículos do capítulo ${chapterIndex + 1} do livro ${book.name} (AA) inseridos com sucesso`);
+          totalVerses += verses.length;
+          console.log(`✓ ${verses.length} versículos inseridos para ${book.name} ${chapterNumber}`);
         }
 
         totalProcessed++;
+        console.log(`✓ Livro ${book.name} processado com sucesso`);
       } catch (error) {
         console.error(`Erro ao processar livro ${book.name}:`, error);
       }
     }
 
+    const successMessage = `Importação concluída! ${totalProcessed} livros processados, ${totalVerses} versículos importados.`;
+    console.log(successMessage);
+
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Importação concluída! ${totalProcessed} livros processados.` 
+        message: successMessage
       }),
       { 
         headers: { 
