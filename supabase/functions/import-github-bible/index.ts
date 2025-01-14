@@ -23,6 +23,26 @@ serve(async (req) => {
       throw new Error('Version is required');
     }
 
+    // Delete existing verses for this version before starting import
+    if (bookIndex === 0) {
+      const supabaseClient = createClient(
+        Deno.env.get('SUPABASE_URL') ?? '',
+        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      )
+
+      console.log(`Deleting existing verses for version: ${version}`);
+      const { error: deleteError } = await supabaseClient
+        .from('bible_verses')
+        .delete()
+        .eq('version', version);
+
+      if (deleteError) {
+        console.error('Error deleting existing verses:', deleteError);
+        throw deleteError;
+      }
+      console.log(`Successfully deleted existing verses for version: ${version}`);
+    }
+
     const BIBLE_SOURCES = {
       'AA': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/aa.json',
       'ACF': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json',
@@ -117,40 +137,20 @@ serve(async (req) => {
         chapterId = chapterData.id;
       }
 
-      // Check existing verses
-      const { data: existingVerses, error: existingVersesError } = await supabaseClient
-        .from('bible_verses')
-        .select('verse_number')
-        .eq('chapter_id', chapterId)
-        .eq('version', version);
-
-      if (existingVersesError) {
-        throw existingVersesError;
-      }
-
-      const existingVerseNumbers = new Set(existingVerses.map(v => v.verse_number));
-
       // Process verses in smaller batches
       const verses = book.chapters[chapterIndex];
       for (let i = 0; i < verses.length; i += BATCH_SIZE) {
         const verseBatch = verses.slice(i, i + BATCH_SIZE);
-        const versesData = verseBatch
-          .map((text: string, index: number) => ({
-            chapter_id: chapterId,
-            verse_number: i + index + 1,
-            text: text || '',
-            version
-          }))
-          .filter(verse => !existingVerseNumbers.has(verse.verse_number));
-
-        if (versesData.length === 0) {
-          console.log(`Skipping verses ${i + 1} to ${i + verseBatch.length} as they already exist`);
-          continue;
-        }
+        const versesData = verseBatch.map((text: string, index: number) => ({
+          chapter_id: chapterId,
+          verse_number: i + index + 1,
+          text: text || '',
+          version
+        }));
 
         console.log(`Inserting verses ${i + 1} to ${i + verseBatch.length} of chapter ${chapterIndex + 1}`);
 
-        // Insert new verses
+        // Insert verses
         const { error: versesError } = await supabaseClient
           .from('bible_verses')
           .insert(versesData);
