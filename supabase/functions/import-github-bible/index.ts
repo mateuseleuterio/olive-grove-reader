@@ -6,6 +6,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const BATCH_SIZE = 100; // Processar 100 versículos por vez
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -19,7 +21,6 @@ serve(async (req) => {
 
     console.log('Iniciando importação da versão AA');
     
-    // Primeiro, vamos limpar os versículos AA existentes
     const { error: deleteError } = await supabaseClient
       .from('bible_verses')
       .delete()
@@ -72,7 +73,6 @@ serve(async (req) => {
           continue;
         }
 
-        // Buscar o livro existente usando maybeSingle()
         const { data: bookData, error: bookError } = await supabaseClient
           .from('bible_books')
           .select('id, name')
@@ -101,7 +101,6 @@ serve(async (req) => {
           continue;
         }
 
-        // Process chapters and verses
         for (let chapterIndex = 0; chapterIndex < book.chapters.length; chapterIndex++) {
           const chapterNumber = chapterIndex + 1;
           const chapter = book.chapters[chapterIndex];
@@ -115,7 +114,6 @@ serve(async (req) => {
             continue;
           }
 
-          // Buscar o capítulo existente usando maybeSingle()
           const { data: chapterData, error: chapterError } = await supabaseClient
             .from('bible_chapters')
             .select('id')
@@ -136,28 +134,34 @@ serve(async (req) => {
             continue;
           }
 
-          // Insert verses
-          const verses = chapter.map((text: string, index: number) => ({
-            chapter_id: chapterData.id,
-            verse_number: index + 1,
-            text: text || '',
-            version: 'AA'
-          }));
+          // Processar versículos em lotes
+          for (let i = 0; i < chapter.length; i += BATCH_SIZE) {
+            const verseBatch = chapter.slice(i, i + BATCH_SIZE);
+            const verses = verseBatch.map((text: string, index: number) => ({
+              chapter_id: chapterData.id,
+              verse_number: i + index + 1,
+              text: text || '',
+              version: 'AA'
+            }));
 
-          console.log(`Inserindo ${verses.length} versículos para ${book.name} ${chapterNumber}`);
+            console.log(`Inserindo lote de ${verses.length} versículos para ${book.name} ${chapterNumber}`);
 
-          const { error: versesError } = await supabaseClient
-            .from('bible_verses')
-            .insert(verses);
+            const { error: versesError } = await supabaseClient
+              .from('bible_verses')
+              .insert(verses);
 
-          if (versesError) {
-            console.error(`Erro ao inserir versículos do capítulo ${chapterNumber}:`, versesError);
-            errors.push({ book: book.name, chapter: chapterNumber, error: versesError });
-            continue;
+            if (versesError) {
+              console.error(`Erro ao inserir lote de versículos do capítulo ${chapterNumber}:`, versesError);
+              errors.push({ book: book.name, chapter: chapterNumber, error: versesError });
+              continue;
+            }
+
+            totalVerses += verses.length;
+            console.log(`✓ Lote de ${verses.length} versículos inseridos para ${book.name} ${chapterNumber}`);
+            
+            // Pequena pausa entre os lotes para evitar sobrecarga
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
-
-          totalVerses += verses.length;
-          console.log(`✓ ${verses.length} versículos inseridos para ${book.name} ${chapterNumber}`);
         }
 
         totalProcessed++;
@@ -175,7 +179,6 @@ serve(async (req) => {
       console.error('Erros encontrados durante a importação:', errors);
     }
 
-    // Verificar o total de versículos após a importação
     const { count: finalCount, error: countError } = await supabaseClient
       .from('bible_verses')
       .select('*', { count: 'exact', head: true })
@@ -198,12 +201,7 @@ serve(async (req) => {
           finalVerseCount: finalCount
         }
       }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        } 
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
 
   } catch (error) {
@@ -214,10 +212,7 @@ serve(async (req) => {
         error: error.message 
       }),
       { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json' 
-        },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400 
       }
     )
