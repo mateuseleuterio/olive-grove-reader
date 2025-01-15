@@ -241,6 +241,62 @@ export type Database = {
           },
         ]
       }
+      bible_word_groups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_index: number
+          id: string
+          language: string
+          original_word: string
+          primary_meaning: string
+          secondary_meanings: string[]
+          start_index: number
+          strong_number: string
+          transliteration: string
+          verse_id: number | null
+          words: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_index: number
+          id?: string
+          language: string
+          original_word: string
+          primary_meaning: string
+          secondary_meanings: string[]
+          start_index: number
+          strong_number: string
+          transliteration: string
+          verse_id?: number | null
+          words: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_index?: number
+          id?: string
+          language?: string
+          original_word?: string
+          primary_meaning?: string
+          secondary_meanings?: string[]
+          start_index?: number
+          strong_number?: string
+          transliteration?: string
+          verse_id?: number | null
+          words?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_word_groups_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bible_word_strongs: {
         Row: {
           created_at: string
@@ -609,6 +665,27 @@ export type Database = {
           portuguese_word?: string
           strong_number?: string
           transliteration?: string
+        }
+        Relationships: []
+      }
+      system_settings: {
+        Row: {
+          created_at: string
+          key: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          created_at?: string
+          key: string
+          updated_at?: string
+          value: string
+        }
+        Update: {
+          created_at?: string
+          key?: string
+          updated_at?: string
+          value?: string
         }
         Relationships: []
       }
