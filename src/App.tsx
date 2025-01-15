@@ -42,30 +42,29 @@ function App() {
 
   const clearSession = async () => {
     try {
-      // Clear all local storage items first to prevent token usage
-      localStorage.removeItem('supabase.auth.token');
-      localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
+      // Primeiro limpa todos os tokens do localStorage
+      localStorage.clear(); // Limpa todo o localStorage para garantir
       
-      // Then try to sign out from Supabase - if it fails, that's okay
-      // since we've already cleared local storage
+      // Reseta o estado do cliente
+      queryClient.clear();
+      setCurrentUser(null);
+      
+      // Por último tenta fazer o logout no Supabase
       try {
         await supabase.auth.signOut();
       } catch (signOutError) {
-        console.error('Error signing out:', signOutError);
+        console.error('Erro ao fazer logout:', signOutError);
+        // Não precisa fazer nada aqui pois já limpamos tudo
       }
-      
-      // Clear query cache and reset state
-      queryClient.clear();
-      setCurrentUser(null);
     } catch (error) {
-      console.error('Error clearing session:', error);
+      console.error('Erro ao limpar sessão:', error);
     }
   };
 
   const handleSessionError = async (error: any) => {
     if (!error) return;
     
-    console.error('Session error:', error);
+    console.error('Erro de sessão:', error);
     
     const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
     const shouldClearSession = 
@@ -105,10 +104,11 @@ function App() {
   };
 
   useEffect(() => {
+    // Verifica o usuário apenas uma vez na montagem inicial
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
+      console.log('Estado de autenticação alterado:', event);
       
       try {
         switch (event) {
@@ -129,10 +129,10 @@ function App() {
             }
             break;
           default:
-            console.log('Unhandled auth event:', event);
+            console.log('Evento de autenticação não tratado:', event);
         }
       } catch (error) {
-        console.error('Error handling auth state change:', error);
+        console.error('Erro ao lidar com mudança de estado de autenticação:', error);
         await handleSessionError(error);
       }
     });
@@ -140,7 +140,7 @@ function App() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [toast]);
+  }, []);
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (currentUser !== ADMIN_UID) {
