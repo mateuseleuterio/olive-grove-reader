@@ -82,7 +82,7 @@ const BibleVersionPanel = ({
           </Button>
         </div>
       </div>
-      <div className="bible-text space-y-6 bg-white p-4 md:p-8 flex-1 overflow-y-auto">
+      <div className="bible-text bg-white p-2 md:p-4 flex-1 overflow-y-auto">
         <BibleVerse 
           bookId={selectedBook}
           chapter={chapter}
