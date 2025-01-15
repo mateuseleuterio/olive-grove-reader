@@ -246,6 +246,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         onVerseSelect={handleVerseSelect}
         bookName={data?.bookName}
         chapter={chapter}
+        version={version}
       />
     </div>
   );

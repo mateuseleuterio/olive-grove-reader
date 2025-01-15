@@ -104,6 +104,7 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
       .replace('{context_after}', context?.after || '');
 
     console.log('Buscando novo significado para:', { word, book, chapter, verse, version, context });
+    console.log('Prompt utilizado:', prompt);
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
