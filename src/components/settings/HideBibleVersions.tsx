@@ -47,10 +47,21 @@ const HideBibleVersions = () => {
       return;
     }
 
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user.id) {
+      toast({
+        title: "Erro",
+        description: "Usuário não autenticado",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const { error } = await supabase
       .from('hidden_bible_versions')
       .insert({
         version: selectedVersion,
+        hidden_by: session.user.id
       });
 
     if (error) {
