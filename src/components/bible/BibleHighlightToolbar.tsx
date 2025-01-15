@@ -1,8 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { StickyNote, Share, Eye, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 
 export const HIGHLIGHT_COLORS = {
   yellow: "bg-[#FFF3B0]",
@@ -31,8 +28,8 @@ export const BibleHighlightToolbar = ({
   if (selectedVerses.length === 0) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[400px] overflow-hidden">
-      <div className="p-3 border-b flex items-center justify-between">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[320px] overflow-hidden">
+      <div className="p-2 border-b flex items-center justify-between">
         {hasHighlightedVerses ? (
           <Button
             variant="ghost"
@@ -50,28 +47,28 @@ export const BibleHighlightToolbar = ({
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 -mr-2"
+          className="text-gray-500 hover:text-gray-700 -mr-1"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="p-3 space-y-3">
-        <div className="grid grid-cols-3 gap-2">
+      <div className="p-2 space-y-2">
+        <div className="grid grid-cols-3 gap-1.5">
           {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
             <button
               key={color}
-              className={`aspect-square rounded-md ${className} hover:opacity-80 transition-opacity`}
+              className={`w-8 h-8 rounded-md ${className} hover:opacity-80 transition-opacity`}
               onClick={() => onHighlight(color)}
             />
           ))}
         </div>
 
-        <div className="flex justify-center gap-2 pt-1">
+        <div className="flex justify-center gap-1.5 pt-1">
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs flex items-center gap-1.5"
+            className="h-7 px-2 text-xs flex items-center gap-1"
           >
             <StickyNote className="h-3 w-3" />
             <span>Anotar</span>
@@ -79,7 +76,7 @@ export const BibleHighlightToolbar = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs flex items-center gap-1.5"
+            className="h-7 px-2 text-xs flex items-center gap-1"
           >
             <Share className="h-3 w-3" />
             <span>Compartilhar</span>
@@ -87,7 +84,7 @@ export const BibleHighlightToolbar = ({
           <Button
             variant="outline"
             size="sm"
-            className="h-8 text-xs flex items-center gap-1.5"
+            className="h-7 px-2 text-xs flex items-center gap-1"
           >
             <Eye className="h-3 w-3" />
             <span>Original</span>

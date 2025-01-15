@@ -20,12 +20,7 @@ export const BibleVerseList = ({ verses, selectedVerses, onVerseSelect }: BibleV
           <div className="flex-1 rounded p-1">
             <BibleVerseActions
               verseId={verse.id}
-              text={
-                <>
-                  <span className="verse-number">{verse.verse_number}</span>
-                  {verse.text}
-                </>
-              }
+              text={`${verse.verse_number} ${verse.text}`}
               isSelected={selectedVerses.includes(verse.id)}
               onSelect={onVerseSelect}
             />
