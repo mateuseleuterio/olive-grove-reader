@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MessageSquare, Share } from "lucide-react";
+import { MessageSquare, Share, Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -102,6 +102,42 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
     setIsSelectionMenuOpen(false);
   };
 
+  const handleRemoveHighlight = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para remover destaques.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { error } = await supabase
+        .from('bible_verse_highlights')
+        .delete()
+        .eq('verse_id', verseId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Destaque removido",
+        description: `Destaque removido do versículo ${verseNumber}.`,
+      });
+    } catch (error) {
+      console.error('Erro ao remover destaque:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o destaque.",
+        variant: "destructive",
+      });
+    }
+    setIsSelectionMenuOpen(false);
+  };
+
   const handleSaveNote = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -188,7 +224,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         {text}
       </div>
 
-      {/* Menu de seleção flutuante */}
       {isSelectionMenuOpen && (
         <div
           ref={menuRef}
@@ -230,6 +265,14 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
                 Compartilhar
               </Button>
             </div>
+            <Button
+              variant="outline"
+              className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
+              onClick={handleRemoveHighlight}
+            >
+              <Eraser className="h-4 w-4 mr-2" />
+              Remover destaque
+            </Button>
           </div>
         </div>
       )}
