@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AuthModal from "@/components/Auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus, X } from "lucide-react";
+import { Plus } from "lucide-react";
 
 interface BibleNotesProps {
   bookId: number;
@@ -123,6 +123,14 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
         );
 
         await Promise.all(promises);
+      } else {
+        // Save note without verse reference
+        await supabase
+          .from('bible_verse_notes')
+          .insert({
+            note_text: noteText,
+            user_id: session.user.id,
+          });
       }
 
       toast({
@@ -180,13 +188,10 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
 
   return (
     <Sheet open={true} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[40vh] flex flex-col">
+      <SheetContent side="bottom" className="h-[40vh] flex flex-col" onPointerDownOutside={onClose} onInteractOutside={onClose}>
         <SheetHeader className="flex-shrink-0">
           <div className="flex justify-between items-center">
             <SheetTitle>Anotações - {bookName} {chapter}</SheetTitle>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
           </div>
         </SheetHeader>
 
@@ -196,7 +201,6 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
               <div className="flex justify-between items-center mb-4">
                 <Button 
                   onClick={() => setIsAddingNote(true)}
-                  disabled={selectedVerses.length === 0}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Nova Anotação
@@ -206,7 +210,11 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
               <ScrollArea className="flex-1">
                 <div className="space-y-4 pr-4">
                   {chapterNotes.map((note) => (
-                    <div key={note.id} className="border rounded-lg p-4">
+                    <div 
+                      key={note.id} 
+                      className="border rounded-lg p-4 cursor-move hover:shadow-md transition-shadow"
+                      draggable="true"
+                    >
                       {note.bible_verses && (
                         <div className="text-sm text-gray-600 mb-2">
                           Versículo {note.bible_verses.verse_number}
