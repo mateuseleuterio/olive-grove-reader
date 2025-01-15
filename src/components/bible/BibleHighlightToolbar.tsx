@@ -31,45 +31,47 @@ export const BibleHighlightToolbar = ({
   if (selectedVerses.length === 0) return null;
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50 w-[95%] max-w-[600px]">
-      <div className="space-y-4">
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            {hasHighlightedVerses && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onRemoveHighlights}
-                className="text-xs text-red-500 hover:text-red-700 px-2 py-1"
-              >
-                <X className="h-3 w-3 mr-1" />
-                <span>Remover destaque</span>
-              </Button>
-            )}
-          </div>
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[400px] overflow-hidden">
+      <div className="p-3 border-b flex items-center justify-between">
+        {hasHighlightedVerses ? (
           <Button
             variant="ghost"
             size="sm"
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
+            onClick={onRemoveHighlights}
+            className="text-xs text-red-500 hover:text-red-700"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3 w-3 mr-1" />
+            <span>Remover destaque</span>
           </Button>
-        </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+        ) : (
+          <span className="text-sm font-medium text-gray-700">Destacar texto</span>
+        )}
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onClose}
+          className="text-gray-500 hover:text-gray-700 -mr-2"
+        >
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="p-3 space-y-3">
+        <div className="grid grid-cols-3 gap-2">
           {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
             <button
               key={color}
-              className={`h-8 rounded-md ${className} hover:opacity-80 transition-opacity`}
+              className={`aspect-square rounded-md ${className} hover:opacity-80 transition-opacity`}
               onClick={() => onHighlight(color)}
             />
           ))}
         </div>
-        <div className="flex justify-center gap-2">
+
+        <div className="flex justify-center gap-2 pt-1">
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 text-xs"
+            className="h-8 text-xs flex items-center gap-1.5"
           >
             <StickyNote className="h-3 w-3" />
             <span>Anotar</span>
@@ -77,7 +79,7 @@ export const BibleHighlightToolbar = ({
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 text-xs"
+            className="h-8 text-xs flex items-center gap-1.5"
           >
             <Share className="h-3 w-3" />
             <span>Compartilhar</span>
@@ -85,7 +87,7 @@ export const BibleHighlightToolbar = ({
           <Button
             variant="outline"
             size="sm"
-            className="flex items-center gap-2 text-xs"
+            className="h-8 text-xs flex items-center gap-1.5"
           >
             <Eye className="h-3 w-3" />
             <span>Original</span>
