@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -16,7 +16,7 @@ import AuthModal from "@/components/Auth";
 interface BibleVerseActionsProps {
   verseId: number;
   text: string;
-  onNoteClick?: () => void;
+  children: ReactNode;
   isSelected: boolean;
   onSelect: (verseId: number) => void;
 }
@@ -32,8 +32,8 @@ const HIGHLIGHT_COLORS = {
 
 export const BibleVerseActions = ({ 
   verseId, 
-  text, 
-  onNoteClick,
+  text,
+  children,
   isSelected,
   onSelect,
 }: BibleVerseActionsProps) => {
@@ -45,6 +45,7 @@ export const BibleVerseActions = ({
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [highlight, setHighlight] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -58,7 +59,7 @@ export const BibleVerseActions = ({
     return () => subscription.unsubscribe();
   }, []);
 
-  const { data: highlight } = useQuery({
+  const { data: highlightData } = useQuery({
     queryKey: ['verse-highlight', verseId, session?.user?.id],
     queryFn: async () => {
       if (!session?.user?.id) {
@@ -82,6 +83,10 @@ export const BibleVerseActions = ({
     enabled: !!session?.user?.id,
     staleTime: 1000 * 60 * 5,
   });
+
+  useEffect(() => {
+    setHighlight(highlightData);
+  }, [highlightData]);
 
   const handleSaveNote = async () => {
     if (!session?.user?.id) {
@@ -107,31 +112,12 @@ export const BibleVerseActions = ({
         title: "Nota salva",
         description: "Nota adicionada ao versículo.",
       });
-      
-      if (onNoteClick) {
-        onNoteClick();
-      }
     } catch (error) {
       console.error('Erro ao salvar nota:', error);
       toast({
         title: "Erro",
         description: "Não foi possível salvar a nota.",
         variant: "destructive",
-      });
-    }
-  };
-
-  const handleShare = async () => {
-    try {
-      await navigator.share({
-        text: text,
-      });
-    } catch (error) {
-      console.error('Erro ao compartilhar:', error);
-      navigator.clipboard.writeText(text);
-      toast({
-        title: "Texto copiado",
-        description: "O versículo foi copiado para a área de transferência.",
       });
     }
   };
@@ -187,47 +173,14 @@ export const BibleVerseActions = ({
     }
   };
 
-  const handleRemoveHighlight = async () => {
-    if (!highlight || !session?.user?.id) return;
-
-    try {
-      const { error } = await supabase
-        .from('bible_verse_highlights')
-        .delete()
-        .eq('id', highlight.id);
-
-      if (error) throw error;
-
-      queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
-      onSelect(verseId); // Deselect verse after removing highlight
-      toast({
-        title: "Destaque removido",
-        description: "O destaque foi removido do versículo.",
-      });
-    } catch (error) {
-      console.error('Erro ao remover destaque:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o destaque.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleVerseClick = () => {
-    onSelect(verseId);
-  };
-
   return (
     <div 
-      onClick={handleVerseClick}
+      onClick={() => onSelect(verseId)}
       className={`cursor-pointer rounded p-2 transition-colors ${
         isSelected ? 'bg-gray-100' : ''
       } ${highlight ? HIGHLIGHT_COLORS[highlight.color as keyof typeof HIGHLIGHT_COLORS] : ''}`}
     >
-      <div className="flex items-start gap-2">
-        <span>{text}</span>
-      </div>
+      {children}
 
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>
