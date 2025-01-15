@@ -25,10 +25,31 @@ interface BibleVerseActionsProps {
 }
 
 const HIGHLIGHT_COLORS = {
-  yellow: "bg-yellow-200",
-  green: "bg-green-200",
-  blue: "bg-blue-200",
-  pink: "bg-pink-200",
+  yellow: {
+    label: "Amarelo",
+    class: "bg-yellow-200 hover:bg-yellow-300",
+    border: "border-yellow-400"
+  },
+  red: {
+    label: "Vermelho",
+    class: "bg-red-200 hover:bg-red-300",
+    border: "border-red-400"
+  },
+  blue: {
+    label: "Azul",
+    class: "bg-blue-200 hover:bg-blue-300",
+    border: "border-blue-400"
+  },
+  green: {
+    label: "Verde",
+    class: "bg-green-200 hover:bg-green-300",
+    border: "border-green-400"
+  },
+  purple: {
+    label: "Roxo",
+    class: "bg-purple-200 hover:bg-purple-300",
+    border: "border-purple-400"
+  }
 };
 
 export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: BibleVerseActionsProps) => {
@@ -49,7 +70,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
       toast({
         title: "Versículo destacado",
-        description: `Versículo ${verseNumber} destacado com sucesso.`,
+        description: `Versículo ${verseNumber} destacado em ${HIGHLIGHT_COLORS[color].label.toLowerCase()}.`,
       });
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
@@ -137,15 +158,17 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
               Destacar
             </ContextMenuItem>
           </PopoverTrigger>
-          <PopoverContent className="w-32 p-2">
-            <div className="grid grid-cols-2 gap-1">
-              {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
+          <PopoverContent className="w-48 p-3">
+            <div className="grid grid-cols-2 gap-2">
+              {Object.entries(HIGHLIGHT_COLORS).map(([color, { label, class: className, border }]) => (
                 <Button
                   key={color}
                   variant="outline"
-                  className={`h-8 w-12 ${className}`}
+                  className={`h-8 w-full ${className} ${border} transition-colors`}
                   onClick={() => handleHighlight(color as keyof typeof HIGHLIGHT_COLORS)}
-                />
+                >
+                  {label}
+                </Button>
               ))}
             </div>
           </PopoverContent>
