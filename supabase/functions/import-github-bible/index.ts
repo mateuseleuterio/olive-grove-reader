@@ -59,7 +59,8 @@ serve(async (req) => {
       'AA': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/aa.json',
       'ACF': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json',
       'KJF': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/KJF.json',
-      'NAA': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/NAA.json'
+      'NAA': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/NAA.json',
+      'NVT': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/NVT.json'
     };
 
     const sourceUrl = BIBLE_SOURCES[version];
