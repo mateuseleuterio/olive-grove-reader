@@ -200,31 +200,24 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     const checkHighlights = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user || !data?.versesData) return;
 
-        const { data: verseIds } = await supabase
-          .from('bible_verses')
-          .select('id')
-          .eq('chapter_id', data?.chapterData?.id)
-          .in('verse_number', localSelectedVerses);
+        const selectedVerseIds = data.versesData
+          .filter(verse => localSelectedVerses.includes(verse.verse_number))
+          .map(verse => verse.id);
 
-        if (!verseIds) return;
-
-        let hasHighlights = false;
-        for (const verse of verseIds) {
-          const { data } = await supabase
-            .from('bible_verse_highlights')
-            .select('id')
-            .eq('verse_id', verse.id)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (data) {
-            hasHighlights = true;
-            break;
-          }
+        if (selectedVerseIds.length === 0) {
+          setHasHighlightedVerses(false);
+          return;
         }
-        setHasHighlightedVerses(hasHighlights);
+
+        const { data: highlights } = await supabase
+          .from('bible_verse_highlights')
+          .select('id')
+          .in('verse_id', selectedVerseIds)
+          .eq('user_id', user.id);
+
+        setHasHighlightedVerses(!!highlights && highlights.length > 0);
       } catch (error) {
         console.error('Error checking highlights:', error);
       }
@@ -235,7 +228,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [localSelectedVerses, data?.chapterData?.id]);
+  }, [localSelectedVerses, data?.versesData]);
 
   if (isLoading) {
     return (
