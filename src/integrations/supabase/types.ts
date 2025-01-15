@@ -443,6 +443,27 @@ export type Database = {
         }
         Relationships: []
       }
+      hidden_bible_versions: {
+        Row: {
+          hidden_at: string
+          hidden_by: string
+          id: string
+          version: string
+        }
+        Insert: {
+          hidden_at?: string
+          hidden_by: string
+          id?: string
+          version: string
+        }
+        Update: {
+          hidden_at?: string
+          hidden_by?: string
+          id?: string
+          version?: string
+        }
+        Relationships: []
+      }
       historical_events: {
         Row: {
           category: string
