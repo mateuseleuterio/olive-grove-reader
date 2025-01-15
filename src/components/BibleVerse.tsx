@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BibleHighlightToolbar, HIGHLIGHT_COLORS } from "./bible/BibleHighlightToolbar";
+import { BibleHighlightToolbar } from "./bible/BibleHighlightToolbar";
 import { BibleVerseList } from "./bible/BibleVerseList";
 
 interface BibleVerseProps {
@@ -103,10 +103,10 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     }
   }, [error, toast]);
 
-  const handleVerseSelect = (verseId: number) => {
-    const newSelectedVerses = localSelectedVerses.includes(verseId)
-      ? localSelectedVerses.filter(id => id !== verseId)
-      : [...localSelectedVerses, verseId];
+  const handleVerseSelect = (verseNumber: number) => {
+    const newSelectedVerses = localSelectedVerses.includes(verseNumber)
+      ? localSelectedVerses.filter(num => num !== verseNumber)
+      : [...localSelectedVerses, verseNumber];
     
     setLocalSelectedVerses(newSelectedVerses);
     if (onVerseSelect) {
@@ -119,11 +119,19 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      for (const verseId of localSelectedVerses) {
+      const { data: verseIds } = await supabase
+        .from('bible_verses')
+        .select('id')
+        .eq('chapter_id', data?.chapterData?.id)
+        .in('verse_number', localSelectedVerses);
+
+      if (!verseIds) return;
+
+      for (const verse of verseIds) {
         const { error } = await supabase
           .from('bible_verse_highlights')
           .delete()
-          .eq('verse_id', verseId)
+          .eq('verse_id', verse.id)
           .eq('user_id', user.id);
 
         if (error) throw error;
@@ -156,11 +164,19 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         await handleRemoveHighlights();
       }
 
-      for (const verseId of localSelectedVerses) {
+      const { data: verseIds } = await supabase
+        .from('bible_verses')
+        .select('id')
+        .eq('chapter_id', data?.chapterData?.id)
+        .in('verse_number', localSelectedVerses);
+
+      if (!verseIds) return;
+
+      for (const verse of verseIds) {
         const { error } = await supabase
           .from('bible_verse_highlights')
           .insert({
-            verse_id: verseId,
+            verse_id: verse.id,
             color,
             user_id: user.id
           });
@@ -187,11 +203,11 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         if (!user) return;
 
         let hasHighlights = false;
-        for (const verseId of localSelectedVerses) {
+        for (const verseNumber of localSelectedVerses) {
           const { data } = await supabase
             .from('bible_verse_highlights')
             .select('id')
-            .eq('verse_id', verseId)
+            .eq('verse_number', verseNumber)
             .eq('user_id', user.id)
             .maybeSingle();
           

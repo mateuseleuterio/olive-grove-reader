@@ -38,16 +38,16 @@ export const BibleVerseList = ({
   return (
     <div className="space-y-4">
       {verses.map((verse) => {
-        const isSelected = selectedVerses.includes(verse.id);
+        const isSelected = selectedVerses.includes(verse.verse_number);
         const words = verse.text.split(/\s+/);
 
         return (
           <div
             key={verse.id}
-            className={`flex items-start space-x-2 p-2 rounded ${
+            className={`flex items-start space-x-2 p-2 rounded cursor-pointer ${
               isSelected ? "bg-bible-highlight" : ""
             }`}
-            onClick={() => onVerseSelect(verse.id)}
+            onClick={() => onVerseSelect(verse.verse_number)}
             data-verse={verse.verse_number}
           >
             <span className="text-bible-navy font-semibold min-w-[1.5rem]">
