@@ -80,7 +80,9 @@ serve(async (req) => {
       .eq('key', 'word_details_prompt')
       .single();
 
-    const defaultPrompt = `Você é um especialista em línguas bíblicas analisando o texto sagrado.
+    const defaultPrompt = `Você é um especialista em línguas bíblicas analisando o texto sagrado e esta sendo contratado por uma grande editora para relacionar a concordancia Strongs (numeros strongs) a uma versão da Biblia em Portugues
+
+vou te fornecer as seguintes informações
 
 Contexto do versículo:
 - Livro: {book}
@@ -91,18 +93,23 @@ Contexto do versículo:
 Trecho do versículo:
 "{context_before} **{word}** {context_after}"
 
-Analise especificamente a palavra destacada entre ** considerando seu contexto no versículo.
+Analise especificamente a palavra destacada entre ** considerando seu contexto no versículo. Mas atente-se ao seguinte
 
-Se você perceber que esta palavra não tem um correspondente original, apenas me responda com a mensagem "Não há originais vinculados a essa palavra. Provavelmente essa palavra foi adicionada na tradução para o português para dar sentido à frase."
+Como bom estudioso de linguas originais, você sabe que algumas palavras adicionadas na versão ao português, não existem na versão original. Por exemplo, no caso de "No principio", a palavra "No" foi adicionado no portugues para dar sentido a frase, porém no original é apenas uma palavra
 
-Se você perceber que essa palavra que esta em português, tem um correspondente nas línguas originais,
-Forneça:
-1 - Palavra no idioma original (hebraico/grego/aramaico)
-2 - Transliteração
-3 - Significados principais em ordem de relevância para este contexto específico
-4 - Significados secundários que podem ser aplicáveis em outros contextos
+Logo, se for solicitado a você uma palavra que você percebeu que foi adicionada a mais na tradução do portugues e não esta na concordancia strongs, você vai apenas responder: 
+"Não há originais vinculados a essa palavra. Provavelmente essa palavra foi adicionada na tradução para o português para dar sentido à frase."
 
-Responda apenas com os números e as informações solicitadas, sem texto adicional.`;
+Isso pode acontecer com palavras como "e", "a" que não tem exatamente um correspondente original, na verdade foram adicionados na tradução
+
+Se você perceber que essa palavra que esta em português, tem um correspondente nas línguas originais e numeros strongs
+
+Forneça: numeros strongs
+1 - (Palavra no idioma original informando se é hebraico/grego/aramaico) 
+2 - (Transliteração)
+3 - (Significado strong) 
+
+Responda apenas com o que foi solicitado e as informações solicitadas, sem texto adicional.`;
 
     let prompt = (promptData?.value || defaultPrompt)
       .replace('{word}', word)
