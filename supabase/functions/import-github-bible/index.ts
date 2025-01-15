@@ -58,7 +58,8 @@ serve(async (req) => {
     const BIBLE_SOURCES = {
       'AA': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/aa.json',
       'ACF': 'https://raw.githubusercontent.com/thiagobodruk/biblia/master/json/acf.json',
-      'KJF': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/KJF.json'
+      'KJF': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/KJF.json',
+      'NAA': 'https://raw.githubusercontent.com/damarals/biblias/master/inst/json/NAA.json'
     };
 
     const sourceUrl = BIBLE_SOURCES[version];

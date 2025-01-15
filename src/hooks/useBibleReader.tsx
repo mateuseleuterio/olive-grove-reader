@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export type BibleVersion = "ACF" | "AA" | "KJF";
+export type BibleVersion = "ACF" | "AA" | "KJF" | "NAA";
 
 export interface Book {
   id: number;
@@ -12,7 +12,8 @@ export interface Book {
 export const BIBLE_VERSIONS = {
   "ACF": "Almeida Corrigida Fiel",
   "AA": "Almeida Atualizada",
-  "KJF": "King James 1611"
+  "KJF": "King James 1611",
+  "NAA": "Nova Almeida Atualizada"
 } as const;
 
 const STORAGE_KEY = "bible_reader_state";

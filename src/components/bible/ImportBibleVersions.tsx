@@ -9,7 +9,8 @@ import { Label } from "@/components/ui/label";
 const VERSIONS = {
   "AA": "Almeida Atualizada",
   "ACF": "Almeida Corrigida Fiel",
-  "KJF": "King James 1611"
+  "KJF": "King James 1611",
+  "NAA": "Nova Almeida Atualizada"
 } as const;
 
 type BibleVersion = keyof typeof VERSIONS;
