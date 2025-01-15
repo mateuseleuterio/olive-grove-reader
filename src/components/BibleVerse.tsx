@@ -26,17 +26,28 @@ interface VerseHighlight {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
   const [highlights, setHighlights] = useState<VerseHighlight[]>([]);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch user ID once
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    fetchUser();
+  }, []);
 
   // Fetch initial highlights
   useEffect(() => {
-    const fetchHighlights = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!userId) return;
 
+    const fetchHighlights = async () => {
       const { data: highlightsData } = await supabase
         .from('bible_verse_highlights')
         .select('verse_id, highlight_color')
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
       
       if (highlightsData) {
         console.log("Destaques carregados:", highlightsData);
@@ -45,48 +56,58 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     };
 
     fetchHighlights();
-  }, []);
+  }, [userId]);
 
   // Subscribe to realtime updates
   useEffect(() => {
-    const setupRealtimeSubscription = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+    if (!userId) return;
 
-      const channel = supabase
-        .channel('highlights-changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'bible_verse_highlights',
-            filter: `user_id=eq.${user.id}`,
-          },
-          async (payload) => {
-            console.log("Mudança em tempo real recebida:", payload);
-            
-            // Atualizar os destaques após qualquer mudança
-            const { data: highlightsData } = await supabase
-              .from('bible_verse_highlights')
-              .select('verse_id, highlight_color')
-              .eq('user_id', user.id);
-            
-            if (highlightsData) {
-              console.log("Destaques atualizados:", highlightsData);
-              setHighlights(highlightsData);
-            }
+    console.log("Configurando inscrição em tempo real para o usuário:", userId);
+
+    const channel = supabase
+      .channel('highlights-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'bible_verse_highlights',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload) => {
+          console.log("Mudança em tempo real recebida:", payload);
+          
+          // Atualizar os destaques baseado no tipo de evento
+          if (payload.eventType === 'INSERT') {
+            const newHighlight = {
+              verse_id: payload.new.verse_id,
+              highlight_color: payload.new.highlight_color,
+            };
+            setHighlights(prev => [...prev, newHighlight]);
+          } else if (payload.eventType === 'DELETE') {
+            setHighlights(prev => 
+              prev.filter(h => h.verse_id !== payload.old.verse_id)
+            );
+          } else if (payload.eventType === 'UPDATE') {
+            setHighlights(prev => 
+              prev.map(h => 
+                h.verse_id === payload.new.verse_id 
+                  ? { ...h, highlight_color: payload.new.highlight_color }
+                  : h
+              )
+            );
           }
-        )
-        .subscribe();
+        }
+      )
+      .subscribe((status) => {
+        console.log("Status da inscrição:", status);
+      });
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+    return () => {
+      console.log("Limpando inscrição em tempo real");
+      supabase.removeChannel(channel);
     };
-
-    setupRealtimeSubscription();
-  }, []);
+  }, [userId]);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -226,10 +247,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         ))}
       </div>
     );
-  }
-
-  if (!verses || verses.length === 0) {
-    return <div>Nenhum versículo encontrado</div>;
   }
 
   return (
