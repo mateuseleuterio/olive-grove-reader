@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import AuthModal from "@/components/Auth";
 
 interface BibleNotesProps {
   bookId: number;
@@ -16,6 +17,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
   const [noteText, setNoteText] = useState("");
   const [bookName, setBookName] = useState("");
   const [chapterNotes, setChapterNotes] = useState<any[]>([]);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -32,6 +34,9 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
     };
 
     const fetchChapterNotes = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return;
+
       const { data: chapterData } = await supabase
         .from('bible_chapters')
         .select('id')
@@ -71,24 +76,20 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
   }, [bookId, chapter]);
 
   const handleSaveNote = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para salvar anotações.",
-          variant: "destructive",
-        });
-        return;
-      }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
 
+    try {
       const promises = selectedVerses.map(verseId =>
         supabase
           .from('bible_verse_notes')
           .insert({
             verse_id: verseId,
             note_text: noteText,
-            user_id: user.id,
+            user_id: session.user.id,
           })
       );
 
@@ -154,6 +155,11 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
           </div>
         </ScrollArea>
       )}
+
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 };
