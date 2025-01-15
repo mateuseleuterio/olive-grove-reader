@@ -15,13 +15,37 @@ interface BibleNotesProps {
   onClose: () => void;
 }
 
+interface Note {
+  id: string;
+  note_text: string;
+  created_at: string;
+  verse_id?: number;
+  bible_verses?: {
+    verse_number: number;
+    text: string;
+  };
+}
+
 export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNotesProps) => {
   const [noteText, setNoteText] = useState("");
   const [bookName, setBookName] = useState("");
-  const [chapterNotes, setChapterNotes] = useState<any[]>([]);
+  const [chapterNotes, setChapterNotes] = useState<Note[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [session, setSession] = useState<any>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const fetchBookName = async () => {
@@ -37,7 +61,6 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
     };
 
     const fetchChapterNotes = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.user) return;
 
       const { data: chapterData } = await supabase
@@ -61,6 +84,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
               id,
               note_text,
               verse_id,
+              created_at,
               bible_verses (
                 verse_number,
                 text
@@ -77,27 +101,29 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
 
     fetchBookName();
     fetchChapterNotes();
-  }, [bookId, chapter]);
+  }, [bookId, chapter, session?.user]);
 
   const handleSaveNote = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
     if (!session?.user) {
       setIsAuthModalOpen(true);
       return;
     }
 
     try {
-      const promises = selectedVerses.map(verseId =>
-        supabase
-          .from('bible_verse_notes')
-          .insert({
-            verse_id: verseId,
-            note_text: noteText,
-            user_id: session.user.id,
-          })
-      );
+      if (selectedVerses.length > 0) {
+        // Save notes for selected verses
+        const promises = selectedVerses.map(verseId =>
+          supabase
+            .from('bible_verse_notes')
+            .insert({
+              verse_id: verseId,
+              note_text: noteText,
+              user_id: session.user.id,
+            })
+        );
 
-      await Promise.all(promises);
+        await Promise.all(promises);
+      }
 
       toast({
         title: "Sucesso",
@@ -106,7 +132,42 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
 
       setNoteText("");
       setIsAddingNote(false);
-      onClose();
+      
+      // Refresh notes after saving
+      const { data: chapterData } = await supabase
+        .from('bible_chapters')
+        .select('id')
+        .eq('book_id', bookId)
+        .eq('chapter_number', parseInt(chapter))
+        .single();
+
+      if (chapterData) {
+        const { data: verseIds } = await supabase
+          .from('bible_verses')
+          .select('id')
+          .eq('chapter_id', chapterData.id);
+
+        if (verseIds) {
+          const verseIdArray = verseIds.map(v => v.id);
+          const { data: notes } = await supabase
+            .from('bible_verse_notes')
+            .select(`
+              id,
+              note_text,
+              verse_id,
+              created_at,
+              bible_verses (
+                verse_number,
+                text
+              )
+            `)
+            .eq('user_id', session.user.id)
+            .in('verse_id', verseIdArray)
+            .order('created_at', { ascending: false });
+
+          setChapterNotes(notes || []);
+        }
+      }
     } catch (error) {
       console.error('Error saving note:', error);
       toast({
@@ -146,12 +207,16 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
                 <div className="space-y-4 pr-4">
                   {chapterNotes.map((note) => (
                     <div key={note.id} className="border rounded-lg p-4">
-                      <div className="text-sm text-gray-600 mb-2">
-                        Versículo {note.bible_verses.verse_number}
-                      </div>
-                      <div className="text-sm italic text-gray-700 mb-2">
-                        {note.bible_verses.text}
-                      </div>
+                      {note.bible_verses && (
+                        <div className="text-sm text-gray-600 mb-2">
+                          Versículo {note.bible_verses.verse_number}
+                        </div>
+                      )}
+                      {note.bible_verses && (
+                        <div className="text-sm italic text-gray-700 mb-2">
+                          {note.bible_verses.text}
+                        </div>
+                      )}
                       <div className="text-sm">
                         {note.note_text}
                       </div>

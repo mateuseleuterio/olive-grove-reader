@@ -21,6 +21,7 @@ const BibleReader = () => {
   } = useBibleReader();
   
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
+
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
