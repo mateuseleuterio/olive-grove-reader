@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const { word, book, chapter, verse } = await req.json()
-    const apiKey = Deno.env.get('PERPLEXITY_API_KEY')
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
@@ -73,14 +73,15 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
 
     console.log('Buscando novo significado para:', { word, book, chapter, verse })
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
+    // Usando a OpenAI ao invés do Perplexity
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-sonar-small-128k-online',
+        model: 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
