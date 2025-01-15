@@ -34,7 +34,7 @@ const HIGHLIGHT_COLORS = {
   orange: "bg-[#FEC6A1]",
 };
 
-export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: BibleVerseActionsProps) => {
+export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActionsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
@@ -42,15 +42,26 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+  const [session, setSession] = useState<any>(null);
 
-  // Fetch highlight for this verse with proper error handling
+  // Check and set session on mount and auth state changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch highlight for this verse with proper session handling
   const { data: highlight } = useQuery({
-    queryKey: ['verse-highlight', verseId],
+    queryKey: ['verse-highlight', verseId, session?.user?.id],
     queryFn: async () => {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.log('No active session:', sessionError?.message);
+      if (!session?.user?.id) {
         return null;
       }
 
@@ -68,23 +79,21 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
       return data;
     },
-    retry: false,
+    enabled: !!session?.user?.id,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const handleSaveNote = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para adicionar notas.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!session?.user?.id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para adicionar notas.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
       const { error } = await supabase
         .from('bible_verse_notes')
         .insert({
@@ -100,7 +109,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
       
       toast({
         title: "Nota salva",
-        description: `Nota adicionada ao versículo ${verseNumber}.`,
+        description: "Nota adicionada ao versículo.",
       });
       
       if (onNoteClick) {
@@ -119,11 +128,11 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const handleShare = async () => {
     try {
       await navigator.share({
-        text: `${text} (Versículo ${verseNumber})`,
+        text: text,
       });
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
-      navigator.clipboard.writeText(`${text} (Versículo ${verseNumber})`);
+      navigator.clipboard.writeText(text);
       toast({
         title: "Texto copiado",
         description: "O versículo foi copiado para a área de transferência.",
@@ -132,18 +141,16 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   };
 
   const handleHighlight = async (color: string) => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para destacar versículos.",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!session?.user?.id) {
+      toast({
+        title: "Erro",
+        description: "Você precisa estar logado para destacar versículos.",
+        variant: "destructive",
+      });
+      return;
+    }
 
+    try {
       if (highlight) {
         // If same color, remove highlight
         if (highlight.color === color) {
