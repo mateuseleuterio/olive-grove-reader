@@ -251,12 +251,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
                       const { data: { user } } = await supabase.auth.getUser();
                       if (!user) return;
 
-                      // Se já existe destaque, remove primeiro
                       if (hasHighlightedVerses) {
                         await handleRemoveHighlights();
                       }
 
-                      // Aplica o novo destaque
                       for (const verseId of selectedVerses) {
                         const { error } = await supabase
                           .from('bible_verse_highlights')
@@ -269,7 +267,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
                         if (error) throw error;
                       }
 
-                      // Atualiza a UI
                       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
                       setSelectedVerses([]);
                     } catch (error) {
@@ -318,7 +315,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           <div className="flex-1 rounded p-1">
             <BibleVerseActions
               verseId={verse.id}
-              text={verse.text}
+              text={<>
+                <span className="verse-number">{verse.verse_number}</span>
+                {verse.text}
+              </>}
               isSelected={selectedVerses.includes(verse.id)}
               onSelect={handleVerseSelect}
             />
