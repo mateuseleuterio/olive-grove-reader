@@ -32,26 +32,7 @@ export const useBibleReader = () => {
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [maxChapters, setMaxChapters] = useState(50);
-  const [hiddenVersions, setHiddenVersions] = useState<string[]>([]);
   const { toast } = useToast();
-
-  // Fetch hidden versions
-  useEffect(() => {
-    const fetchHiddenVersions = async () => {
-      const { data, error } = await supabase
-        .from('hidden_bible_versions')
-        .select('version');
-      
-      if (error) {
-        console.error('Erro ao buscar versões ocultas:', error);
-        return;
-      }
-
-      setHiddenVersions(data.map(item => item.version));
-    };
-
-    fetchHiddenVersions();
-  }, []);
 
   // Load saved state on initial mount
   useEffect(() => {
@@ -62,9 +43,7 @@ export const useBibleReader = () => {
         setSelectedBook(state.selectedBook);
         setChapter(state.chapter);
         if (state.versions && state.versions.length > 0) {
-          // Filter out hidden versions from saved state
-          const filteredVersions = state.versions.filter(v => !hiddenVersions.includes(v.id));
-          setVersions(filteredVersions.length > 0 ? filteredVersions : [{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
+          setVersions(state.versions);
         } else {
           setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
         }
@@ -75,52 +54,64 @@ export const useBibleReader = () => {
     } else {
       setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
     }
-  }, [hiddenVersions]);
+  }, []);
 
-  const fetchBooks = async () => {
-    const { data, error } = await supabase
-      .from('bible_books')
-      .select('id, name')
-      .order('position');
-
-    if (error) {
-      console.error('Erro ao buscar livros:', error);
-      return;
+  // Save state changes to localStorage
+  useEffect(() => {
+    if (versions.length > 0) {
+      const state: StoredState = {
+        selectedBook,
+        chapter,
+        versions
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     }
-
-    if (data) {
-      const uniqueBooks = data.filter((book, index, self) =>
-        index === self.findIndex((b) => b.name === book.name)
-      );
-      setBooks(uniqueBooks);
-    }
-  };
+  }, [selectedBook, chapter, versions]);
 
   useEffect(() => {
+    const fetchBooks = async () => {
+      const { data, error } = await supabase
+        .from('bible_books')
+        .select('id, name')
+        .order('position');
+
+      if (error) {
+        console.error('Erro ao buscar livros:', error);
+        return;
+      }
+
+      if (data) {
+        const uniqueBooks = data.filter((book, index, self) =>
+          index === self.findIndex((b) => b.name === book.name)
+        );
+        setBooks(uniqueBooks);
+      }
+    };
+
     fetchBooks();
   }, []);
 
-  const fetchChapterCount = async () => {
-    if (!selectedBook) return;
-    
-    const { data, error } = await supabase
-      .from('bible_chapters')
-      .select('chapter_number')
-      .eq('book_id', selectedBook)
-      .order('chapter_number', { ascending: false })
-      .limit(1);
-
-    if (error) {
-      console.error('Erro ao buscar número de capítulos:', error);
-      return;
-    }
-
-    if (data && data.length > 0) {
-      setMaxChapters(data[0].chapter_number);
-    }
-  };
-
   useEffect(() => {
+    const fetchChapterCount = async () => {
+      if (!selectedBook) return;
+      
+      const { data, error } = await supabase
+        .from('bible_chapters')
+        .select('chapter_number')
+        .eq('book_id', selectedBook)
+        .order('chapter_number', { ascending: false })
+        .limit(1);
+
+      if (error) {
+        console.error('Erro ao buscar número de capítulos:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setMaxChapters(data[0].chapter_number);
+      }
+    };
+
     fetchChapterCount();
   }, [selectedBook]);
 
@@ -134,22 +125,8 @@ export const useBibleReader = () => {
       return;
     }
     
-    // Find first available version that isn't hidden
-    const availableVersion = Object.entries(BIBLE_VERSIONS).find(([id]) => 
-      !versions.some(v => v.id === id) && !hiddenVersions.includes(id)
-    );
-
-    if (!availableVersion) {
-      toast({
-        title: "Não há versões disponíveis",
-        description: "Todas as versões disponíveis já estão sendo utilizadas.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const [id, name] = availableVersion;
-    setVersions([...versions, { id: id as BibleVersion, name }]);
+    const defaultVersion: BibleVersion = "ACF";
+    setVersions([...versions, { id: defaultVersion, name: BIBLE_VERSIONS[defaultVersion] }]);
     
     toast({
       title: "Versão adicionada",
@@ -176,16 +153,6 @@ export const useBibleReader = () => {
   };
 
   const handleVersionChange = (index: number, newVersion: BibleVersion) => {
-    // Check if version is hidden
-    if (hiddenVersions.includes(newVersion)) {
-      toast({
-        title: "Versão indisponível",
-        description: "Esta versão não está disponível no momento.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     const newVersions = versions.map((v, i) => {
       if (i === index) {
         return { id: newVersion, name: BIBLE_VERSIONS[newVersion] };

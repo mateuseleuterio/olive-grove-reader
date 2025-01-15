@@ -2,7 +2,6 @@ import { ImportBibleVersions } from "@/components/bible/ImportBibleVersions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import AdminPromptPanel from "@/components/settings/AdminPromptPanel";
-import HideBibleVersions from "@/components/settings/HideBibleVersions";
 
 const Settings = () => {
   return (
@@ -21,8 +20,6 @@ const Settings = () => {
             <ImportBibleVersions />
           </CardContent>
         </Card>
-
-        <HideBibleVersions />
 
         <AdminPromptPanel />
       </div>

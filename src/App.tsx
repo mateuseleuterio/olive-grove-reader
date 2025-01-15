@@ -26,10 +26,11 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: any) => {
+        // Don't retry on 403 errors (unauthorized)
         if (error?.status === 403) return false;
         return failureCount < 3;
       },
-      staleTime: 1000 * 60 * 5,
+      staleTime: 1000 * 60 * 5, // 5 minutes
     },
   },
 });
@@ -40,107 +41,50 @@ function App() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const clearSession = async () => {
-    try {
-      // Primeiro limpa todos os tokens do localStorage
-      localStorage.clear(); // Limpa todo o localStorage para garantir
-      
-      // Reseta o estado do cliente
-      queryClient.clear();
-      setCurrentUser(null);
-      
-      // Por último tenta fazer o logout no Supabase
-      try {
-        await supabase.auth.signOut();
-      } catch (signOutError) {
-        console.error('Erro ao fazer logout:', signOutError);
-        // Não precisa fazer nada aqui pois já limpamos tudo
-      }
-    } catch (error) {
-      console.error('Erro ao limpar sessão:', error);
-    }
-  };
-
-  const handleSessionError = async (error: any) => {
-    if (!error) return;
-    
-    console.error('Erro de sessão:', error);
-    
-    const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
-    const shouldClearSession = 
-      errorMessage.includes('session_not_found') || 
-      errorMessage.includes('jwt expired') ||
-      error.status === 403;
-
-    if (shouldClearSession) {
-      await clearSession();
-      toast({
-        title: "Sessão expirada",
-        description: "Sua sessão expirou. Por favor, faça login novamente.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const checkUser = async () => {
-    try {
-      const { data: { session }, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        await handleSessionError(error);
-        return;
-      }
-
-      if (!session?.user) {
-        await clearSession();
-        return;
-      }
-
-      setCurrentUser(session.user.id);
-    } catch (error) {
-      console.error('Erro ao verificar usuário:', error);
-      await handleSessionError(error);
-    }
-  };
-
   useEffect(() => {
-    // Verifica o usuário apenas uma vez na montagem inicial
+    const checkUser = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erro ao verificar sessão:', error);
+          if (error.message.includes('session_not_found')) {
+            await supabase.auth.signOut();
+            localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
+          }
+          return;
+        }
+
+        setCurrentUser(session?.user?.id || null);
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error);
+        toast({
+          title: "Erro de autenticação",
+          description: "Houve um problema ao verificar sua sessão. Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+      }
+    };
+
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Estado de autenticação alterado:', event);
-      
-      try {
-        switch (event) {
-          case 'SIGNED_OUT':
-            await clearSession();
-            break;
-          case 'SIGNED_IN':
-            if (session?.user) {
-              setCurrentUser(session.user.id);
-            }
-            break;
-          case 'TOKEN_REFRESHED':
-          case 'USER_UPDATED':
-            if (session?.user) {
-              setCurrentUser(session.user.id);
-            } else {
-              await clearSession();
-            }
-            break;
-          default:
-            console.log('Evento de autenticação não tratado:', event);
-        }
-      } catch (error) {
-        console.error('Erro ao lidar com mudança de estado de autenticação:', error);
-        await handleSessionError(error);
+      console.log('Auth state changed:', event);
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
+        queryClient.clear();
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setCurrentUser(session?.user?.id || null);
+      } else if (event === 'USER_UPDATED') {
+        await checkUser();
       }
     });
 
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    return () => subscription.unsubscribe();
+  }, [toast]);
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (currentUser !== ADMIN_UID) {
