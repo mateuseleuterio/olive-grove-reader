@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import "https://deno.land/x/xhr@0.1.0/mod.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,8 +15,39 @@ serve(async (req) => {
   try {
     const { word, book, chapter, verse } = await req.json()
     const apiKey = Deno.env.get('PERPLEXITY_API_KEY')
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
-    console.log('Buscando detalhes para:', { word, book, chapter, verse })
+    if (!supabaseUrl || !supabaseServiceKey) {
+      throw new Error('Missing Supabase environment variables')
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+
+    // Primeiro, verifica se já existe no banco
+    const { data: existingMeaning, error: searchError } = await supabase
+      .from('word_meanings')
+      .select('meaning_details')
+      .eq('word', word)
+      .eq('book', book)
+      .eq('chapter', chapter)
+      .eq('verse', verse)
+      .maybeSingle()
+
+    if (searchError) {
+      console.error('Erro ao buscar significado existente:', searchError)
+      throw searchError
+    }
+
+    if (existingMeaning) {
+      console.log('Significado encontrado no banco:', existingMeaning)
+      return new Response(
+        JSON.stringify({ result: existingMeaning.meaning_details }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('Buscando novo significado para:', { word, book, chapter, verse })
 
     const prompt = `Analise a palavra "${word}" do versículo ${book} ${chapter}:${verse} da Bíblia e forneça:
 1 - Palavra no idioma original (hebraico/grego/aramaico)
@@ -49,10 +81,26 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
     })
 
     const data = await response.json()
-    console.log('Resposta da API:', data)
+    const meaningDetails = data.choices[0].message.content
+
+    // Salva o novo significado no banco
+    const { error: insertError } = await supabase
+      .from('word_meanings')
+      .insert({
+        word,
+        book,
+        chapter,
+        verse,
+        meaning_details: meaningDetails
+      })
+
+    if (insertError) {
+      console.error('Erro ao salvar significado:', insertError)
+      throw insertError
+    }
 
     return new Response(
-      JSON.stringify({ result: data.choices[0].message.content }),
+      JSON.stringify({ result: meaningDetails }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
   } catch (error) {

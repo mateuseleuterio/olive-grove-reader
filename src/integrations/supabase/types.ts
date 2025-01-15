@@ -734,6 +734,36 @@ export type Database = {
           },
         ]
       }
+      word_meanings: {
+        Row: {
+          book: string
+          chapter: string
+          created_at: string
+          id: string
+          meaning_details: string
+          verse: string
+          word: string
+        }
+        Insert: {
+          book: string
+          chapter: string
+          created_at?: string
+          id?: string
+          meaning_details: string
+          verse: string
+          word: string
+        }
+        Update: {
+          book?: string
+          chapter?: string
+          created_at?: string
+          id?: string
+          meaning_details?: string
+          verse?: string
+          word?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
