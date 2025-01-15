@@ -18,8 +18,32 @@ interface Verse {
   text: string;
 }
 
+interface VerseHighlight {
+  verse_id: number;
+  highlight_color: string;
+}
+
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
+  const [highlights, setHighlights] = useState<VerseHighlight[]>([]);
+
+  useEffect(() => {
+    const fetchHighlights = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: highlightsData } = await supabase
+          .from('bible_verse_highlights')
+          .select('verse_id, highlight_color')
+          .eq('user_id', user.id);
+        
+        if (highlightsData) {
+          setHighlights(highlightsData);
+        }
+      }
+    };
+
+    fetchHighlights();
+  }, []);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -111,14 +135,28 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { data: verses, isLoading, error } = useQuery({
     queryKey: ['verses', bookId, chapter, version],
     queryFn: fetchVerses,
-    staleTime: 1000 * 60 * 60, // Cache por 1 hora
-    gcTime: 1000 * 60 * 60 * 24, // Manter no cache por 24 horas
+    staleTime: 1000 * 60 * 60,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const renderVerse = (text: string) => {
-    return text.split(" ").map((word, index) => (
-      <WordDetails key={`${text}-${index}`} word={word} />
-    ));
+  const getHighlightClass = (verseId: number) => {
+    const highlight = highlights.find(h => h.verse_id === verseId);
+    if (!highlight) return '';
+
+    switch (highlight.highlight_color) {
+      case 'yellow':
+        return 'bg-yellow-200';
+      case 'red':
+        return 'bg-red-200';
+      case 'blue':
+        return 'bg-blue-200';
+      case 'green':
+        return 'bg-green-200';
+      case 'purple':
+        return 'bg-purple-200';
+      default:
+        return '';
+    }
   };
 
   useEffect(() => {
@@ -155,7 +193,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
             {verse.verse_number}
           </span>
-          <div className="flex-1">
+          <div className={`flex-1 ${getHighlightClass(verse.id)}`}>
             <BibleVerseActions
               verseId={verse.id}
               verseNumber={verse.verse_number}
