@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import BibleVerse from "../BibleVerse";
 import { BibleVersion, BIBLE_VERSIONS } from "@/hooks/useBibleReader";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface BibleVersionPanelProps {
   version: { id: BibleVersion; name: string };
@@ -33,6 +35,29 @@ const BibleVersionPanel = ({
   onVerseSelect,
   selectedVerses,
 }: BibleVersionPanelProps) => {
+  const [hiddenVersions, setHiddenVersions] = useState<string[]>([]);
+
+  useEffect(() => {
+    const fetchHiddenVersions = async () => {
+      const { data, error } = await supabase
+        .from('hidden_bible_versions')
+        .select('version');
+      
+      if (error) {
+        console.error('Erro ao buscar versões ocultas:', error);
+        return;
+      }
+
+      setHiddenVersions(data.map(item => item.version));
+    };
+
+    fetchHiddenVersions();
+  }, []);
+
+  const availableVersions = Object.entries(BIBLE_VERSIONS).filter(
+    ([id]) => !hiddenVersions.includes(id)
+  );
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b bg-white">
@@ -45,7 +70,7 @@ const BibleVersionPanel = ({
               <SelectValue placeholder="Selecione a versão" />
             </SelectTrigger>
             <SelectContent>
-              {Object.entries(BIBLE_VERSIONS).map(([id, name]) => (
+              {availableVersions.map(([id, name]) => (
                 <SelectItem key={id} value={id}>{name}</SelectItem>
               ))}
             </SelectContent>
