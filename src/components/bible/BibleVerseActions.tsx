@@ -15,7 +15,7 @@ import AuthModal from "@/components/Auth";
 
 interface BibleVerseActionsProps {
   verseId: number;
-  text: string;
+  text: string | JSX.Element; // Atualizado para aceitar JSX.Element
   onNoteClick?: () => void;
   isSelected: boolean;
   onSelect: (verseId: number) => void;
