@@ -176,7 +176,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       // Invalidate the query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
       setIsColorPickerOpen(false);
-      setIsSelected(false); // Close verse selection after highlighting
+      setIsSelected(false); // Deselect verse after highlighting
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
       toast({
