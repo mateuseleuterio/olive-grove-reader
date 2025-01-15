@@ -16,8 +16,6 @@ interface BibleHighlightToolbarProps {
   onRemoveHighlights: () => Promise<void>;
   onHighlight: (color: string) => Promise<void>;
   onClose: () => void;
-  showOriginal?: boolean;
-  onToggleOriginal?: () => void;
 }
 
 export const BibleHighlightToolbar = ({
@@ -26,8 +24,6 @@ export const BibleHighlightToolbar = ({
   onRemoveHighlights,
   onHighlight,
   onClose,
-  showOriginal,
-  onToggleOriginal,
 }: BibleHighlightToolbarProps) => {
   if (selectedVerses.length === 0) return null;
 
@@ -86,10 +82,9 @@ export const BibleHighlightToolbar = ({
             <span>Compartilhar</span>
           </Button>
           <Button
-            variant={showOriginal ? "default" : "outline"}
+            variant="outline"
             size="sm"
             className="h-8 px-3 text-sm flex items-center gap-1.5"
-            onClick={onToggleOriginal}
           >
             <Eye className="h-3.5 w-3.5" />
             <span>Original</span>

@@ -41,6 +41,6 @@
   }
 
   .verse-number {
-    @apply text-bible-verse/60 font-sans text-xs align-super mr-0.5 font-medium;
+    @apply text-bible-verse font-sans text-sm align-super mr-1;
   }
 }

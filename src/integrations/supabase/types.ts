@@ -171,41 +171,6 @@ export type Database = {
           },
         ]
       }
-      bible_verse_originals: {
-        Row: {
-          created_at: string
-          created_by: string | null
-          id: string
-          language: string
-          original_text: string
-          verse_id: number | null
-        }
-        Insert: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          language: string
-          original_text: string
-          verse_id?: number | null
-        }
-        Update: {
-          created_at?: string
-          created_by?: string | null
-          id?: string
-          language?: string
-          original_text?: string
-          verse_id?: number | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "bible_verse_originals_verse_id_fkey"
-            columns: ["verse_id"]
-            isOneToOne: false
-            referencedRelation: "bible_verses"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       bible_verses: {
         Row: {
           chapter_id: number | null
