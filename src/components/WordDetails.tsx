@@ -5,6 +5,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
 
 interface WordDetailsProps {
   word: string;
@@ -16,6 +18,8 @@ interface WordDetailsProps {
 const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
   const [details, setDetails] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const { toast } = useToast();
 
   const formatResponse = (text: string) => {
     // Substitui os asteriscos duplos por tags de negrito
@@ -50,17 +54,81 @@ const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
     });
   };
 
+  const checkAdminStatus = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user.id === '5e475092-3de0-47b8-8543-c62450e07bbd') {
+      setIsAdmin(true);
+    }
+  };
+
+  const saveToDatabase = async () => {
+    if (!details) return;
+
+    try {
+      const { error } = await supabase
+        .from('word_meanings')
+        .insert({
+          word,
+          book,
+          chapter,
+          verse,
+          meaning_details: details
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Significado salvo no banco de dados.",
+      });
+    } catch (error) {
+      console.error('Erro ao salvar no banco de dados:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível salvar no banco de dados.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchWordDetails = async () => {
     try {
       setLoading(true);
+
+      // Primeiro, verifica se já existe no banco de dados
+      const { data: existingMeaning, error: searchError } = await supabase
+        .from('word_meanings')
+        .select('meaning_details')
+        .eq('word', word)
+        .eq('book', book)
+        .eq('chapter', chapter)
+        .eq('verse', verse)
+        .maybeSingle();
+
+      if (searchError) throw searchError;
+
+      if (existingMeaning) {
+        setDetails(existingMeaning.meaning_details);
+        return;
+      }
+
+      // Se não existir no banco, busca via API
       const { data, error } = await supabase.functions.invoke('get-word-details', {
         body: { word, book, chapter, verse }
       });
 
       if (error) throw error;
       setDetails(data.result);
+      
+      // Verifica se o usuário é admin
+      await checkAdminStatus();
     } catch (error) {
       console.error('Erro ao buscar detalhes da palavra:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível buscar os detalhes da palavra.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -82,6 +150,17 @@ const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
         ) : details ? (
           <div className="space-y-2">
             {formatResponse(details)}
+            {isAdmin && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <Button 
+                  onClick={saveToDatabase}
+                  className="w-full"
+                  variant="outline"
+                >
+                  Enviar para banco de dados
+                </Button>
+              </div>
+            )}
           </div>
         ) : (
           <p className="text-center text-gray-500">

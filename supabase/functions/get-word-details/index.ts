@@ -83,22 +83,6 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
     const data = await response.json()
     const meaningDetails = data.choices[0].message.content
 
-    // Salva o novo significado no banco
-    const { error: insertError } = await supabase
-      .from('word_meanings')
-      .insert({
-        word,
-        book,
-        chapter,
-        verse,
-        meaning_details: meaningDetails
-      })
-
-    if (insertError) {
-      console.error('Erro ao salvar significado:', insertError)
-      throw insertError
-    }
-
     return new Response(
       JSON.stringify({ result: meaningDetails }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
