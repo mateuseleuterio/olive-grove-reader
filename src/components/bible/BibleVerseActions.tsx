@@ -8,7 +8,7 @@ import {
   ContextMenuSeparator,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Highlight, MessageSquare, Share } from "lucide-react";
+import { Highlighter, MessageSquare, Share } from "lucide-react";
 import {
   Popover,
   PopoverContent,
@@ -133,7 +133,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
               className="gap-2"
               onClick={(e) => e.preventDefault()}
             >
-              <Highlight className="h-4 w-4" />
+              <Highlighter className="h-4 w-4" />
               Destacar
             </ContextMenuItem>
           </PopoverTrigger>
