@@ -32,6 +32,7 @@ export const useBibleReader = () => {
   const [selectedBook, setSelectedBook] = useState<number>(1);
   const [chapter, setChapter] = useState("1");
   const [maxChapters, setMaxChapters] = useState(50);
+  const [hiddenVersions, setHiddenVersions] = useState<string[]>([]);
   const { toast } = useToast();
 
   // Load saved state on initial mount
@@ -54,7 +55,22 @@ export const useBibleReader = () => {
     } else {
       setVersions([{ id: "ACF", name: BIBLE_VERSIONS.ACF }]);
     }
+
+    fetchHiddenVersions();
   }, []);
+
+  const fetchHiddenVersions = async () => {
+    const { data, error } = await supabase
+      .from('hidden_bible_versions')
+      .select('version');
+    
+    if (error) {
+      console.error('Erro ao buscar versões ocultas:', error);
+      return;
+    }
+
+    setHiddenVersions(data.map(item => item.version));
+  };
 
   // Save state changes to localStorage
   useEffect(() => {
@@ -153,6 +169,16 @@ export const useBibleReader = () => {
   };
 
   const handleVersionChange = (index: number, newVersion: BibleVersion) => {
+    // Verificar se a versão está oculta
+    if (hiddenVersions.includes(newVersion)) {
+      toast({
+        title: "Versão indisponível",
+        description: "Esta versão não está disponível no momento.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newVersions = versions.map((v, i) => {
       if (i === index) {
         return { id: newVersion, name: BIBLE_VERSIONS[newVersion] };
