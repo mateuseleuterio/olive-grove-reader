@@ -180,8 +180,8 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
 
   return (
     <Sheet open={true} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[40vh]">
-        <SheetHeader>
+      <SheetContent side="bottom" className="h-[40vh] flex flex-col">
+        <SheetHeader className="flex-shrink-0">
           <div className="flex justify-between items-center">
             <SheetTitle>Anotações - {bookName} {chapter}</SheetTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
@@ -190,7 +190,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
           </div>
         </SheetHeader>
 
-        <div className="mt-4 h-full flex flex-col">
+        <div className="flex-1 flex flex-col gap-4 overflow-hidden py-4">
           {!isAddingNote ? (
             <div className="flex flex-col h-full">
               <div className="flex justify-between items-center mb-4">
@@ -226,14 +226,14 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
               </ScrollArea>
             </div>
           ) : (
-            <div className="space-y-4 h-full flex flex-col">
+            <div className="flex flex-col h-full gap-4">
               <Textarea
                 placeholder="Digite sua anotação aqui..."
                 value={noteText}
                 onChange={(e) => setNoteText(e.target.value)}
-                className="flex-1 min-h-0"
+                className="flex-1 min-h-0 resize-none"
               />
-              <div className="flex justify-end gap-2">
+              <div className="flex justify-end gap-2 mt-auto">
                 <Button variant="outline" onClick={() => setIsAddingNote(false)}>
                   Cancelar
                 </Button>
