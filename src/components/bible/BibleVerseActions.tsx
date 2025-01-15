@@ -17,10 +17,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import AuthModal from "@/components/Auth";
 
 interface BibleVerseActionsProps {
   verseId: number;
-  verseNumber: number;
   text: string;
   onNoteClick?: () => void;
 }
@@ -43,8 +43,8 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  // Check and set session on mount and auth state changes
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
@@ -57,7 +57,6 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
     return () => subscription.unsubscribe();
   }, []);
 
-  // Fetch highlight for this verse with proper session handling
   const { data: highlight } = useQuery({
     queryKey: ['verse-highlight', verseId, session?.user?.id],
     queryFn: async () => {
@@ -80,16 +79,12 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       return data;
     },
     enabled: !!session?.user?.id,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    staleTime: 1000 * 60 * 5,
   });
 
   const handleSaveNote = async () => {
     if (!session?.user?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para adicionar notas.",
-        variant: "destructive",
-      });
+      setIsAuthModalOpen(true);
       return;
     }
 
@@ -142,11 +137,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
 
   const handleHighlight = async (color: string) => {
     if (!session?.user?.id) {
-      toast({
-        title: "Erro",
-        description: "Você precisa estar logado para destacar versículos.",
-        variant: "destructive",
-      });
+      setIsAuthModalOpen(true);
       return;
     }
 
@@ -185,6 +176,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       // Invalidate the query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
       setIsColorPickerOpen(false);
+      setIsSelected(false); // Close verse selection after highlighting
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
       toast({
@@ -257,7 +249,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Adicionar nota ao versículo {verseNumber}</DialogTitle>
+            <DialogTitle>Adicionar nota ao versículo</DialogTitle>
             <DialogDescription>
               Escreva sua nota para este versículo.
             </DialogDescription>
@@ -313,6 +305,11 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
           </div>
         </DialogContent>
       </Dialog>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+      />
     </div>
   );
 };
