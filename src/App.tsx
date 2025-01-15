@@ -73,12 +73,12 @@ function App() {
           return;
         }
 
-        if (!session) {
+        if (!session || !session.user) {
           await clearSession();
           return;
         }
 
-        setCurrentUser(session.user?.id || null);
+        setCurrentUser(session.user.id);
       } catch (error) {
         console.error('Erro ao verificar usuário:', error);
         await clearSession();
@@ -96,10 +96,12 @@ function App() {
       console.log('Auth state changed:', event);
       if (event === 'SIGNED_OUT') {
         await clearSession();
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setCurrentUser(session?.user?.id || null);
-      } else if (event === 'USER_UPDATED') {
-        await checkUser();
+      } else if (event === 'SIGNED_IN' && session?.user) {
+        setCurrentUser(session.user.id);
+      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        setCurrentUser(session.user.id);
+      } else if (event === 'USER_UPDATED' && session?.user) {
+        setCurrentUser(session.user.id);
       }
     });
 
