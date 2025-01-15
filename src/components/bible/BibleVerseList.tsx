@@ -43,10 +43,10 @@ export const BibleVerseList = ({
               verseId={verse.id}
               text={
                 <div className="flex items-start">
-                  <span className="text-xs opacity-60 font-medium mr-0.5">
+                  <span className="text-[10px] opacity-40 font-medium mr-0.5 mt-1">
                     {verse.verse_number}
                   </span>
-                  <div className="flex-1">
+                  <div className="flex-1 flex flex-wrap">
                     {renderText(verse.text, verse.verse_number)}
                   </div>
                 </div>
