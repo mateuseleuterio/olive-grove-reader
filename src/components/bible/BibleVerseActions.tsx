@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 interface BibleVerseActionsProps {
   verseId: number;
@@ -35,11 +36,31 @@ const HIGHLIGHT_COLORS = {
 
 export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: BibleVerseActionsProps) => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
+
+  // Fetch highlight for this verse
+  const { data: highlight } = useQuery({
+    queryKey: ['verse-highlight', verseId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data, error } = await supabase
+        .from('bible_verse_highlights')
+        .select('*')
+        .eq('verse_id', verseId)
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    },
+  });
 
   const handleSaveNote = async () => {
     try {
@@ -100,6 +121,68 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
     }
   };
 
+  const handleHighlight = async (color: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para destacar versículos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (highlight) {
+        // If same color, remove highlight
+        if (highlight.color === color) {
+          const { error } = await supabase
+            .from('bible_verse_highlights')
+            .delete()
+            .eq('id', highlight.id);
+
+          if (error) throw error;
+        } else {
+          // Update color
+          const { error } = await supabase
+            .from('bible_verse_highlights')
+            .update({ color })
+            .eq('id', highlight.id);
+
+          if (error) throw error;
+        }
+      } else {
+        // Create new highlight
+        const { error } = await supabase
+          .from('bible_verse_highlights')
+          .insert({
+            verse_id: verseId,
+            color,
+            user_id: user.id
+          });
+
+        if (error) throw error;
+      }
+
+      // Invalidate the query to trigger a refetch
+      queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
+      setIsColorPickerOpen(false);
+      
+      toast({
+        title: "Destaque atualizado",
+        description: "O destaque do versículo foi atualizado.",
+      });
+    } catch (error) {
+      console.error('Erro ao destacar versículo:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível destacar o versículo.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleVerseClick = () => {
     setIsSelected(!isSelected);
   };
@@ -109,16 +192,13 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
       onClick={handleVerseClick}
       className={`cursor-pointer rounded p-2 transition-colors ${
         isSelected ? 'bg-gray-100' : ''
-      }`}
+      } ${highlight ? HIGHLIGHT_COLORS[highlight.color as keyof typeof HIGHLIGHT_COLORS] : ''}`}
     >
       <div className="flex items-start gap-2">
-        <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
-          {verseNumber}
-        </span>
         <span>{text}</span>
       </div>
       
-      <Popover>
+      <Popover open={isSelected}>
         <PopoverTrigger asChild>
           <div className={`${isSelected ? 'block' : 'hidden'} mt-2`}>
             <div className="flex gap-1 justify-start">
@@ -201,10 +281,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
               <button
                 key={color}
                 className={`h-12 rounded-md ${className} hover:opacity-80 transition-opacity`}
-                onClick={() => {
-                  // Implementar lógica de destaque aqui
-                  setIsColorPickerOpen(false);
-                }}
+                onClick={() => handleHighlight(color)}
               />
             ))}
           </div>
