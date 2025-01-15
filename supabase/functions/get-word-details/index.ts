@@ -80,17 +80,27 @@ serve(async (req) => {
       .eq('key', 'word_details_prompt')
       .single();
 
-    const defaultPrompt = `Analise a palavra "{word}" do versículo {book} {chapter}:{verse} da Bíblia na versão {version}, considerando o seguinte contexto:
+    const defaultPrompt = `Você é um especialista em línguas bíblicas analisando o texto sagrado.
 
-Palavras anteriores: {context_before}
-Palavra analisada: {word}
-Palavras posteriores: {context_after}
+Contexto do versículo:
+- Livro: {book}
+- Capítulo: {chapter}
+- Versículo: {verse}
+- Versão da Bíblia: {version}
 
+Trecho do versículo:
+"{context_before} **{word}** {context_after}"
+
+Analise especificamente a palavra destacada entre ** considerando seu contexto no versículo.
+
+Se você perceber que esta palavra não tem um correspondente original, apenas me responda com a mensagem "Não há originais vinculados a essa palavra. Provavelmente essa palavra foi adicionada na tradução para o português para dar sentido à frase."
+
+Se você perceber que essa palavra que esta em português, tem um correspondente nas línguas originais,
 Forneça:
 1 - Palavra no idioma original (hebraico/grego/aramaico)
 2 - Transliteração
-3 - Significados principais em ordem de relevância
-4 - Significados secundários
+3 - Significados principais em ordem de relevância para este contexto específico
+4 - Significados secundários que podem ser aplicáveis em outros contextos
 
 Responda apenas com os números e as informações solicitadas, sem texto adicional.`;
 
