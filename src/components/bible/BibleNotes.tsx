@@ -179,8 +179,14 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
   };
 
   return (
-    <Sheet open={true} onOpenChange={onClose}>
-      <SheetContent side="bottom" className="h-[40vh] flex flex-col">
+    <Sheet defaultOpen={true} onOpenChange={onClose}>
+      <SheetContent 
+        side="bottom" 
+        className="h-[40vh] flex flex-col"
+        // Remove modal-like behavior to allow interaction with content behind
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <SheetHeader className="flex-shrink-0">
           <div className="flex justify-between items-center">
             <SheetTitle>Anotações - {bookName} {chapter}</SheetTitle>
