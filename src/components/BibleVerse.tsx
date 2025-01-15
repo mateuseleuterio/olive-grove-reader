@@ -58,6 +58,20 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     fetchHighlights();
   }, [userId]);
 
+  // Função para buscar um destaque específico
+  const fetchSingleHighlight = async (verseId: number) => {
+    if (!userId) return null;
+
+    const { data } = await supabase
+      .from('bible_verse_highlights')
+      .select('verse_id, highlight_color')
+      .eq('user_id', userId)
+      .eq('verse_id', verseId)
+      .maybeSingle();
+
+    return data;
+  };
+
   // Subscribe to realtime updates
   useEffect(() => {
     if (!userId) return;
@@ -74,10 +88,10 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           table: 'bible_verse_highlights',
           filter: `user_id=eq.${userId}`,
         },
-        (payload) => {
+        async (payload) => {
           console.log("Mudança em tempo real recebida:", payload);
           
-          // Atualizar os destaques baseado no tipo de evento
+          // Atualizar apenas o destaque específico que foi modificado
           if (payload.eventType === 'INSERT') {
             const newHighlight = {
               verse_id: payload.new.verse_id,
@@ -89,13 +103,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
               prev.filter(h => h.verse_id !== payload.old.verse_id)
             );
           } else if (payload.eventType === 'UPDATE') {
-            setHighlights(prev => 
-              prev.map(h => 
-                h.verse_id === payload.new.verse_id 
-                  ? { ...h, highlight_color: payload.new.highlight_color }
-                  : h
-              )
-            );
+            // Buscar o destaque atualizado do servidor
+            const updatedHighlight = await fetchSingleHighlight(payload.new.verse_id);
+            if (updatedHighlight) {
+              setHighlights(prev => 
+                prev.map(h => 
+                  h.verse_id === updatedHighlight.verse_id 
+                    ? updatedHighlight 
+                    : h
+                )
+              );
+            }
           }
         }
       )
