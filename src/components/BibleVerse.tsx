@@ -170,21 +170,28 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   useEffect(() => {
     const checkHighlights = async () => {
-      let hasHighlights = false;
-      for (const verseId of selectedVerses) {
-        const { data } = await supabase
-          .from('bible_verse_highlights')
-          .select('id')
-          .eq('verse_id', verseId)
-          .eq('user_id', supabase.auth.getUser().then(({ data }) => data.user?.id))
-          .maybeSingle();
-        
-        if (data) {
-          hasHighlights = true;
-          break;
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        let hasHighlights = false;
+        for (const verseId of selectedVerses) {
+          const { data } = await supabase
+            .from('bible_verse_highlights')
+            .select('id')
+            .eq('verse_id', verseId)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          if (data) {
+            hasHighlights = true;
+            break;
+          }
         }
+        setHasHighlightedVerses(hasHighlights);
+      } catch (error) {
+        console.error('Error checking highlights:', error);
       }
-      setHasHighlightedVerses(hasHighlights);
     };
     
     if (selectedVerses.length > 0) {
