@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleVerseActions } from "./bible/BibleVerseActions";
 import { StickyNote, Share, Eye, X } from "lucide-react";
@@ -32,7 +32,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
-  const queryClient = useQuery();
+  const queryClient = useQueryClient();
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -226,18 +226,18 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {selectedVerses.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-50 min-w-[600px]">
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50 min-w-[600px]">
           <div className="space-y-4">
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-2">
               {hasHighlightedVerses && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={handleRemoveHighlights}
-                  className="text-gray-500 hover:text-gray-700"
+                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
                 >
-                  <X className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Remover destaque</span>
+                  <X className="h-3 w-3 mr-1" />
+                  <span>Remover destaque</span>
                 </Button>
               )}
             </div>
