@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AuthModal from "@/components/Auth";
+import BibleOriginalText from "./BibleOriginalText";
 
 interface BibleVerseActionsProps {
   verseId: number;
@@ -229,6 +230,39 @@ export const BibleVerseActions = ({
         <span>{text}</span>
       </div>
 
+      {isSelected && (
+        <div className="mt-2 flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsOriginalTextOpen(true)}
+          >
+            Texto Original
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsColorPickerOpen(true)}
+          >
+            Destacar
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsNoteOpen(true)}
+          >
+            Adicionar Nota
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleShare}
+          >
+            Compartilhar
+          </Button>
+        </div>
+      )}
+
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>
           <DialogHeader>
@@ -275,19 +309,11 @@ export const BibleVerseActions = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isOriginalTextOpen} onOpenChange={setIsOriginalTextOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Texto Original</DialogTitle>
-          </DialogHeader>
-          <div className="mt-4">
-            <p className="text-lg font-semibold">Em desenvolvimento</p>
-            <p className="text-sm text-muted-foreground">
-              Esta funcionalidade estará disponível em breve.
-            </p>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <BibleOriginalText
+        verseId={verseId}
+        isOpen={isOriginalTextOpen}
+        onClose={() => setIsOriginalTextOpen(false)}
+      />
 
       <AuthModal 
         isOpen={isAuthModalOpen}
