@@ -26,11 +26,10 @@ const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: (failureCount, error: any) => {
-        // Don't retry on 403 errors (unauthorized)
         if (error?.status === 403) return false;
         return failureCount < 3;
       },
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
     },
   },
 });
@@ -43,20 +42,20 @@ function App() {
 
   const clearSession = async () => {
     try {
-      // First try to sign out from Supabase
-      const { error: signOutError } = await supabase.auth.signOut();
-      if (signOutError) {
-        console.error('Error signing out:', signOutError);
-      }
-
-      // Clear all local storage items related to auth
+      // Clear all local storage items first to prevent token usage
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
       
-      // Clear query cache
-      queryClient.clear();
+      // Then try to sign out from Supabase - if it fails, that's okay
+      // since we've already cleared local storage
+      try {
+        await supabase.auth.signOut();
+      } catch (signOutError) {
+        console.error('Error signing out:', signOutError);
+      }
       
-      // Reset user state
+      // Clear query cache and reset state
+      queryClient.clear();
       setCurrentUser(null);
     } catch (error) {
       console.error('Error clearing session:', error);
@@ -64,11 +63,17 @@ function App() {
   };
 
   const handleSessionError = async (error: any) => {
+    if (!error) return;
+    
     console.error('Session error:', error);
     
-    if (error.message.includes('session_not_found') || 
-        error.message.includes('JWT expired') ||
-        error.status === 403) {
+    const errorMessage = typeof error.message === 'string' ? error.message.toLowerCase() : '';
+    const shouldClearSession = 
+      errorMessage.includes('session_not_found') || 
+      errorMessage.includes('jwt expired') ||
+      error.status === 403;
+
+    if (shouldClearSession) {
       await clearSession();
       toast({
         title: "Sessão expirada",
@@ -78,28 +83,28 @@ function App() {
     }
   };
 
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          await handleSessionError(error);
-          return;
-        }
-
-        if (!session?.user) {
-          await clearSession();
-          return;
-        }
-
-        setCurrentUser(session.user.id);
-      } catch (error) {
-        console.error('Erro ao verificar usuário:', error);
+  const checkUser = async () => {
+    try {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      
+      if (error) {
         await handleSessionError(error);
+        return;
       }
-    };
 
+      if (!session?.user) {
+        await clearSession();
+        return;
+      }
+
+      setCurrentUser(session.user.id);
+    } catch (error) {
+      console.error('Erro ao verificar usuário:', error);
+      await handleSessionError(error);
+    }
+  };
+
+  useEffect(() => {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
@@ -124,7 +129,6 @@ function App() {
             }
             break;
           default:
-            // Handle unknown events
             console.log('Unhandled auth event:', event);
         }
       } catch (error) {
