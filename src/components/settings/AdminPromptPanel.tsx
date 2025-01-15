@@ -38,13 +38,36 @@ const AdminPromptPanel = () => {
     }
   };
 
-  const defaultPrompt = `Analise a palavra "{word}" do versículo {book} {chapter}:{verse} da Bíblia e forneça:
-1 - Palavra no idioma original (hebraico/grego/aramaico)
-2 - Transliteração
-3 - Significados principais em ordem de relevância
-4 - Significados secundários
+  const defaultPrompt = `Você é um especialista em línguas bíblicas analisando o texto sagrado e esta sendo contratado por uma grande editora para relacionar a concordancia Strongs (numeros strongs) a uma versão da Biblia em Portugues
 
-Responda apenas com os números e as informações solicitadas, sem texto adicional.`;
+vou te fornecer as seguintes informações
+
+Contexto do versículo:
+- Livro: {book}
+- Capítulo: {chapter}
+- Versículo: {verse}
+- Versão da Bíblia: {version}
+
+Trecho do versículo:
+"{context_before} **{word}** {context_after}"
+
+Analise especificamente a palavra destacada entre ** considerando seu contexto no versículo. Mas atente-se ao seguinte
+
+Como bom estudioso de linguas originais, você sabe que algumas palavras adicionadas na versão ao português, não existem na versão original. Por exemplo, no caso de "No principio", a palavra "No" foi adicionado no portugues para dar sentido a frase, porém no original é apenas uma palavra
+
+Logo, se for solicitado a você uma palavra que você percebeu que foi adicionada a mais na tradução do portugues e não esta na concordancia strongs, você vai apenas responder: 
+"Não há originais vinculados a essa palavra. Provavelmente essa palavra foi adicionada na tradução para o português para dar sentido à frase."
+
+Isso pode acontecer com palavras como "e", "a" que não tem exatamente um correspondente original, na verdade foram adicionados na tradução
+
+Se você perceber que essa palavra que esta em português, tem um correspondente nas línguas originais e numeros strongs
+
+Forneça: numeros strongs
+1 - (Palavra no idioma original informando se é hebraico/grego/aramaico) 
+2 - (Transliteração)
+3 - (Significado strong) 
+
+Responda apenas com o que foi solicitado e as informações solicitadas, sem texto adicional.`;
 
   const handleSave = async () => {
     try {
@@ -79,7 +102,7 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
         <CardTitle>Configuração do Prompt</CardTitle>
         <CardDescription>
           Configure o prompt usado para gerar os significados das palavras.
-          Use {word}, {book}, {chapter} e {verse} como placeholders.
+          Use {"{word}"}, {"{book}"}, {"{chapter}"} e {"{verse}"} como placeholders.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
