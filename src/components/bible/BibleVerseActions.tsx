@@ -2,20 +2,14 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { Eye, Share, StickyNote, Palette, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import AuthModal from "@/components/Auth";
 
@@ -28,12 +22,12 @@ interface BibleVerseActionsProps {
 }
 
 const HIGHLIGHT_COLORS = {
-  yellow: "bg-[#FFF3B0]", // Warmer soft yellow
-  blue: "bg-[#C1E3FF]",   // Brighter soft blue
-  red: "bg-[#FFD6DB]",    // Warmer soft pink/red
-  purple: "bg-[#DED4FF]", // Brighter soft purple
-  green: "bg-[#E8FAD5]",  // Brighter soft green
-  orange: "bg-[#FFE4D3]", // Warmer soft peach/orange
+  yellow: "bg-[#FFF3B0]",
+  blue: "bg-[#C1E3FF]",
+  red: "bg-[#FFD6DB]",
+  purple: "bg-[#DED4FF]",
+  green: "bg-[#E8FAD5]",
+  orange: "bg-[#FFE4D3]",
 };
 
 export const BibleVerseActions = ({ 
@@ -235,61 +229,6 @@ export const BibleVerseActions = ({
       <div className="flex items-start gap-2">
         <span>{text}</span>
       </div>
-      
-      <Popover>
-        <PopoverTrigger asChild>
-          <div className={`${isSelected ? 'block' : 'hidden'} mt-2`}>
-            <div className="flex gap-1 justify-start">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsColorPickerOpen(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Palette className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsNoteOpen(true)}
-                className="h-8 w-8 p-0"
-              >
-                <StickyNote className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="h-8 w-8 p-0"
-              >
-                <Share className="h-4 w-4" />
-              </Button>
-              
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsOriginalTextOpen(true)}
-                className="h-8 w-8 p-0"
-              >
-                <Eye className="h-4 w-4" />
-              </Button>
-
-              {highlight && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveHighlight}
-                  className="h-8 w-8 p-0"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </div>
-        </PopoverTrigger>
-      </Popover>
 
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>

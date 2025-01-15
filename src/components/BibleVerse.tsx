@@ -156,36 +156,40 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   return (
     <div className="space-y-4">
-      {selectedVerses.length > 1 && (
-        <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50">
-          <div className="flex gap-2">
+      {selectedVerses.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-50 min-w-[320px]">
+          <div className="flex gap-4 justify-center">
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
+              variant="outline"
+              size="lg"
+              className="flex items-center gap-2"
             >
-              <Palette className="h-4 w-4" />
+              <Palette className="h-5 w-5" />
+              <span>Destacar</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
+              variant="outline"
+              size="lg"
+              className="flex items-center gap-2"
             >
-              <StickyNote className="h-4 w-4" />
+              <StickyNote className="h-5 w-5" />
+              <span>Anotar</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
+              variant="outline"
+              size="lg"
+              className="flex items-center gap-2"
             >
-              <Share className="h-4 w-4" />
+              <Share className="h-5 w-5" />
+              <span>Compartilhar</span>
             </Button>
             <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0"
+              variant="outline"
+              size="lg"
+              className="flex items-center gap-2"
             >
-              <Eye className="h-4 w-4" />
+              <Eye className="h-5 w-5" />
+              <span>Original</span>
             </Button>
           </div>
         </div>
