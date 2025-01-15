@@ -79,7 +79,7 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
         <CardTitle>Configuração do Prompt</CardTitle>
         <CardDescription>
           Configure o prompt usado para gerar os significados das palavras.
-          Use {word}, {book}, {chapter} e {verse} como placeholders.
+          Use {"{word}"}, {"{book}"}, {"{chapter}"} e {"{verse}"} como placeholders.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
