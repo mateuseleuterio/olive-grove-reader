@@ -10,17 +10,13 @@ interface BibleVerseProps {
   bookId: number;
   chapter: string;
   version: string;
+  onVerseSelect?: (verses: number[]) => void;
+  selectedVerses?: number[];
 }
 
-interface Verse {
-  id: number;
-  verse_number: number;
-  text: string;
-}
-
-const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
+const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [] }: BibleVerseProps) => {
   const { toast } = useToast();
-  const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
+  const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
   const queryClient = useQueryClient();
 
@@ -108,12 +104,14 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   }, [error, toast]);
 
   const handleVerseSelect = (verseId: number) => {
-    setSelectedVerses(prev => {
-      if (prev.includes(verseId)) {
-        return prev.filter(id => id !== verseId);
-      }
-      return [...prev, verseId];
-    });
+    const newSelectedVerses = localSelectedVerses.includes(verseId)
+      ? localSelectedVerses.filter(id => id !== verseId)
+      : [...localSelectedVerses, verseId];
+    
+    setLocalSelectedVerses(newSelectedVerses);
+    if (onVerseSelect) {
+      onVerseSelect(newSelectedVerses);
+    }
   };
 
   const handleRemoveHighlights = async () => {
@@ -121,7 +119,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      for (const verseId of selectedVerses) {
+      for (const verseId of localSelectedVerses) {
         const { error } = await supabase
           .from('bible_verse_highlights')
           .delete()
@@ -132,7 +130,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       }
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
-      setSelectedVerses([]);
+      setLocalSelectedVerses([]);
       setHasHighlightedVerses(false);
 
       toast({
@@ -158,7 +156,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         await handleRemoveHighlights();
       }
 
-      for (const verseId of selectedVerses) {
+      for (const verseId of localSelectedVerses) {
         const { error } = await supabase
           .from('bible_verse_highlights')
           .insert({
@@ -171,7 +169,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       }
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
-      setSelectedVerses([]);
+      setLocalSelectedVerses([]);
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
       toast({
@@ -189,7 +187,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         if (!user) return;
 
         let hasHighlights = false;
-        for (const verseId of selectedVerses) {
+        for (const verseId of localSelectedVerses) {
           const { data } = await supabase
             .from('bible_verse_highlights')
             .select('id')
@@ -208,12 +206,12 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       }
     };
     
-    if (selectedVerses.length > 0) {
+    if (localSelectedVerses.length > 0) {
       checkHighlights();
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [selectedVerses]);
+  }, [localSelectedVerses]);
 
   if (isLoading) {
     return (
@@ -231,15 +229,20 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       <BibleHighlightToolbar
-        selectedVerses={selectedVerses}
+        selectedVerses={selectedVerses || localSelectedVerses}
         hasHighlightedVerses={hasHighlightedVerses}
         onRemoveHighlights={handleRemoveHighlights}
         onHighlight={handleHighlight}
-        onClose={() => setSelectedVerses([])}
+        onClose={() => {
+          setLocalSelectedVerses([]);
+          if (onVerseSelect) {
+            onVerseSelect([]);
+          }
+        }}
       />
       <BibleVerseList
         verses={verses || []}
-        selectedVerses={selectedVerses}
+        selectedVerses={selectedVerses || localSelectedVerses}
         onVerseSelect={handleVerseSelect}
       />
     </div>

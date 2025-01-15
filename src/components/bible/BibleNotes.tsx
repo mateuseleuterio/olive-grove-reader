@@ -32,33 +32,37 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
     };
 
     const fetchChapterNotes = async () => {
-      const { data: verseIds } = await supabase
-        .from('bible_verses')
+      const { data: chapterData } = await supabase
+        .from('bible_chapters')
         .select('id')
-        .eq('chapter_id', (await supabase
-          .from('bible_chapters')
+        .eq('book_id', bookId)
+        .eq('chapter_number', parseInt(chapter))
+        .single();
+
+      if (chapterData) {
+        const { data: verseIds } = await supabase
+          .from('bible_verses')
           .select('id')
-          .eq('book_id', bookId)
-          .eq('chapter_number', chapter)
-          .single()).data?.id);
+          .eq('chapter_id', chapterData.id);
 
-      if (verseIds) {
-        const verseIdArray = verseIds.map(v => v.id);
-        const { data: notes } = await supabase
-          .from('bible_verse_notes')
-          .select(`
-            id,
-            note_text,
-            verse_id,
-            bible_verses (
-              verse_number,
-              text
-            )
-          `)
-          .in('verse_id', verseIdArray)
-          .order('created_at', { ascending: false });
+        if (verseIds) {
+          const verseIdArray = verseIds.map(v => v.id);
+          const { data: notes } = await supabase
+            .from('bible_verse_notes')
+            .select(`
+              id,
+              note_text,
+              verse_id,
+              bible_verses (
+                verse_number,
+                text
+              )
+            `)
+            .in('verse_id', verseIdArray)
+            .order('created_at', { ascending: false });
 
-        setChapterNotes(notes || []);
+          setChapterNotes(notes || []);
+        }
       }
     };
 
