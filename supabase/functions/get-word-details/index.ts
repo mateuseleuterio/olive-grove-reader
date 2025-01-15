@@ -47,15 +47,31 @@ serve(async (req) => {
       )
     }
 
-    console.log('Buscando novo significado para:', { word, book, chapter, verse })
+    // Busca o prompt personalizado
+    const { data: promptData } = await supabase
+      .from('system_settings')
+      .select('value')
+      .eq('key', 'word_details_prompt')
+      .single()
 
-    const prompt = `Analise a palavra "${word}" do versículo ${book} ${chapter}:${verse} da Bíblia e forneça:
+    const defaultPrompt = `Analise a palavra "${word}" do versículo ${book} ${chapter}:${verse} da Bíblia e forneça:
 1 - Palavra no idioma original (hebraico/grego/aramaico)
 2 - Transliteração
 3 - Significados principais em ordem de relevância
 4 - Significados secundários
 
 Responda apenas com os números e as informações solicitadas, sem texto adicional.`
+
+    let prompt = promptData?.value || defaultPrompt
+    
+    // Substitui os placeholders
+    prompt = prompt
+      .replace('{word}', word)
+      .replace('{book}', book)
+      .replace('{chapter}', chapter)
+      .replace('{verse}', verse)
+
+    console.log('Buscando novo significado para:', { word, book, chapter, verse })
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',
