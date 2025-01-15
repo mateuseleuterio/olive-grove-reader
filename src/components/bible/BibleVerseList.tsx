@@ -23,7 +23,8 @@ export const BibleVerseList = ({
   chapter = ""
 }: BibleVerseListProps) => {
   const renderText = (text: string, verseNumber: number) => {
-    return text.split(' ').map((word, index) => (
+    const words = text.split(' ');
+    return words.map((word, index) => (
       <WordDetails
         key={`${verseNumber}-${index}`}
         word={word}
