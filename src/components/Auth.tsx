@@ -18,7 +18,22 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Clear any potentially invalid session data on mount
+    const checkAndClearSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error?.message.includes('session_not_found')) {
+        console.log('Invalid session detected, clearing...');
+        await supabase.auth.signOut();
+        localStorage.removeItem('supabase.auth.token');
+        setError('Sua sessão expirou. Por favor, faça login novamente.');
+      }
+    };
+
+    checkAndClearSession();
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
       if (event === 'SIGNED_IN') {
         // Limpa qualquer erro quando o usuário faz login com sucesso
         setError(null);
@@ -31,6 +46,16 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
       } else if (event === 'TOKEN_REFRESHED') {
         // Limpa erros quando o token é atualizado com sucesso
         setError(null);
+      } else if (event === 'USER_UPDATED') {
+        const { error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          if (sessionError.message.includes('session_not_found')) {
+            await supabase.auth.signOut();
+            localStorage.removeItem('supabase.auth.token');
+            setError('Sua sessão expirou. Por favor, faça login novamente.');
+          }
+        }
       }
     });
 
@@ -39,7 +64,7 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
 
   const handleError = (error: AuthError) => {
     console.error('Auth error:', error);
-    if (error.message.includes('refresh_token_not_found')) {
+    if (error.message.includes('session_not_found')) {
       setError('Sessão expirada. Por favor, faça login novamente.');
       // Limpa tokens antigos
       localStorage.removeItem('supabase.auth.token');
