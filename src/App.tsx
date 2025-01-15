@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import NavigationBar from "./components/NavigationBar";
 import Home from "./pages/Home";
 import BibleReader from "./components/BibleReader";
@@ -27,21 +28,46 @@ const ADMIN_UID = '5e475092-3de0-47b8-8543-c62450e07bbd';
 
 function App() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setCurrentUser(session?.user?.id || null);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Erro ao verificar sessão:', error);
+          if (error.message.includes('session_not_found')) {
+            await supabase.auth.signOut();
+            localStorage.removeItem('supabase.auth.token');
+          }
+          return;
+        }
+
+        setCurrentUser(session?.user?.id || null);
+      } catch (error) {
+        console.error('Erro ao verificar usuário:', error);
+        toast({
+          title: "Erro de autenticação",
+          description: "Houve um problema ao verificar sua sessão. Por favor, faça login novamente.",
+          variant: "destructive",
+        });
+      }
     };
 
     checkUser();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user?.id || null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT') {
+        setCurrentUser(null);
+        localStorage.removeItem('supabase.auth.token');
+      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+        setCurrentUser(session?.user?.id || null);
+      }
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [toast]);
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     if (currentUser !== ADMIN_UID) {
