@@ -13,9 +13,10 @@ interface WordDetailsProps {
   book: string;
   chapter: string;
   verse: string;
+  version: string;
 }
 
-const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
+const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) => {
   const [details, setDetails] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -142,6 +143,7 @@ const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
           book,
           chapter,
           verse,
+          version,
           context
         }
       });

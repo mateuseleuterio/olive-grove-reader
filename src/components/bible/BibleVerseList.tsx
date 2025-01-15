@@ -1,60 +1,59 @@
-import { BibleVerseActions } from "./BibleVerseActions";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import WordDetails from "../WordDetails";
 
-interface Verse {
-  id: number;
-  verse_number: number;
-  text: string;
-}
-
 interface BibleVerseListProps {
-  verses: Verse[];
+  verses: Array<{
+    id: number;
+    verse_number: number;
+    text: string;
+  }>;
   selectedVerses: number[];
   onVerseSelect: (verseId: number) => void;
   bookName?: string;
-  chapter?: string;
+  chapter: string;
+  version: string;
 }
 
 export const BibleVerseList = ({ 
   verses, 
   selectedVerses, 
   onVerseSelect,
-  bookName = "",
-  chapter = ""
+  bookName,
+  chapter,
+  version
 }: BibleVerseListProps) => {
-  const renderText = (text: string, verseNumber: number) => {
-    return text.split(' ').map((word, index) => (
+  const processText = (text: string, verseNumber: number) => {
+    return text.split(/\s+/).map((word, index) => (
       <WordDetails
         key={`${verseNumber}-${index}`}
         word={word}
-        book={bookName}
+        book={bookName || ""}
         chapter={chapter}
         verse={verseNumber.toString()}
+        version={version}
       />
     ));
   };
 
   return (
-    <div className="space-y-4">
-      {verses?.map((verse) => (
-        <div key={verse.id} className="flex items-start gap-2">
-          <div className="flex-1 rounded p-1">
-            <BibleVerseActions
-              verseId={verse.id}
-              text={
-                <div className="flex items-start">
-                  <span className="text-[10px] opacity-40 font-medium mr-0.5 mt-1">
-                    {verse.verse_number}
-                  </span>
-                  <div className="flex-1 flex flex-wrap">
-                    {renderText(verse.text, verse.verse_number)}
-                  </div>
-                </div>
-              }
-              isSelected={selectedVerses.includes(verse.id)}
-              onSelect={onVerseSelect}
-            />
-          </div>
+    <div className="space-y-2">
+      {verses.map((verse) => (
+        <div
+          key={verse.id}
+          className={`p-2 rounded cursor-pointer ${
+            selectedVerses.includes(verse.id) ? "bg-bible-highlight" : ""
+          }`}
+          onClick={() => onVerseSelect(verse.id)}
+          data-verse={verse.verse_number}
+        >
+          <span className="text-bible-navy font-semibold mr-2">
+            {verse.verse_number}
+          </span>
+          <span className="text-bible-text">
+            {processText(verse.text, verse.verse_number)}
+          </span>
         </div>
       ))}
     </div>
