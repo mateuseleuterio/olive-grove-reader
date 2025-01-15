@@ -199,6 +199,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
+      setIsSelected(false); // Deselect verse after removing highlight
       toast({
         title: "Destaque removido",
         description: "O destaque foi removido do versículo.",
