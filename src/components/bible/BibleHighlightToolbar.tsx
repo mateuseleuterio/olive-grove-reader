@@ -28,16 +28,16 @@ export const BibleHighlightToolbar = ({
   if (selectedVerses.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[320px] overflow-hidden">
-      <div className="p-2 border-b flex items-center justify-between">
+    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[360px] overflow-hidden">
+      <div className="p-2.5 border-b flex items-center justify-between">
         {hasHighlightedVerses ? (
           <Button
             variant="ghost"
             size="sm"
             onClick={onRemoveHighlights}
-            className="text-xs text-red-500 hover:text-red-700"
+            className="text-sm text-red-500 hover:text-red-700"
           >
-            <X className="h-3 w-3 mr-1" />
+            <X className="h-3.5 w-3.5 mr-1.5" />
             <span>Remover destaque</span>
           </Button>
         ) : (
@@ -47,46 +47,46 @@ export const BibleHighlightToolbar = ({
           variant="ghost"
           size="sm"
           onClick={onClose}
-          className="text-gray-500 hover:text-gray-700 -mr-1"
+          className="text-gray-500 hover:text-gray-700"
         >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="p-2 space-y-2">
-        <div className="grid grid-cols-3 gap-1.5">
+      <div className="p-3 space-y-2.5">
+        <div className="grid grid-cols-6 gap-2">
           {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
             <button
               key={color}
-              className={`w-8 h-8 rounded-md ${className} hover:opacity-80 transition-opacity`}
+              className={`w-10 h-10 rounded-md ${className} hover:opacity-80 transition-opacity`}
               onClick={() => onHighlight(color)}
             />
           ))}
         </div>
 
-        <div className="flex justify-center gap-1.5 pt-1">
+        <div className="flex justify-center gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-2 text-xs flex items-center gap-1"
+            className="h-8 px-3 text-sm flex items-center gap-1.5"
           >
-            <StickyNote className="h-3 w-3" />
+            <StickyNote className="h-3.5 w-3.5" />
             <span>Anotar</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-2 text-xs flex items-center gap-1"
+            className="h-8 px-3 text-sm flex items-center gap-1.5"
           >
-            <Share className="h-3 w-3" />
+            <Share className="h-3.5 w-3.5" />
             <span>Compartilhar</span>
           </Button>
           <Button
             variant="outline"
             size="sm"
-            className="h-7 px-2 text-xs flex items-center gap-1"
+            className="h-8 px-3 text-sm flex items-center gap-1.5"
           >
-            <Eye className="h-3 w-3" />
+            <Eye className="h-3.5 w-3.5" />
             <span>Original</span>
           </Button>
         </div>
