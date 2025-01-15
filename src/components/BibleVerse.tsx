@@ -30,13 +30,13 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   // Fetch initial highlights
   useEffect(() => {
     const fetchHighlights = async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       const { data: highlightsData } = await supabase
         .from('bible_verse_highlights')
         .select('verse_id, highlight_color')
-        .eq('user_id', authData.user.id);
+        .eq('user_id', user.id);
       
       if (highlightsData) {
         console.log("Destaques carregados:", highlightsData);
@@ -50,8 +50,8 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   // Subscribe to realtime updates
   useEffect(() => {
     const setupRealtimeSubscription = async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      if (!authData.user) return;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
       const channel = supabase
         .channel('highlights-changes')
@@ -61,7 +61,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             event: '*',
             schema: 'public',
             table: 'bible_verse_highlights',
-            filter: `user_id=eq.${authData.user.id}`,
+            filter: `user_id=eq.${user.id}`,
           },
           async (payload) => {
             console.log("Mudança em tempo real recebida:", payload);
@@ -70,7 +70,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
             const { data: highlightsData } = await supabase
               .from('bible_verse_highlights')
               .select('verse_id, highlight_color')
-              .eq('user_id', authData.user.id);
+              .eq('user_id', user.id);
             
             if (highlightsData) {
               console.log("Destaques atualizados:", highlightsData);
