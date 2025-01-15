@@ -83,10 +83,10 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
       throw new Error(`A versão ${version} ainda não está disponível para este capítulo.`);
     }
 
-    return versesData;
+    return { versesData, bookName: bookData?.name };
   };
 
-  const { data: verses, isLoading, error } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['verses', bookId, chapter, version],
     queryFn: fetchVerses,
     staleTime: 1000 * 60 * 60,
@@ -241,9 +241,11 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         }}
       />
       <BibleVerseList
-        verses={verses || []}
+        verses={data?.versesData || []}
         selectedVerses={selectedVerses || localSelectedVerses}
         onVerseSelect={handleVerseSelect}
+        bookName={data?.bookName}
+        chapter={chapter}
       />
     </div>
   );

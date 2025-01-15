@@ -5,41 +5,29 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { StrongEntry } from "@/types/strong";
 
 interface WordDetailsProps {
   word: string;
+  book: string;
+  chapter: string;
+  verse: string;
 }
 
-const WordDetails = ({ word }: WordDetailsProps) => {
-  const [strongDetails, setStrongDetails] = useState<StrongEntry | null>(null);
+const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
+  const [details, setDetails] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const fetchStrongDetails = async () => {
+  const fetchWordDetails = async () => {
     try {
       setLoading(true);
-      const { data: wordMapping, error: mappingError } = await supabase
-        .from('bible_word_strongs_mapping')
-        .select('strong_number')
-        .eq('word', word.toLowerCase())
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('get-word-details', {
+        body: { word, book, chapter, verse }
+      });
 
-      if (mappingError) throw mappingError;
-      
-      if (wordMapping) {
-        const { data: strongData, error: strongError } = await supabase
-          .from('strongs_dictionary')
-          .select('*')
-          .eq('strong_number', wordMapping.strong_number)
-          .maybeSingle();
-
-        if (strongError) throw strongError;
-        if (strongData) {
-          setStrongDetails(strongData);
-        }
-      }
+      if (error) throw error;
+      setDetails(data.result);
     } catch (error) {
-      console.error('Erro ao buscar detalhes do Strong:', error);
+      console.error('Erro ao buscar detalhes da palavra:', error);
     } finally {
       setLoading(false);
     }
@@ -50,7 +38,7 @@ const WordDetails = ({ word }: WordDetailsProps) => {
       <PopoverTrigger asChild>
         <span 
           className="cursor-pointer hover:text-bible-accent inline-block mx-1"
-          onClick={fetchStrongDetails}
+          onClick={fetchWordDetails}
         >
           {word}
         </span>
@@ -58,16 +46,12 @@ const WordDetails = ({ word }: WordDetailsProps) => {
       <PopoverContent className="w-80">
         {loading ? (
           <p>Carregando...</p>
-        ) : strongDetails ? (
-          <div className="space-y-2">
-            <p><strong>Palavra Original:</strong> {strongDetails.hebrew_word}</p>
-            <p><strong>Transliteração:</strong> {strongDetails.transliteration}</p>
-            <p><strong>Significado:</strong> {strongDetails.meaning}</p>
-            <p><strong>Tradução:</strong> {strongDetails.portuguese_word}</p>
-            <p className="text-xs text-muted-foreground">Strong's #{strongDetails.strong_number}</p>
+        ) : details ? (
+          <div className="space-y-2 whitespace-pre-line">
+            {details}
           </div>
         ) : (
-          <p>Nenhuma referência Strong encontrada para esta palavra.</p>
+          <p>Clique para ver os detalhes da palavra no idioma original.</p>
         )}
       </PopoverContent>
     </Popover>
