@@ -1,8 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { StickyNote, Share, Eye, X } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useQueryClient } from "@tanstack/react-query";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export const HIGHLIGHT_COLORS = {
@@ -53,7 +50,7 @@ export const BibleHighlightToolbar = ({
               className="text-xs text-gray-500 hover:text-gray-700 p-1"
             >
               <X className="h-3 w-3 mr-1" />
-              <span className="hidden sm:inline">Remover destaque</span>
+              <span>Remover destaque</span>
             </Button>
           )}
         </div>
@@ -61,7 +58,7 @@ export const BibleHighlightToolbar = ({
           {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
             <button
               key={color}
-              className={`h-10 rounded-md ${className} hover:opacity-80 transition-opacity`}
+              className={`h-8 rounded-md ${className} hover:opacity-80 transition-opacity`}
               onClick={() => onHighlight(color)}
             />
           ))}
