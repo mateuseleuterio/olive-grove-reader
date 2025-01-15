@@ -6,9 +6,15 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MessageSquare, Share } from "lucide-react";
+import { Eye, Share, StickyNote, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface BibleVerseActionsProps {
   verseId: number;
@@ -17,12 +23,22 @@ interface BibleVerseActionsProps {
   onNoteClick?: () => void;
 }
 
+const HIGHLIGHT_COLORS = {
+  yellow: "bg-[#FEF7CD]",
+  green: "bg-[#F2FCE2]",
+  blue: "bg-[#D3E4FD]",
+  purple: "bg-[#E5DEFF]",
+  pink: "bg-[#FFDEE2]",
+  orange: "bg-[#FEC6A1]",
+};
+
 export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: BibleVerseActionsProps) => {
   const { toast } = useToast();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
-  const [selectionMenuPosition, setSelectionMenuPosition] = useState({ x: 0, y: 0 });
-  const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
+  const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
   const handleSaveNote = async () => {
     try {
@@ -81,71 +97,76 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         description: "O versículo foi copiado para a área de transferência.",
       });
     }
-    setIsSelectionMenuOpen(false);
   };
 
-  const handleTextSelection = () => {
-    const selection = window.getSelection();
-    if (selection && selection.toString().length > 0) {
-      const range = selection.getRangeAt(0);
-      const rect = range.getBoundingClientRect();
-      
-      setSelectionMenuPosition({
-        x: rect.left + (rect.width / 2),
-        y: rect.top - 10
-      });
-      setIsSelectionMenuOpen(true);
+  const handleVerseClick = () => {
+    if (selectedVerses.includes(verseNumber)) {
+      setSelectedVerses(selectedVerses.filter(v => v !== verseNumber));
     } else {
-      setIsSelectionMenuOpen(false);
+      setSelectedVerses([...selectedVerses, verseNumber]);
     }
   };
 
   return (
-    <div 
-      className="relative cursor-text select-text" 
-      onMouseUp={handleTextSelection}
-      onContextMenu={(e) => e.preventDefault()}
-    >
-      <div className="cursor-text">
-        {text}
+    <div className="group relative">
+      <div 
+        onClick={handleVerseClick}
+        className={`cursor-pointer rounded p-1 transition-colors ${
+          selectedVerses.includes(verseNumber) ? 'bg-gray-100' : ''
+        }`}
+      >
+        <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
+          {verseNumber}
+        </span>
+        <span className="ml-2">{text}</span>
       </div>
 
-      {isSelectionMenuOpen && (
-        <div
-          className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]"
-          style={{
-            left: `${selectionMenuPosition.x}px`,
-            top: `${selectionMenuPosition.y}px`,
-            transform: 'translate(-50%, -100%)'
-          }}
-        >
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => setIsNoteOpen(true)}
-              >
-                <MessageSquare className="h-4 w-4 mr-2" />
-                Nota
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={handleShare}
-              >
-                <Share className="h-4 w-4 mr-2" />
-                Compartilhar
-              </Button>
-            </div>
-          </div>
+      {selectedVerses.includes(verseNumber) && (
+        <div className="absolute right-0 top-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsColorPickerOpen(true)}
+            className="h-8 w-8 p-0"
+          >
+            <Palette className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsNoteOpen(true)}
+            className="h-8 w-8 p-0"
+          >
+            <StickyNote className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleShare}
+            className="h-8 w-8 p-0"
+          >
+            <Share className="h-4 w-4" />
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setIsOriginalTextOpen(true)}
+            className="h-8 w-8 p-0"
+          >
+            <Eye className="h-4 w-4" />
+          </Button>
         </div>
       )}
 
-      <Popover open={isNoteOpen} onOpenChange={setIsNoteOpen}>
-        <PopoverContent className="w-80">
+      <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar nota ao versículo {verseNumber}</DialogTitle>
+          </DialogHeader>
           <div className="space-y-4">
-            <h4 className="font-medium">Adicionar nota ao versículo {verseNumber}</h4>
             <Textarea
               placeholder="Digite sua nota..."
               value={noteText}
@@ -163,8 +184,42 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
               </Button>
             </div>
           </div>
-        </PopoverContent>
-      </Popover>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isColorPickerOpen} onOpenChange={setIsColorPickerOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Escolha uma cor para destacar</DialogTitle>
+          </DialogHeader>
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
+              <button
+                key={color}
+                className={`h-12 rounded-md ${className} hover:opacity-80 transition-opacity`}
+                onClick={() => {
+                  // Implementar lógica de destaque aqui
+                  setIsColorPickerOpen(false);
+                }}
+              />
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isOriginalTextOpen} onOpenChange={setIsOriginalTextOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Texto Original</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            <p className="text-lg font-semibold">Em desenvolvimento</p>
+            <p className="text-sm text-muted-foreground">
+              Esta funcionalidade estará disponível em breve.
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
