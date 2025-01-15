@@ -25,11 +25,11 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         bible: {
-          navy: "#2F4F4F", // Base color (Dark slate gray)
-          gray: "#F5F5F5", // Light background
-          accent: "#3D6666", // Lighter variation
-          text: "#1A2F2F", // Darker variation for text
-          verse: "#4A6B6B", // Medium variation
+          navy: "#1B4332", // Base color (Dark green)
+          gray: "#F5F7F5", // Light background
+          accent: "#2D5A46", // Lighter variation
+          text: "#0A2419", // Darker variation for text
+          verse: "#3B6B55", // Medium variation
         },
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -73,24 +73,24 @@ export default {
         DEFAULT: {
           css: {
             maxWidth: 'none',
-            color: '#1A2F2F',
-            '--tw-prose-headings': '#2F4F4F',
-            '--tw-prose-links': '#3D6666',
+            color: '#0A2419',
+            '--tw-prose-headings': '#1B4332',
+            '--tw-prose-links': '#2D5A46',
             h1: {
-              color: '#2F4F4F',
+              color: '#1B4332',
               fontFamily: 'Merriweather, serif',
               fontSize: '2rem',
               marginBottom: '1.5rem',
             },
             h2: {
-              color: '#2F4F4F',
+              color: '#1B4332',
               fontFamily: 'Merriweather, serif',
               fontSize: '1.5rem',
               marginTop: '2rem',
               marginBottom: '1rem',
             },
             h3: {
-              color: '#2F4F4F',
+              color: '#1B4332',
               fontFamily: 'Merriweather, serif',
               fontSize: '1.25rem',
               marginTop: '1.5rem',
