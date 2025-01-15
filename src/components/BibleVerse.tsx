@@ -4,13 +4,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleVerseActions } from "./bible/BibleVerseActions";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { StickyNote, Share, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Palette, StickyNote, Share, Eye } from "lucide-react";
 
 interface BibleVerseProps {
   bookId: number;
@@ -23,6 +18,15 @@ interface Verse {
   verse_number: number;
   text: string;
 }
+
+const HIGHLIGHT_COLORS = {
+  yellow: "bg-[#FFF3B0]",
+  blue: "bg-[#C1E3FF]",
+  red: "bg-[#FFD6DB]",
+  purple: "bg-[#DED4FF]",
+  green: "bg-[#E8FAD5]",
+  orange: "bg-[#FFE4D3]",
+};
 
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
@@ -157,40 +161,54 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {selectedVerses.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-50 min-w-[320px]">
-          <div className="flex gap-4 justify-center">
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              <Palette className="h-5 w-5" />
-              <span>Destacar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              <StickyNote className="h-5 w-5" />
-              <span>Anotar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              <Share className="h-5 w-5" />
-              <span>Compartilhar</span>
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              className="flex items-center gap-2"
-            >
-              <Eye className="h-5 w-5" />
-              <span>Original</span>
-            </Button>
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-8 rounded-lg shadow-lg z-50 min-w-[600px]">
+          <div className="space-y-6">
+            <div className="grid grid-cols-6 gap-4">
+              {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
+                <button
+                  key={color}
+                  className={`h-12 rounded-md ${className} hover:opacity-80 transition-opacity`}
+                  onClick={() => {
+                    selectedVerses.forEach(verseId => {
+                      const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
+                      if (verseActions) {
+                        const handleHighlight = (verseActions as any).__handleHighlight;
+                        if (handleHighlight) {
+                          handleHighlight(color);
+                        }
+                      }
+                    });
+                    setSelectedVerses([]);
+                  }}
+                />
+              ))}
+            </div>
+            <div className="flex justify-center gap-4">
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <StickyNote className="h-5 w-5" />
+                <span>Anotar</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Share className="h-5 w-5" />
+                <span>Compartilhar</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                className="flex items-center gap-2"
+              >
+                <Eye className="h-5 w-5" />
+                <span>Original</span>
+              </Button>
+            </div>
           </div>
         </div>
       )}
