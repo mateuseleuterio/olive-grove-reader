@@ -1,4 +1,5 @@
-import { WordDetails } from "@/components/WordDetails";
+import React from 'react';
+import WordDetails from "@/components/WordDetails";
 
 interface BibleVerseListProps {
   verses: {
