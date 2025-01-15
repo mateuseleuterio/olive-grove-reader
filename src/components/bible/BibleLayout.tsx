@@ -13,6 +13,8 @@ interface BibleLayoutProps {
   onPreviousChapter: () => void;
   hasNextChapter: boolean;
   hasPreviousChapter: boolean;
+  onVerseSelect: (verses: number[]) => void;
+  selectedVerses: number[];
 }
 
 const BibleLayout = ({
@@ -25,6 +27,8 @@ const BibleLayout = ({
   onPreviousChapter,
   hasNextChapter,
   hasPreviousChapter,
+  onVerseSelect,
+  selectedVerses,
 }: BibleLayoutProps) => {
   const [isMobile, setIsMobile] = useState(false);
 
@@ -55,6 +59,8 @@ const BibleLayout = ({
               onPreviousChapter={onPreviousChapter}
               hasNextChapter={hasNextChapter}
               hasPreviousChapter={hasPreviousChapter}
+              onVerseSelect={onVerseSelect}
+              selectedVerses={selectedVerses}
             />
           </div>
         ))}
@@ -81,6 +87,8 @@ const BibleLayout = ({
               onPreviousChapter={onPreviousChapter}
               hasNextChapter={hasNextChapter}
               hasPreviousChapter={hasPreviousChapter}
+              onVerseSelect={onVerseSelect}
+              selectedVerses={selectedVerses}
             />
           </ResizablePanel>
           {index < versions.length - 1 && (

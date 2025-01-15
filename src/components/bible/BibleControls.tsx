@@ -1,16 +1,10 @@
-import { BookOpen, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useToast } from "@/hooks/use-toast";
-
-interface Book {
-  id: number;
-  name: string;
-}
+import { Plus, Book, StickyNote } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface BibleControlsProps {
-  books: Book[];
+  books: { id: number; name: string }[];
   selectedBook: number;
   chapter: string;
   maxChapters: number;
@@ -18,6 +12,7 @@ interface BibleControlsProps {
   onChapterChange: (chapter: string) => void;
   onAddVersion: () => void;
   onCommentaryOpen: () => void;
+  onNotesOpen: () => void;
   versionsCount: number;
 }
 
@@ -30,68 +25,95 @@ const BibleControls = ({
   onChapterChange,
   onAddVersion,
   onCommentaryOpen,
-  versionsCount
+  onNotesOpen,
+  versionsCount,
 }: BibleControlsProps) => {
-  const { toast } = useToast();
-  const chapters = Array.from({ length: maxChapters }, (_, i) => (i + 1).toString());
-
   return (
-    <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8">
-      <div className="flex flex-wrap items-center gap-4 w-full md:w-auto">
-        <Select 
-          value={selectedBook.toString()} 
-          onValueChange={(value) => onBookChange(parseInt(value))}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Selecione o livro" />
-          </SelectTrigger>
-          <SelectContent>
-            <ScrollArea className="h-72">
-              {books.map((book) => (
-                <SelectItem key={book.id} value={book.id.toString()}>
-                  {book.name}
-                </SelectItem>
-              ))}
-            </ScrollArea>
-          </SelectContent>
-        </Select>
+    <div className="flex flex-wrap gap-4 items-center mb-6">
+      <Select
+        value={selectedBook.toString()}
+        onValueChange={(value) => onBookChange(parseInt(value))}
+      >
+        <SelectTrigger className="w-[180px]">
+          <SelectValue placeholder="Selecione o livro" />
+        </SelectTrigger>
+        <SelectContent>
+          {books.map((book) => (
+            <SelectItem key={book.id} value={book.id.toString()}>
+              {book.name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-        <Select value={chapter} onValueChange={onChapterChange}>
-          <SelectTrigger className="w-[120px]">
-            <SelectValue placeholder="Capítulo" />
-          </SelectTrigger>
-          <SelectContent>
-            <ScrollArea className="h-72">
-              {chapters.map((c) => (
-                <SelectItem key={c} value={c}>
-                  Capítulo {c}
-                </SelectItem>
-              ))}
-            </ScrollArea>
-          </SelectContent>
-        </Select>
-      </div>
+      <Select
+        value={chapter}
+        onValueChange={onChapterChange}
+      >
+        <SelectTrigger className="w-[120px]">
+          <SelectValue placeholder="Capítulo" />
+        </SelectTrigger>
+        <SelectContent>
+          {[...Array(maxChapters)].map((_, i) => (
+            <SelectItem key={i + 1} value={(i + 1).toString()}>
+              Capítulo {i + 1}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <div className="flex items-center gap-4 w-full md:w-auto">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={onAddVersion}
-          disabled={versionsCount >= 4}
-          className="relative"
-          title="Adicionar versão"
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
-        <Button 
-          variant="outline" 
-          size="icon"
-          onClick={onCommentaryOpen}
-          className="relative"
-          title="Abrir comentários"
-        >
-          <BookOpen className="h-4 w-4" />
-        </Button>
+      <div className="flex gap-2">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onAddVersion}
+                disabled={versionsCount >= 3}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Adicionar versão</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onCommentaryOpen}
+              >
+                <Book className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Abrir comentário</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={onNotesOpen}
+              >
+                <StickyNote className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Minhas anotações</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   );
