@@ -11,7 +11,8 @@ const VERSIONS = {
   "ACF": "Almeida Corrigida Fiel",
   "KJF": "King James 1611",
   "NAA": "Nova Almeida Atualizada",
-  "NVT": "Nova Versão Transformadora"
+  "NVT": "Nova Versão Transformadora",
+  "ARA": "Almeida Revista e Atualizada"
 } as const;
 
 type BibleVersion = keyof typeof VERSIONS;
