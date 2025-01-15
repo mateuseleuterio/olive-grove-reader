@@ -37,6 +37,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           .eq('user_id', user.id);
         
         if (highlightsData) {
+          console.log("Destaques carregados:", highlightsData);
           setHighlights(highlightsData);
         }
       }
@@ -143,18 +144,21 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     const highlight = highlights.find(h => h.verse_id === verseId);
     if (!highlight) return '';
 
+    console.log("Cor do destaque:", highlight.highlight_color);
+
     switch (highlight.highlight_color) {
       case 'yellow':
-        return 'bg-yellow-200';
+        return 'bg-yellow-200 hover:bg-yellow-300';
       case 'red':
-        return 'bg-red-200';
+        return 'bg-red-200 hover:bg-red-300';
       case 'blue':
-        return 'bg-blue-200';
+        return 'bg-blue-200 hover:bg-blue-300';
       case 'green':
-        return 'bg-green-200';
+        return 'bg-green-200 hover:bg-green-300';
       case 'purple':
-        return 'bg-purple-200';
+        return 'bg-purple-200 hover:bg-purple-300';
       default:
+        console.log("Cor não mapeada:", highlight.highlight_color);
         return '';
     }
   };
@@ -188,7 +192,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   return (
     <div className="space-y-4">
-      {verses.map((verse) => (
+      {verses?.map((verse) => (
         <div key={verse.id} className="flex items-start gap-2">
           <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
             {verse.verse_number}
