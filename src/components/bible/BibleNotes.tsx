@@ -94,7 +94,14 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
             .in('verse_id', verseIdArray)
             .order('created_at', { ascending: false });
 
-          setChapterNotes(notes || []);
+          // Sort notes: verse-linked notes first, then notes without verses
+          const sortedNotes = (notes || []).sort((a, b) => {
+            if (a.verse_id && !b.verse_id) return -1;
+            if (!a.verse_id && b.verse_id) return 1;
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+
+          setChapterNotes(sortedNotes);
         }
       }
     };
