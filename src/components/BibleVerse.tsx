@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BibleHighlightToolbar, HIGHLIGHT_COLORS } from "./bible/BibleHighlightToolbar";
+import { BibleHighlightToolbar } from "./bible/BibleHighlightToolbar";
 import { BibleVerseList } from "./bible/BibleVerseList";
 
 interface BibleVerseProps {
@@ -215,10 +215,10 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-2">
         {[...Array(30)].map((_, index) => (
-          <div key={index} className="flex items-start space-x-2">
-            <Skeleton className="h-4 w-6" />
+          <div key={index} className="flex items-start space-x-1">
+            <Skeleton className="h-4 w-4" />
             <Skeleton className="h-4 flex-1" />
           </div>
         ))}
@@ -227,7 +227,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <BibleHighlightToolbar
         selectedVerses={selectedVerses || localSelectedVerses}
         hasHighlightedVerses={hasHighlightedVerses}

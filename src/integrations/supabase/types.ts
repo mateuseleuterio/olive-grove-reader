@@ -841,6 +841,36 @@ export type Database = {
         }
         Relationships: []
       }
+      word_meanings_backup: {
+        Row: {
+          book: string | null
+          chapter: string | null
+          created_at: string | null
+          id: string | null
+          meaning_details: string | null
+          verse: string | null
+          word: string | null
+        }
+        Insert: {
+          book?: string | null
+          chapter?: string | null
+          created_at?: string | null
+          id?: string | null
+          meaning_details?: string | null
+          verse?: string | null
+          word?: string | null
+        }
+        Update: {
+          book?: string | null
+          chapter?: string | null
+          created_at?: string | null
+          id?: string | null
+          meaning_details?: string | null
+          verse?: string | null
+          word?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
