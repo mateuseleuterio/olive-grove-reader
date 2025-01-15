@@ -1,68 +1,62 @@
-import React from 'react';
-import WordDetails from "@/components/WordDetails";
+import { BibleVerseActions } from "./BibleVerseActions";
+import WordDetails from "../WordDetails";
+
+interface Verse {
+  id: number;
+  verse_number: number;
+  text: string;
+}
 
 interface BibleVerseListProps {
-  verses: {
-    id: number;
-    verse_number: number;
-    text: string;
-  }[];
+  verses: Verse[];
   selectedVerses: number[];
   onVerseSelect: (verseId: number) => void;
   bookName?: string;
-  chapter: string;
-  version: string;
+  chapter?: string;
 }
 
 export const BibleVerseList = ({ 
   verses, 
   selectedVerses, 
-  onVerseSelect, 
-  bookName, 
-  chapter,
-  version 
+  onVerseSelect,
+  bookName = "",
+  chapter = ""
 }: BibleVerseListProps) => {
-  const renderWord = (word: string, verseNumber: string) => {
-    return (
+  const renderText = (text: string, verseNumber: number) => {
+    return text.split(' ').map((word, index) => (
       <WordDetails
-        key={`${word}-${verseNumber}`}
+        key={`${verseNumber}-${index}`}
         word={word}
-        book={bookName || ""}
+        book={bookName}
         chapter={chapter}
-        verse={verseNumber}
-        version={version}
+        verse={verseNumber.toString()}
       />
-    );
+    ));
   };
 
   return (
     <div className="space-y-4">
-      {verses.map((verse) => {
-        const isSelected = selectedVerses.includes(verse.verse_number);
-        const words = verse.text.split(/\s+/);
-
-        return (
-          <div
-            key={verse.id}
-            className={`flex items-start space-x-2 p-2 rounded cursor-pointer ${
-              isSelected ? "bg-bible-highlight" : ""
-            }`}
-            onClick={() => onVerseSelect(verse.verse_number)}
-            data-verse={verse.verse_number}
-          >
-            <span className="text-bible-navy font-semibold min-w-[1.5rem]">
-              {verse.verse_number}
-            </span>
-            <div className="flex-1 text-bible-text flex flex-wrap items-center">
-              {words.map((word, index) => (
-                <React.Fragment key={`${word}-${index}`}>
-                  {renderWord(word, verse.verse_number.toString())}
-                </React.Fragment>
-              ))}
-            </div>
+      {verses?.map((verse) => (
+        <div key={verse.id} className="flex items-start gap-2">
+          <div className="flex-1 rounded p-1">
+            <BibleVerseActions
+              verseId={verse.id}
+              text={
+                <div className="flex items-start">
+                  <span className="text-[10px] opacity-40 font-medium mr-0.5 mt-1">
+                    {verse.verse_number}
+                  </span>
+                  <div className="flex-1 flex flex-wrap">
+                    {renderText(verse.text, verse.verse_number)}
+                  </div>
+                </div>
+              }
+              isSelected={selectedVerses.includes(verse.id)}
+              onSelect={onVerseSelect}
+            />
           </div>
-        );
-      })}
+        </div>
+      ))}
     </div>
   );
 };
