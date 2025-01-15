@@ -91,7 +91,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         async (payload) => {
           console.log("Mudança em tempo real recebida:", payload);
           
-          // Atualizar apenas o destaque específico que foi modificado
           if (payload.eventType === 'INSERT') {
             const newHighlight = {
               verse_id: payload.new.verse_id,
@@ -103,7 +102,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
               prev.filter(h => h.verse_id !== payload.old.verse_id)
             );
           } else if (payload.eventType === 'UPDATE') {
-            // Buscar o destaque atualizado do servidor
             const updatedHighlight = await fetchSingleHighlight(payload.new.verse_id);
             if (updatedHighlight) {
               setHighlights(prev => 
@@ -225,19 +223,19 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     const highlight = highlights.find(h => h.verse_id === verseId);
     if (!highlight) return '';
 
-    console.log("Cor do destaque:", highlight.highlight_color);
+    console.log("Cor do destaque encontrada:", highlight.highlight_color, "para o versículo:", verseId);
 
     switch (highlight.highlight_color) {
       case 'yellow':
-        return 'bg-yellow-200 hover:bg-yellow-300';
+        return 'bg-yellow-200';
       case 'red':
-        return 'bg-red-200 hover:bg-red-300';
+        return 'bg-red-200';
       case 'blue':
-        return 'bg-blue-200 hover:bg-blue-300';
+        return 'bg-blue-200';
       case 'green':
-        return 'bg-green-200 hover:bg-green-300';
+        return 'bg-green-200';
       case 'purple':
-        return 'bg-purple-200 hover:bg-purple-300';
+        return 'bg-purple-200';
       default:
         console.log("Cor não mapeada:", highlight.highlight_color);
         return '';
@@ -274,7 +272,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
             {verse.verse_number}
           </span>
-          <div className={`flex-1 ${getHighlightClass(verse.id)}`}>
+          <div className={`flex-1 rounded p-1 ${getHighlightClass(verse.id)}`}>
             <BibleVerseActions
               verseId={verse.id}
               verseNumber={verse.verse_number}
