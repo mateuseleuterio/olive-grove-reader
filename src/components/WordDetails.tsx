@@ -144,7 +144,7 @@ const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) 
       const { data: verseData, error: verseError } = await supabase
         .from('bible_verses')
         .select('id')
-        .eq('verse_number', verse)
+        .eq('verse_number', parseInt(verse))
         .single();
 
       if (verseError) throw verseError;
