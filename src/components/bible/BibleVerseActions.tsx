@@ -43,30 +43,40 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
   const [isSelected, setIsSelected] = useState(false);
 
-  // Fetch highlight for this verse
+  // Fetch highlight for this verse with proper error handling
   const { data: highlight } = useQuery({
     queryKey: ['verse-highlight', verseId],
     queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.log('No active session:', sessionError?.message);
+        return null;
+      }
 
       const { data, error } = await supabase
         .from('bible_verse_highlights')
         .select('*')
         .eq('verse_id', verseId)
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching highlight:', error);
+        return null;
+      }
+
       return data;
     },
+    retry: false,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
   });
 
   const handleSaveNote = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user) {
+      if (!session) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para adicionar notas.",
@@ -80,7 +90,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         .insert({
           verse_id: verseId,
           note_text: noteText,
-          user_id: user.id
+          user_id: session.user.id
         });
 
       if (error) throw error;
@@ -123,9 +133,9 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleHighlight = async (color: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user) {
+      if (!session) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para destacar versículos.",
@@ -159,7 +169,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           .insert({
             verse_id: verseId,
             color,
-            user_id: user.id
+            user_id: session.user.id
           });
 
         if (error) throw error;
@@ -168,11 +178,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
       // Invalidate the query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
       setIsColorPickerOpen(false);
-      
-      toast({
-        title: "Destaque atualizado",
-        description: "O destaque do versículo foi atualizado.",
-      });
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
       toast({
