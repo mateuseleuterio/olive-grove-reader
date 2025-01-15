@@ -23,6 +23,8 @@ interface BibleVerseActionsProps {
   verseId: number;
   text: string;
   onNoteClick?: () => void;
+  isSelected: boolean;
+  onSelect: (verseId: number) => void;
 }
 
 const HIGHLIGHT_COLORS = {
@@ -34,16 +36,21 @@ const HIGHLIGHT_COLORS = {
   orange: "bg-[#FFE4D3]", // Warmer soft peach/orange
 };
 
-export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActionsProps) => {
+export const BibleVerseActions = ({ 
+  verseId, 
+  text, 
+  onNoteClick,
+  isSelected,
+  onSelect,
+}: BibleVerseActionsProps) => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
-  const [isSelected, setIsSelected] = useState(false);
-  const [session, setSession] = useState<any>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -176,7 +183,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       // Invalidate the query to trigger a refetch
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
       setIsColorPickerOpen(false);
-      setIsSelected(false); // Deselect verse after highlighting
+      onSelect(verseId); // Deselect verse after highlighting
     } catch (error) {
       console.error('Erro ao destacar versículo:', error);
       toast({
@@ -199,7 +206,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
-      setIsSelected(false); // Deselect verse after removing highlight
+      onSelect(verseId); // Deselect verse after removing highlight
       toast({
         title: "Destaque removido",
         description: "O destaque foi removido do versículo.",
@@ -215,7 +222,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
   };
 
   const handleVerseClick = () => {
-    setIsSelected(!isSelected);
+    onSelect(verseId);
   };
 
   return (
@@ -229,7 +236,7 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
         <span>{text}</span>
       </div>
       
-      <Popover open={isSelected}>
+      <Popover>
         <PopoverTrigger asChild>
           <div className={`${isSelected ? 'block' : 'hidden'} mt-2`}>
             <div className="flex gap-1 justify-start">

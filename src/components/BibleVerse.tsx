@@ -1,10 +1,16 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import WordDetails from "./WordDetails";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleVerseActions } from "./bible/BibleVerseActions";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Palette, StickyNote, Share, Eye } from "lucide-react";
 
 interface BibleVerseProps {
   bookId: number;
@@ -20,6 +26,7 @@ interface Verse {
 
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
+  const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -125,6 +132,15 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     }
   }, [error, toast]);
 
+  const handleVerseSelect = (verseId: number) => {
+    setSelectedVerses(prev => {
+      if (prev.includes(verseId)) {
+        return prev.filter(id => id !== verseId);
+      }
+      return [...prev, verseId];
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -140,12 +156,48 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   return (
     <div className="space-y-4">
+      {selectedVerses.length > 1 && (
+        <div className="fixed bottom-4 right-4 bg-white p-4 rounded-lg shadow-lg z-50">
+          <div className="flex gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Palette className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <StickyNote className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Share className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-8 p-0"
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
       {verses?.map((verse) => (
         <div key={verse.id} className="flex items-start gap-2">
           <div className="flex-1 rounded p-1">
             <BibleVerseActions
               verseId={verse.id}
               text={verse.text}
+              isSelected={selectedVerses.includes(verse.id)}
+              onSelect={handleVerseSelect}
             />
           </div>
         </div>
