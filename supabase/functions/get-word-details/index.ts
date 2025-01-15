@@ -13,7 +13,7 @@ serve(async (req) => {
   }
 
   try {
-    const { word, book, chapter, verse } = await req.json()
+    const { word, book, chapter, verse, context } = await req.json()
     const apiKey = Deno.env.get('PERPLEXITY_API_KEY')
     const supabaseUrl = Deno.env.get('SUPABASE_URL')
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
@@ -54,7 +54,13 @@ serve(async (req) => {
       .eq('key', 'word_details_prompt')
       .single()
 
-    const defaultPrompt = `Analise a palavra "${word}" do versículo ${book} ${chapter}:${verse} da Bíblia e forneça:
+    const defaultPrompt = `Analise a palavra "{word}" do versículo {book} {chapter}:{verse} da Bíblia, considerando o seguinte contexto:
+
+Palavras anteriores: {context_before}
+Palavra analisada: {word}
+Palavras posteriores: {context_after}
+
+Forneça:
 1 - Palavra no idioma original (hebraico/grego/aramaico)
 2 - Transliteração
 3 - Significados principais em ordem de relevância
@@ -70,8 +76,10 @@ Responda apenas com os números e as informações solicitadas, sem texto adicio
       .replace('{book}', book)
       .replace('{chapter}', chapter)
       .replace('{verse}', verse)
+      .replace('{context_before}', context?.before || '')
+      .replace('{context_after}', context?.after || '')
 
-    console.log('Buscando novo significado para:', { word, book, chapter, verse })
+    console.log('Buscando novo significado para:', { word, book, chapter, verse, context })
 
     const response = await fetch('https://api.perplexity.ai/chat/completions', {
       method: 'POST',

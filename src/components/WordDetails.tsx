@@ -91,6 +91,28 @@ const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
     }
   };
 
+  const getWordContext = () => {
+    // Encontra o elemento pai que contém o texto do versículo
+    const verseElement = document.querySelector(`[data-verse="${verse}"]`);
+    if (!verseElement) return { before: "", after: "" };
+
+    const text = verseElement.textContent || "";
+    const words = text.split(/\s+/);
+    const wordIndex = words.findIndex(w => w === word);
+    
+    if (wordIndex === -1) return { before: "", after: "" };
+
+    // Pega até 3 palavras antes
+    const beforeWords = words.slice(Math.max(0, wordIndex - 3), wordIndex);
+    // Pega até 3 palavras depois
+    const afterWords = words.slice(wordIndex + 1, wordIndex + 4);
+
+    return {
+      before: beforeWords.join(" "),
+      after: afterWords.join(" ")
+    };
+  };
+
   const fetchWordDetails = async () => {
     try {
       setLoading(true);
@@ -113,8 +135,15 @@ const WordDetails = ({ word, book, chapter, verse }: WordDetailsProps) => {
       }
 
       // Se não existir no banco, busca via API
+      const context = getWordContext();
       const { data, error } = await supabase.functions.invoke('get-word-details', {
-        body: { word, book, chapter, verse }
+        body: { 
+          word,
+          book,
+          chapter,
+          verse,
+          context
+        }
       });
 
       if (error) throw error;
