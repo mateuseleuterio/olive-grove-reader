@@ -1,5 +1,4 @@
 import { BibleVerseActions } from "./BibleVerseActions";
-import { ReactNode } from "react";
 
 interface Verse {
   id: number;
@@ -21,7 +20,12 @@ export const BibleVerseList = ({ verses, selectedVerses, onVerseSelect }: BibleV
           <div className="flex-1 rounded p-1">
             <BibleVerseActions
               verseId={verse.id}
-              text={verse.text}
+              text={
+                <>
+                  <span className="verse-number">{verse.verse_number}</span>
+                  {verse.text}
+                </>
+              }
               isSelected={selectedVerses.includes(verse.id)}
               onSelect={onVerseSelect}
             />
