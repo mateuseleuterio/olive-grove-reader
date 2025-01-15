@@ -3,9 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { BibleVerseActions } from "./bible/BibleVerseActions";
-import { StickyNote, Share, Eye, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { BibleHighlightToolbar, HIGHLIGHT_COLORS } from "./bible/BibleHighlightToolbar";
+import { BibleVerseList } from "./bible/BibleVerseList";
 
 interface BibleVerseProps {
   bookId: number;
@@ -18,15 +17,6 @@ interface Verse {
   verse_number: number;
   text: string;
 }
-
-const HIGHLIGHT_COLORS = {
-  yellow: "bg-[#FFF3B0]",
-  blue: "bg-[#C1E3FF]",
-  red: "bg-[#FFD6DB]",
-  purple: "bg-[#DED4FF]",
-  green: "bg-[#E8FAD5]",
-  orange: "bg-[#FFE4D3]",
-};
 
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
@@ -75,19 +65,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     console.log('Chapter ID encontrado:', chapterData.id);
 
-    const { count: verseCount, error: countError } = await supabase
-      .from('bible_verses')
-      .select('*', { count: 'exact', head: true })
-      .eq('version', version)
-      .eq('chapter_id', chapterData.id);
-
-    if (countError) {
-      console.error('Erro ao contar versículos:', countError);
-      throw new Error('Erro ao verificar versículos disponíveis');
-    }
-
-    console.log(`Total de versículos encontrados para capítulo ${chapterData.id}, versão ${version}:`, verseCount);
-
     const { data: versesData, error: versesError } = await supabase
       .from('bible_verses')
       .select('id, verse_number, text')
@@ -97,10 +74,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     if (versesError) {
       console.error('Erro ao buscar versículos:', versesError);
-      console.log('Detalhes da busca de versículos:', { 
-        chapterId: chapterData.id, 
-        version 
-      });
       throw new Error('Ocorreu um erro ao carregar os versículos.');
     }
 
@@ -158,7 +131,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         if (error) throw error;
       }
 
-      // Invalidate queries to refresh the UI
       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
       setSelectedVerses([]);
       setHasHighlightedVerses(false);
@@ -172,6 +144,39 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
       toast({
         title: "Erro",
         description: "Não foi possível remover os destaques.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleHighlight = async (color: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (hasHighlightedVerses) {
+        await handleRemoveHighlights();
+      }
+
+      for (const verseId of selectedVerses) {
+        const { error } = await supabase
+          .from('bible_verse_highlights')
+          .insert({
+            verse_id: verseId,
+            color,
+            user_id: user.id
+          });
+        
+        if (error) throw error;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
+      setSelectedVerses([]);
+    } catch (error) {
+      console.error('Erro ao destacar versículo:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível destacar o versículo.",
         variant: "destructive",
       });
     }
@@ -225,106 +230,18 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   return (
     <div className="space-y-4">
-      {selectedVerses.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-4 rounded-lg shadow-lg z-50 min-w-[600px]">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between mb-2">
-              {hasHighlightedVerses && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRemoveHighlights}
-                  className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1"
-                >
-                  <X className="h-3 w-3 mr-1" />
-                  <span>Remover destaque</span>
-                </Button>
-              )}
-            </div>
-            <div className="grid grid-cols-6 gap-4">
-              {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
-                <button
-                  key={color}
-                  className={`h-12 rounded-md ${className} hover:opacity-80 transition-opacity`}
-                  onClick={async () => {
-                    try {
-                      const { data: { user } } = await supabase.auth.getUser();
-                      if (!user) return;
-
-                      if (hasHighlightedVerses) {
-                        await handleRemoveHighlights();
-                      }
-
-                      for (const verseId of selectedVerses) {
-                        const { error } = await supabase
-                          .from('bible_verse_highlights')
-                          .insert({
-                            verse_id: verseId,
-                            color,
-                            user_id: user.id
-                          });
-                        
-                        if (error) throw error;
-                      }
-
-                      queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
-                      setSelectedVerses([]);
-                    } catch (error) {
-                      console.error('Erro ao destacar versículo:', error);
-                      toast({
-                        title: "Erro",
-                        description: "Não foi possível destacar o versículo.",
-                        variant: "destructive",
-                      });
-                    }
-                  }}
-                />
-              ))}
-            </div>
-            <div className="flex justify-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <StickyNote className="h-4 w-4" />
-                <span>Anotar</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Share className="h-4 w-4" />
-                <span>Compartilhar</span>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Eye className="h-4 w-4" />
-                <span>Original</span>
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-      {verses?.map((verse) => (
-        <div key={verse.id} className="flex items-start gap-2">
-          <div className="flex-1 rounded p-1">
-            <BibleVerseActions
-              verseId={verse.id}
-              text={<>
-                <span className="verse-number">{verse.verse_number}</span>
-                {verse.text}
-              </>}
-              isSelected={selectedVerses.includes(verse.id)}
-              onSelect={handleVerseSelect}
-            />
-          </div>
-        </div>
-      ))}
+      <BibleHighlightToolbar
+        selectedVerses={selectedVerses}
+        hasHighlightedVerses={hasHighlightedVerses}
+        onRemoveHighlights={handleRemoveHighlights}
+        onHighlight={handleHighlight}
+        onClose={() => setSelectedVerses([])}
+      />
+      <BibleVerseList
+        verses={verses || []}
+        selectedVerses={selectedVerses}
+        onVerseSelect={handleVerseSelect}
+      />
     </div>
   );
 };
