@@ -56,6 +56,8 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const { toast } = useToast();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
+  const [selectionMenuPosition, setSelectionMenuPosition] = useState({ x: 0, y: 0 });
+  const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
 
   const handleHighlight = async (color: keyof typeof HIGHLIGHT_COLORS) => {
     try {
@@ -80,6 +82,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         variant: "destructive",
       });
     }
+    setIsSelectionMenuOpen(false);
   };
 
   const handleSaveNote = async () => {
@@ -121,44 +124,101 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
       });
     } catch (error) {
       console.error('Erro ao compartilhar:', error);
-      // Fallback para copiar para a área de transferência
       navigator.clipboard.writeText(`${text} (Versículo ${verseNumber})`);
       toast({
         title: "Texto copiado",
         description: "O versículo foi copiado para a área de transferência.",
       });
     }
+    setIsSelectionMenuOpen(false);
+  };
+
+  const handleTextSelection = (e: React.MouseEvent) => {
+    const selection = window.getSelection();
+    if (selection && selection.toString().length > 0) {
+      const range = selection.getRangeAt(0);
+      const rect = range.getBoundingClientRect();
+      
+      setSelectionMenuPosition({
+        x: e.clientX,
+        y: rect.top - 10
+      });
+      setIsSelectionMenuOpen(true);
+      e.preventDefault();
+    } else {
+      setIsSelectionMenuOpen(false);
+    }
   };
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger className="flex-1">
-        <div className="cursor-context-menu">
-          {text}
-        </div>
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-48">
-        <ContextMenuItem
-          onClick={() => handleShare()}
-          className="gap-2"
+    <>
+      <ContextMenu>
+        <ContextMenuTrigger 
+          className="flex-1 cursor-text select-text" 
+          onMouseUp={handleTextSelection}
         >
-          <Share className="h-4 w-4" />
-          Compartilhar
-        </ContextMenuItem>
-        
-        <ContextMenuSeparator />
-        
-        <Popover>
-          <PopoverTrigger asChild>
-            <ContextMenuItem
-              className="gap-2"
-              onClick={(e) => e.preventDefault()}
-            >
-              <Highlighter className="h-4 w-4" />
-              Destacar
-            </ContextMenuItem>
-          </PopoverTrigger>
-          <PopoverContent className="w-48 p-3">
+          <div className="cursor-text">
+            {text}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent className="w-48">
+          <ContextMenuItem
+            onClick={() => handleShare()}
+            className="gap-2"
+          >
+            <Share className="h-4 w-4" />
+            Compartilhar
+          </ContextMenuItem>
+          
+          <ContextMenuSeparator />
+          
+          <Popover>
+            <PopoverTrigger asChild>
+              <ContextMenuItem
+                className="gap-2"
+                onClick={(e) => e.preventDefault()}
+              >
+                <Highlighter className="h-4 w-4" />
+                Destacar
+              </ContextMenuItem>
+            </PopoverTrigger>
+            <PopoverContent className="w-48 p-3">
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(HIGHLIGHT_COLORS).map(([color, { label, class: className, border }]) => (
+                  <Button
+                    key={color}
+                    variant="outline"
+                    className={`h-8 w-full ${className} ${border} transition-colors`}
+                    onClick={() => handleHighlight(color as keyof typeof HIGHLIGHT_COLORS)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+
+          <ContextMenuItem
+            onClick={() => setIsNoteOpen(true)}
+            className="gap-2"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Adicionar nota
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+
+      {/* Menu de seleção flutuante */}
+      {isSelectionMenuOpen && (
+        <div
+          className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]"
+          style={{
+            left: `${selectionMenuPosition.x}px`,
+            top: `${selectionMenuPosition.y}px`,
+            transform: 'translateY(-100%)'
+          }}
+        >
+          <div className="flex flex-col gap-2">
             <div className="grid grid-cols-2 gap-2">
               {Object.entries(HIGHLIGHT_COLORS).map(([color, { label, class: className, border }]) => (
                 <Button
@@ -171,17 +231,27 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
                 </Button>
               ))}
             </div>
-          </PopoverContent>
-        </Popover>
-
-        <ContextMenuItem
-          onClick={() => setIsNoteOpen(true)}
-          className="gap-2"
-        >
-          <MessageSquare className="h-4 w-4" />
-          Adicionar nota
-        </ContextMenuItem>
-      </ContextMenuContent>
+            <div className="flex gap-2 mt-2 border-t pt-2">
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setIsNoteOpen(true)}
+              >
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Nota
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleShare}
+              >
+                <Share className="h-4 w-4 mr-2" />
+                Compartilhar
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <Popover open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <PopoverContent className="w-80">
@@ -206,6 +276,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           </div>
         </PopoverContent>
       </Popover>
-    </ContextMenu>
+    </>
   );
 };
