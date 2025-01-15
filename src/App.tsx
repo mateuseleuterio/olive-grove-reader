@@ -73,7 +73,12 @@ function App() {
           return;
         }
 
-        setCurrentUser(session?.user?.id || null);
+        if (!session) {
+          await clearSession();
+          return;
+        }
+
+        setCurrentUser(session.user?.id || null);
       } catch (error) {
         console.error('Erro ao verificar usuário:', error);
         await clearSession();
