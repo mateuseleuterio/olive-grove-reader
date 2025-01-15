@@ -4,7 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleVerseActions } from "./bible/BibleVerseActions";
-import { StickyNote, Share, Eye } from "lucide-react";
+import { StickyNote, Share, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface BibleVerseProps {
@@ -31,11 +31,11 @@ const HIGHLIGHT_COLORS = {
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
+  const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
     
-    // Primeiro, verificar se o livro existe
     const { data: bookData, error: bookError } = await supabase
       .from('bible_books')
       .select('id, name')
@@ -54,7 +54,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     console.log('Livro encontrado:', bookData);
     
-    // Buscar o chapter_id
     const { data: chapterData, error: chapterError } = await supabase
       .from('bible_chapters')
       .select('id')
@@ -75,7 +74,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     console.log('Chapter ID encontrado:', chapterData.id);
 
-    // Verificar se existem versículos para esta versão
     const { count: verseCount, error: countError } = await supabase
       .from('bible_verses')
       .select('*', { count: 'exact', head: true })
@@ -89,7 +87,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
     console.log(`Total de versículos encontrados para capítulo ${chapterData.id}, versão ${version}:`, verseCount);
 
-    // Buscar versículos
     const { data: versesData, error: versesError } = await supabase
       .from('bible_verses')
       .select('id, verse_number, text')
@@ -145,6 +142,50 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     });
   };
 
+  const handleRemoveHighlights = async () => {
+    try {
+      for (const verseId of selectedVerses) {
+        const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
+        if (verseActions) {
+          const handleRemoveHighlight = (verseActions as any).__handleRemoveHighlight;
+          if (handleRemoveHighlight) {
+            await handleRemoveHighlight();
+          }
+        }
+      }
+      setSelectedVerses([]);
+      toast({
+        title: "Destaques removidos",
+        description: "Os destaques foram removidos com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao remover destaques:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover os destaques.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  useEffect(() => {
+    const checkHighlights = async () => {
+      let hasHighlights = false;
+      for (const verseId of selectedVerses) {
+        const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
+        if (verseActions) {
+          const highlight = (verseActions as any).__highlight;
+          if (highlight) {
+            hasHighlights = true;
+            break;
+          }
+        }
+      }
+      setHasHighlightedVerses(hasHighlights);
+    };
+    checkHighlights();
+  }, [selectedVerses]);
+
   if (isLoading) {
     return (
       <div className="space-y-4">
@@ -184,6 +225,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
               ))}
             </div>
             <div className="flex justify-center gap-4">
+              {hasHighlightedVerses && (
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="flex items-center gap-2"
+                  onClick={handleRemoveHighlights}
+                >
+                  <X className="h-5 w-5" />
+                  <span>Remover destaque</span>
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="lg"
