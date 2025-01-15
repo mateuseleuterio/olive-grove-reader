@@ -30,17 +30,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   // Fetch initial highlights
   useEffect(() => {
     const fetchHighlights = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: highlightsData } = await supabase
-          .from('bible_verse_highlights')
-          .select('verse_id, highlight_color')
-          .eq('user_id', user.id);
-        
-        if (highlightsData) {
-          console.log("Destaques carregados:", highlightsData);
-          setHighlights(highlightsData);
-        }
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return;
+
+      const { data: highlightsData } = await supabase
+        .from('bible_verse_highlights')
+        .select('verse_id, highlight_color')
+        .eq('user_id', authData.user.id);
+      
+      if (highlightsData) {
+        console.log("Destaques carregados:", highlightsData);
+        setHighlights(highlightsData);
       }
     };
 
@@ -49,39 +49,43 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   // Subscribe to realtime updates
   useEffect(() => {
-    const { data: { user } } = supabase.auth.getUser();
-    if (!user) return;
+    const setupRealtimeSubscription = async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      if (!authData.user) return;
 
-    const channel = supabase
-      .channel('highlights-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'bible_verse_highlights',
-          filter: `user_id=eq.${user.id}`,
-        },
-        async (payload) => {
-          console.log("Mudança em tempo real recebida:", payload);
-          
-          // Atualizar os destaques após qualquer mudança
-          const { data: highlightsData } = await supabase
-            .from('bible_verse_highlights')
-            .select('verse_id, highlight_color')
-            .eq('user_id', user.id);
-          
-          if (highlightsData) {
-            console.log("Destaques atualizados:", highlightsData);
-            setHighlights(highlightsData);
+      const channel = supabase
+        .channel('highlights-changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'bible_verse_highlights',
+            filter: `user_id=eq.${authData.user.id}`,
+          },
+          async (payload) => {
+            console.log("Mudança em tempo real recebida:", payload);
+            
+            // Atualizar os destaques após qualquer mudança
+            const { data: highlightsData } = await supabase
+              .from('bible_verse_highlights')
+              .select('verse_id, highlight_color')
+              .eq('user_id', authData.user.id);
+            
+            if (highlightsData) {
+              console.log("Destaques atualizados:", highlightsData);
+              setHighlights(highlightsData);
+            }
           }
-        }
-      )
-      .subscribe();
+        )
+        .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
+
+    setupRealtimeSubscription();
   }, []);
 
   const fetchVerses = async () => {
