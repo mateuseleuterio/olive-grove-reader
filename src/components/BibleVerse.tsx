@@ -32,6 +32,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
+  const queryClient = useQuery();
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -144,16 +145,24 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
 
   const handleRemoveHighlights = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
       for (const verseId of selectedVerses) {
-        const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
-        if (verseActions) {
-          const handleRemoveHighlight = (verseActions as any).__handleRemoveHighlight;
-          if (handleRemoveHighlight) {
-            await handleRemoveHighlight();
-          }
-        }
+        const { error } = await supabase
+          .from('bible_verse_highlights')
+          .delete()
+          .eq('verse_id', verseId)
+          .eq('user_id', user.id);
+
+        if (error) throw error;
       }
+
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
       setSelectedVerses([]);
+      setHasHighlightedVerses(false);
+
       toast({
         title: "Destaques removidos",
         description: "Os destaques foram removidos com sucesso.",
@@ -217,62 +226,87 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {selectedVerses.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-8 rounded-lg shadow-lg z-50 min-w-[600px]">
-          <div className="space-y-6">
+        <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 bg-white p-6 rounded-lg shadow-lg z-50 min-w-[600px]">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between mb-4">
+              {hasHighlightedVerses && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveHighlights}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  <span className="text-sm">Remover destaque</span>
+                </Button>
+              )}
+            </div>
             <div className="grid grid-cols-6 gap-4">
               {Object.entries(HIGHLIGHT_COLORS).map(([color, className]) => (
                 <button
                   key={color}
                   className={`h-12 rounded-md ${className} hover:opacity-80 transition-opacity`}
-                  onClick={() => {
-                    selectedVerses.forEach(verseId => {
-                      const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
-                      if (verseActions) {
-                        const handleHighlight = (verseActions as any).__handleHighlight;
-                        if (handleHighlight) {
-                          handleHighlight(color);
-                        }
+                  onClick={async () => {
+                    try {
+                      const { data: { user } } = await supabase.auth.getUser();
+                      if (!user) return;
+
+                      // Se já existe destaque, remove primeiro
+                      if (hasHighlightedVerses) {
+                        await handleRemoveHighlights();
                       }
-                    });
-                    setSelectedVerses([]);
+
+                      // Aplica o novo destaque
+                      for (const verseId of selectedVerses) {
+                        const { error } = await supabase
+                          .from('bible_verse_highlights')
+                          .insert({
+                            verse_id: verseId,
+                            color,
+                            user_id: user.id
+                          });
+                        
+                        if (error) throw error;
+                      }
+
+                      // Atualiza a UI
+                      queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
+                      setSelectedVerses([]);
+                    } catch (error) {
+                      console.error('Erro ao destacar versículo:', error);
+                      toast({
+                        title: "Erro",
+                        description: "Não foi possível destacar o versículo.",
+                        variant: "destructive",
+                      });
+                    }
                   }}
                 />
               ))}
             </div>
             <div className="flex justify-center gap-4">
-              {hasHighlightedVerses && (
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="flex items-center gap-2"
-                  onClick={handleRemoveHighlights}
-                >
-                  <X className="h-5 w-5" />
-                  <span>Remover destaque</span>
-                </Button>
-              )}
               <Button
                 variant="outline"
-                size="lg"
+                size="sm"
                 className="flex items-center gap-2"
               >
-                <StickyNote className="h-5 w-5" />
+                <StickyNote className="h-4 w-4" />
                 <span>Anotar</span>
               </Button>
               <Button
                 variant="outline"
-                size="lg"
+                size="sm"
                 className="flex items-center gap-2"
               >
-                <Share className="h-5 w-5" />
+                <Share className="h-4 w-4" />
                 <span>Compartilhar</span>
               </Button>
               <Button
                 variant="outline"
-                size="lg"
+                size="sm"
                 className="flex items-center gap-2"
               >
-                <Eye className="h-5 w-5" />
+                <Eye className="h-4 w-4" />
                 <span>Original</span>
               </Button>
             </div>
