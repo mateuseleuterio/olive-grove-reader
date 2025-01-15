@@ -87,7 +87,7 @@ export const BibleHighlightToolbar = ({
             className="h-8 px-3 text-sm flex items-center gap-1.5"
           >
             <Eye className="h-3.5 w-3.5" />
-            <span>Original</span>
+            <span>Texto Original</span>
           </Button>
         </div>
       </div>
