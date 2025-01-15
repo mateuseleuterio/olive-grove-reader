@@ -202,12 +202,20 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
+        const { data: verseIds } = await supabase
+          .from('bible_verses')
+          .select('id')
+          .eq('chapter_id', data?.chapterData?.id)
+          .in('verse_number', localSelectedVerses);
+
+        if (!verseIds) return;
+
         let hasHighlights = false;
-        for (const verseNumber of localSelectedVerses) {
+        for (const verse of verseIds) {
           const { data } = await supabase
             .from('bible_verse_highlights')
             .select('id')
-            .eq('verse_number', verseNumber)
+            .eq('verse_id', verse.id)
             .eq('user_id', user.id)
             .maybeSingle();
           
@@ -227,7 +235,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [localSelectedVerses]);
+  }, [localSelectedVerses, data?.chapterData?.id]);
 
   if (isLoading) {
     return (
