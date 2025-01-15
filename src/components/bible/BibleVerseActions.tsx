@@ -61,11 +61,23 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleHighlight = async (color: keyof typeof HIGHLIGHT_COLORS) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para destacar versículos.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('bible_verse_highlights')
         .insert({
           verse_id: verseId,
           highlight_color: color,
+          user_id: user.id
         });
 
       if (error) throw error;
