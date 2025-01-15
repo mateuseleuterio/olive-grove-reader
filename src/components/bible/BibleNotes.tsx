@@ -5,6 +5,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AuthModal from "@/components/Auth";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Plus, X } from "lucide-react";
 
 interface BibleNotesProps {
   bookId: number;
@@ -18,6 +20,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
   const [bookName, setBookName] = useState("");
   const [chapterNotes, setChapterNotes] = useState<any[]>([]);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isAddingNote, setIsAddingNote] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -63,6 +66,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
                 text
               )
             `)
+            .eq('user_id', session.user.id)
             .in('verse_id', verseIdArray)
             .order('created_at', { ascending: false });
 
@@ -101,6 +105,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
       });
 
       setNoteText("");
+      setIsAddingNote(false);
       onClose();
     } catch (error) {
       console.error('Error saving note:', error);
@@ -113,53 +118,73 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
   };
 
   return (
-    <div className="flex flex-col h-full bg-white p-4 space-y-4">
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Anotações</h3>
-        <Button variant="ghost" size="sm" onClick={onClose}>
-          Fechar
-        </Button>
-      </div>
-
-      {selectedVerses.length > 0 ? (
-        <div className="space-y-4">
-          <div className="text-sm text-gray-600">
-            {bookName} {chapter}
+    <Sheet open={true} onOpenChange={onClose}>
+      <SheetContent side="bottom" className="h-[40vh]">
+        <SheetHeader>
+          <div className="flex justify-between items-center">
+            <SheetTitle>Anotações - {bookName} {chapter}</SheetTitle>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="h-4 w-4" />
+            </Button>
           </div>
-          <Textarea
-            placeholder="Digite sua anotação aqui..."
-            value={noteText}
-            onChange={(e) => setNoteText(e.target.value)}
-            className="min-h-[200px]"
-          />
-          <Button onClick={handleSaveNote}>
-            Salvar Anotação
-          </Button>
-        </div>
-      ) : (
-        <ScrollArea className="flex-1">
-          <div className="space-y-4">
-            {chapterNotes.map((note) => (
-              <div key={note.id} className="border rounded-lg p-4">
-                <div className="text-sm text-gray-600 mb-2">
-                  Versículo {note.bible_verses.verse_number}
-                </div>
-                <div className="text-sm italic text-gray-700 mb-2">
-                  {note.bible_verses.text}
-                </div>
-                <div className="text-sm">
-                  {note.note_text}
-                </div>
+        </SheetHeader>
+
+        <div className="mt-4 h-full flex flex-col">
+          {!isAddingNote ? (
+            <div className="flex flex-col h-full">
+              <div className="flex justify-between items-center mb-4">
+                <Button 
+                  onClick={() => setIsAddingNote(true)}
+                  disabled={selectedVerses.length === 0}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Nova Anotação
+                </Button>
               </div>
-            ))}
-          </div>
-        </ScrollArea>
-      )}
+              
+              <ScrollArea className="flex-1">
+                <div className="space-y-4 pr-4">
+                  {chapterNotes.map((note) => (
+                    <div key={note.id} className="border rounded-lg p-4">
+                      <div className="text-sm text-gray-600 mb-2">
+                        Versículo {note.bible_verses.verse_number}
+                      </div>
+                      <div className="text-sm italic text-gray-700 mb-2">
+                        {note.bible_verses.text}
+                      </div>
+                      <div className="text-sm">
+                        {note.note_text}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
+          ) : (
+            <div className="space-y-4 h-full flex flex-col">
+              <Textarea
+                placeholder="Digite sua anotação aqui..."
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                className="flex-1 min-h-0"
+              />
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setIsAddingNote(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveNote}>
+                  Salvar Anotação
+                </Button>
+              </div>
+            </div>
+          )}
+        </div>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
-      />
-    </div>
+        <AuthModal 
+          isOpen={isAuthModalOpen}
+          onClose={() => setIsAuthModalOpen(false)}
+        />
+      </SheetContent>
+    </Sheet>
   );
 };

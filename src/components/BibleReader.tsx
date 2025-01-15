@@ -5,7 +5,6 @@ import BibleControls from "./bible/BibleControls";
 import BibleLayout from "./bible/BibleLayout";
 import { useBibleReader } from "@/hooks/useBibleReader";
 import { BibleNotes } from "./bible/BibleNotes";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 const BibleReader = () => {
   const {
@@ -75,40 +74,31 @@ const BibleReader = () => {
         versionsCount={versions.length}
       />
       
-      <ResizablePanelGroup direction="horizontal">
-        <ResizablePanel defaultSize={isNotesOpen ? 70 : 100}>
-          <BibleLayout
-            versions={versions}
-            selectedBook={selectedBook}
-            chapter={chapter}
-            onVersionChange={handleVersionChange}
-            onRemoveVersion={removeVersion}
-            onNextChapter={handleNextChapter}
-            onPreviousChapter={handlePreviousChapter}
-            hasNextChapter={hasNextChapter}
-            hasPreviousChapter={hasPreviousChapter}
-            onVerseSelect={setSelectedVerses}
-            selectedVerses={selectedVerses}
-          />
-        </ResizablePanel>
+      <BibleLayout
+        versions={versions}
+        selectedBook={selectedBook}
+        chapter={chapter}
+        onVersionChange={handleVersionChange}
+        onRemoveVersion={removeVersion}
+        onNextChapter={handleNextChapter}
+        onPreviousChapter={handlePreviousChapter}
+        hasNextChapter={hasNextChapter}
+        hasPreviousChapter={hasPreviousChapter}
+        onVerseSelect={setSelectedVerses}
+        selectedVerses={selectedVerses}
+      />
 
-        {isNotesOpen && (
-          <>
-            <ResizableHandle />
-            <ResizablePanel defaultSize={30}>
-              <BibleNotes
-                bookId={selectedBook}
-                chapter={chapter}
-                selectedVerses={selectedVerses}
-                onClose={() => {
-                  setIsNotesOpen(false);
-                  setSelectedVerses([]);
-                }}
-              />
-            </ResizablePanel>
-          </>
-        )}
-      </ResizablePanelGroup>
+      {isNotesOpen && (
+        <BibleNotes
+          bookId={selectedBook}
+          chapter={chapter}
+          selectedVerses={selectedVerses}
+          onClose={() => {
+            setIsNotesOpen(false);
+            setSelectedVerses([]);
+          }}
+        />
+      )}
 
       <CommentaryDrawer 
         isOpen={isCommentaryOpen}
