@@ -43,13 +43,38 @@ function App() {
 
   const clearSession = async () => {
     try {
-      await supabase.auth.signOut();
+      // First try to sign out from Supabase
+      const { error: signOutError } = await supabase.auth.signOut();
+      if (signOutError) {
+        console.error('Error signing out:', signOutError);
+      }
+
+      // Clear all local storage items related to auth
       localStorage.removeItem('supabase.auth.token');
       localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
+      
+      // Clear query cache
       queryClient.clear();
+      
+      // Reset user state
       setCurrentUser(null);
     } catch (error) {
       console.error('Error clearing session:', error);
+    }
+  };
+
+  const handleSessionError = async (error: any) => {
+    console.error('Session error:', error);
+    
+    if (error.message.includes('session_not_found') || 
+        error.message.includes('JWT expired') ||
+        error.status === 403) {
+      await clearSession();
+      toast({
+        title: "Sessão expirada",
+        description: "Sua sessão expirou. Por favor, faça login novamente.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -59,21 +84,11 @@ function App() {
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) {
-          console.error('Erro ao verificar sessão:', error);
-          if (error.message.includes('session_not_found') || 
-              error.message.includes('JWT expired') ||
-              error.status === 403) {
-            await clearSession();
-            toast({
-              title: "Sessão expirada",
-              description: "Sua sessão expirou. Por favor, faça login novamente.",
-              variant: "destructive",
-            });
-          }
+          await handleSessionError(error);
           return;
         }
 
-        if (!session || !session.user) {
+        if (!session?.user) {
           await clearSession();
           return;
         }
@@ -81,12 +96,7 @@ function App() {
         setCurrentUser(session.user.id);
       } catch (error) {
         console.error('Erro ao verificar usuário:', error);
-        await clearSession();
-        toast({
-          title: "Erro de autenticação",
-          description: "Houve um problema ao verificar sua sessão. Por favor, faça login novamente.",
-          variant: "destructive",
-        });
+        await handleSessionError(error);
       }
     };
 
@@ -94,18 +104,38 @@ function App() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event);
-      if (event === 'SIGNED_OUT') {
-        await clearSession();
-      } else if (event === 'SIGNED_IN' && session?.user) {
-        setCurrentUser(session.user.id);
-      } else if (event === 'TOKEN_REFRESHED' && session?.user) {
-        setCurrentUser(session.user.id);
-      } else if (event === 'USER_UPDATED' && session?.user) {
-        setCurrentUser(session.user.id);
+      
+      try {
+        switch (event) {
+          case 'SIGNED_OUT':
+            await clearSession();
+            break;
+          case 'SIGNED_IN':
+            if (session?.user) {
+              setCurrentUser(session.user.id);
+            }
+            break;
+          case 'TOKEN_REFRESHED':
+          case 'USER_UPDATED':
+            if (session?.user) {
+              setCurrentUser(session.user.id);
+            } else {
+              await clearSession();
+            }
+            break;
+          default:
+            // Handle unknown events
+            console.log('Unhandled auth event:', event);
+        }
+      } catch (error) {
+        console.error('Error handling auth state change:', error);
+        await handleSessionError(error);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [toast]);
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
