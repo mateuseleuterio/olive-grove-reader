@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface BibleVerseActionsProps {
@@ -38,7 +39,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const [noteText, setNoteText] = useState("");
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const [isOriginalTextOpen, setIsOriginalTextOpen] = useState(false);
-  const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
+  const [isSelected, setIsSelected] = useState(false);
 
   const handleSaveNote = async () => {
     try {
@@ -100,29 +101,30 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   };
 
   const handleVerseClick = () => {
-    if (selectedVerses.includes(verseNumber)) {
-      setSelectedVerses(selectedVerses.filter(v => v !== verseNumber));
-    } else {
-      setSelectedVerses([...selectedVerses, verseNumber]);
-    }
+    setIsSelected(!isSelected);
   };
 
   return (
-    <div className="group relative">
-      <div 
-        onClick={handleVerseClick}
-        className={`cursor-pointer rounded p-1 transition-colors ${
-          selectedVerses.includes(verseNumber) ? 'bg-gray-100' : ''
-        }`}
+    <Popover>
+      <PopoverTrigger asChild>
+        <div 
+          onClick={handleVerseClick}
+          className={`cursor-pointer rounded p-2 transition-colors ${
+            isSelected ? 'bg-gray-100' : ''
+          }`}
+        >
+          <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
+            {verseNumber}
+          </span>
+          <span className="ml-2">{text}</span>
+        </div>
+      </PopoverTrigger>
+      <PopoverContent 
+        className="w-auto p-2" 
+        side="top"
+        align="start"
       >
-        <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
-          {verseNumber}
-        </span>
-        <span className="ml-2">{text}</span>
-      </div>
-
-      {selectedVerses.includes(verseNumber) && (
-        <div className="absolute right-0 top-0 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex gap-1">
           <Button
             variant="ghost"
             size="sm"
@@ -159,12 +161,15 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
             <Eye className="h-4 w-4" />
           </Button>
         </div>
-      )}
+      </PopoverContent>
 
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Adicionar nota ao versículo {verseNumber}</DialogTitle>
+            <DialogDescription>
+              Escreva sua nota para este versículo.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <Textarea
@@ -220,6 +225,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </Popover>
   );
 };
