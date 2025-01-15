@@ -83,7 +83,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
       throw new Error(`A versão ${version} ainda não está disponível para este capítulo.`);
     }
 
-    return { versesData, bookName: bookData?.name };
+    return { versesData, bookName: bookData?.name, chapterData };
   };
 
   const { data, isLoading, error } = useQuery({
