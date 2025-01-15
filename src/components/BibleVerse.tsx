@@ -172,18 +172,26 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     const checkHighlights = async () => {
       let hasHighlights = false;
       for (const verseId of selectedVerses) {
-        const verseActions = document.querySelector(`[data-verse-id="${verseId}"]`);
-        if (verseActions) {
-          const highlight = (verseActions as any).__highlight;
-          if (highlight) {
-            hasHighlights = true;
-            break;
-          }
+        const { data } = await supabase
+          .from('bible_verse_highlights')
+          .select('id')
+          .eq('verse_id', verseId)
+          .eq('user_id', supabase.auth.getUser().then(({ data }) => data.user?.id))
+          .maybeSingle();
+        
+        if (data) {
+          hasHighlights = true;
+          break;
         }
       }
       setHasHighlightedVerses(hasHighlights);
     };
-    checkHighlights();
+    
+    if (selectedVerses.length > 0) {
+      checkHighlights();
+    } else {
+      setHasHighlightedVerses(false);
+    }
   }, [selectedVerses]);
 
   if (isLoading) {
