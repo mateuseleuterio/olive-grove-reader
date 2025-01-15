@@ -18,6 +18,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
+  const [showOriginal, setShowOriginal] = useState(false);
   const queryClient = useQueryClient();
 
   const fetchVerses = async () => {
@@ -233,8 +234,11 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         hasHighlightedVerses={hasHighlightedVerses}
         onRemoveHighlights={handleRemoveHighlights}
         onHighlight={handleHighlight}
+        showOriginal={showOriginal}
+        onToggleOriginal={() => setShowOriginal(!showOriginal)}
         onClose={() => {
           setLocalSelectedVerses([]);
+          setShowOriginal(false);
           if (onVerseSelect) {
             onVerseSelect([]);
           }
@@ -244,6 +248,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         verses={verses || []}
         selectedVerses={selectedVerses || localSelectedVerses}
         onVerseSelect={handleVerseSelect}
+        showOriginal={showOriginal}
       />
     </div>
   );
