@@ -105,63 +105,62 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   };
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <div 
-          onClick={handleVerseClick}
-          className={`cursor-pointer rounded p-2 transition-colors ${
-            isSelected ? 'bg-gray-100' : ''
-          }`}
-        >
-          <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
-            {verseNumber}
-          </span>
-          <span className="ml-2">{text}</span>
-        </div>
-      </PopoverTrigger>
-      <PopoverContent 
-        className="w-auto p-2" 
-        side="top"
-        align="start"
-      >
-        <div className="flex gap-1">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsColorPickerOpen(true)}
-            className="h-8 w-8 p-0"
-          >
-            <Palette className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsNoteOpen(true)}
-            className="h-8 w-8 p-0"
-          >
-            <StickyNote className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleShare}
-            className="h-8 w-8 p-0"
-          >
-            <Share className="h-4 w-4" />
-          </Button>
-          
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOriginalTextOpen(true)}
-            className="h-8 w-8 p-0"
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
-        </div>
-      </PopoverContent>
+    <div 
+      onClick={handleVerseClick}
+      className={`cursor-pointer rounded p-2 transition-colors ${
+        isSelected ? 'bg-gray-100' : ''
+      }`}
+    >
+      <div className="flex items-start gap-2">
+        <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
+          {verseNumber}
+        </span>
+        <span>{text}</span>
+      </div>
+      
+      <Popover>
+        <PopoverTrigger asChild>
+          <div className={`${isSelected ? 'block' : 'hidden'} mt-2`}>
+            <div className="flex gap-1 justify-start">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsColorPickerOpen(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Palette className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsNoteOpen(true)}
+                className="h-8 w-8 p-0"
+              >
+                <StickyNote className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleShare}
+                className="h-8 w-8 p-0"
+              >
+                <Share className="h-4 w-4" />
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsOriginalTextOpen(true)}
+                className="h-8 w-8 p-0"
+              >
+                <Eye className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </PopoverTrigger>
+      </Popover>
 
       <Dialog open={isNoteOpen} onOpenChange={setIsNoteOpen}>
         <DialogContent>
@@ -225,6 +224,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           </div>
         </DialogContent>
       </Dialog>
-    </Popover>
+    </div>
   );
 };
