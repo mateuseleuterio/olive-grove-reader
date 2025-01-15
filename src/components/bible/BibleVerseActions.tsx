@@ -1,19 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuSeparator,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { Highlighter, MessageSquare, Share } from "lucide-react";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { MessageSquare, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -58,6 +51,18 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const [noteText, setNoteText] = useState("");
   const [selectionMenuPosition, setSelectionMenuPosition] = useState({ x: 0, y: 0 });
   const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsSelectionMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleHighlight = async (color: keyof typeof HIGHLIGHT_COLORS) => {
     try {
@@ -99,11 +104,23 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleSaveNote = async () => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          title: "Erro",
+          description: "Você precisa estar logado para adicionar notas.",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const { error } = await supabase
         .from('bible_verse_notes')
         .insert({
           verse_id: verseId,
           note_text: noteText,
+          user_id: user.id
         });
 
       if (error) throw error;
@@ -145,89 +162,41 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
     setIsSelectionMenuOpen(false);
   };
 
-  const handleTextSelection = (e: React.MouseEvent) => {
+  const handleTextSelection = () => {
     const selection = window.getSelection();
     if (selection && selection.toString().length > 0) {
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       
       setSelectionMenuPosition({
-        x: e.clientX,
+        x: rect.left + (rect.width / 2),
         y: rect.top - 10
       });
       setIsSelectionMenuOpen(true);
-      e.preventDefault();
     } else {
       setIsSelectionMenuOpen(false);
     }
   };
 
   return (
-    <>
-      <ContextMenu>
-        <ContextMenuTrigger 
-          className="flex-1 cursor-text select-text" 
-          onMouseUp={handleTextSelection}
-        >
-          <div className="cursor-text">
-            {text}
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent className="w-48">
-          <ContextMenuItem
-            onClick={() => handleShare()}
-            className="gap-2"
-          >
-            <Share className="h-4 w-4" />
-            Compartilhar
-          </ContextMenuItem>
-          
-          <ContextMenuSeparator />
-          
-          <Popover>
-            <PopoverTrigger asChild>
-              <ContextMenuItem
-                className="gap-2"
-                onClick={(e) => e.preventDefault()}
-              >
-                <Highlighter className="h-4 w-4" />
-                Destacar
-              </ContextMenuItem>
-            </PopoverTrigger>
-            <PopoverContent className="w-48 p-3">
-              <div className="grid grid-cols-2 gap-2">
-                {Object.entries(HIGHLIGHT_COLORS).map(([color, { label, class: className, border }]) => (
-                  <Button
-                    key={color}
-                    variant="outline"
-                    className={`h-8 w-full ${className} ${border} transition-colors`}
-                    onClick={() => handleHighlight(color as keyof typeof HIGHLIGHT_COLORS)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
-
-          <ContextMenuItem
-            onClick={() => setIsNoteOpen(true)}
-            className="gap-2"
-          >
-            <MessageSquare className="h-4 w-4" />
-            Adicionar nota
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
+    <div 
+      className="relative cursor-text select-text" 
+      onMouseUp={handleTextSelection}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      <div className="cursor-text">
+        {text}
+      </div>
 
       {/* Menu de seleção flutuante */}
       {isSelectionMenuOpen && (
         <div
+          ref={menuRef}
           className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]"
           style={{
             left: `${selectionMenuPosition.x}px`,
             top: `${selectionMenuPosition.y}px`,
-            transform: 'translateY(-100%)'
+            transform: 'translate(-50%, -100%)'
           }}
         >
           <div className="flex flex-col gap-2">
@@ -288,6 +257,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           </div>
         </PopoverContent>
       </Popover>
-    </>
+    </div>
   );
 };
