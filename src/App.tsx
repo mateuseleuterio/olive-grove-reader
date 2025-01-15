@@ -22,7 +22,18 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import ComingSoon from "./pages/ComingSoon";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on 403 errors (unauthorized)
+        if (error?.status === 403) return false;
+        return failureCount < 3;
+      },
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+  },
+});
 
 const ADMIN_UID = '5e475092-3de0-47b8-8543-c62450e07bbd';
 
@@ -40,6 +51,7 @@ function App() {
           if (error.message.includes('session_not_found')) {
             await supabase.auth.signOut();
             localStorage.removeItem('supabase.auth.token');
+            localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
           }
           return;
         }
@@ -58,11 +70,16 @@ function App() {
     checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
       if (event === 'SIGNED_OUT') {
         setCurrentUser(null);
         localStorage.removeItem('supabase.auth.token');
+        localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
+        queryClient.clear();
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setCurrentUser(session?.user?.id || null);
+      } else if (event === 'USER_DELETED' || event === 'USER_UPDATED') {
+        await checkUser();
       }
     });
 
