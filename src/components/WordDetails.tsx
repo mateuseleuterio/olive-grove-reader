@@ -1,4 +1,3 @@
-<lov-code>
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -164,4 +163,124 @@ const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) 
         .eq('word', word)
         .eq('book', book)
         .eq('chapter', chapter)
-        .eq('verse',
+        .eq('verse', verse)
+        .single();
+
+      if (searchError && searchError.code !== 'PGRST116') {
+        throw searchError;
+      }
+
+      if (existingMeaning) {
+        setDetails(existingMeaning.meaning_details);
+        setLoading(false);
+        return;
+      }
+
+      const context = getWordContext();
+      
+      const response = await fetch('/api/analyze-verse-words', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          word,
+          book,
+          chapter,
+          verse,
+          context
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch word details');
+      }
+
+      const data = await response.json();
+      setDetails(data.meaning);
+    } catch (error) {
+      console.error('Error fetching word details:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível obter os detalhes da palavra.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, []);
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button
+          variant="ghost"
+          className="p-0 font-normal h-auto"
+        >
+          {word}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-80">
+        {loading ? (
+          <div className="flex items-center justify-center p-4">
+            <Loader2 className="h-6 w-6 animate-spin" />
+          </div>
+        ) : wordGroup ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Palavra Original:</span>
+              <span className="text-sm">{wordGroup.original_word}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Transliteração:</span>
+              <span className="text-sm">{wordGroup.transliteration}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold">Strong:</span>
+              <span className="text-sm">{wordGroup.strong_number}</span>
+            </div>
+            <div>
+              <span className="text-sm font-semibold block mb-1">Significado Principal:</span>
+              <p className="text-sm">{wordGroup.primary_meaning}</p>
+            </div>
+            {wordGroup.secondary_meanings.length > 0 && (
+              <div>
+                <span className="text-sm font-semibold block mb-1">Significados Secundários:</span>
+                <ul className="list-disc pl-4">
+                  {wordGroup.secondary_meanings.map((meaning, index) => (
+                    <li key={index} className="text-sm">{meaning}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </div>
+        ) : details ? (
+          <div className="space-y-4">
+            <div>{formatResponse(details)}</div>
+            {isAdmin && (
+              <Button
+                className="w-full mt-4"
+                onClick={saveToDatabase}
+              >
+                Salvar no Banco de Dados
+              </Button>
+            )}
+          </div>
+        ) : (
+          <Button
+            className="w-full"
+            onClick={fetchWordDetails}
+          >
+            Analisar Palavra
+          </Button>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
+export default WordDetails;
