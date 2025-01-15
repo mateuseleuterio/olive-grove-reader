@@ -58,20 +58,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     fetchHighlights();
   }, [userId]);
 
-  // Função para buscar um destaque específico
-  const fetchSingleHighlight = async (verseId: number) => {
-    if (!userId) return null;
-
-    const { data } = await supabase
-      .from('bible_verse_highlights')
-      .select('verse_id, highlight_color')
-      .eq('user_id', userId)
-      .eq('verse_id', verseId)
-      .maybeSingle();
-
-    return data;
-  };
-
   // Subscribe to realtime updates
   useEffect(() => {
     if (!userId) return;
@@ -91,29 +77,28 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
         async (payload) => {
           console.log("Mudança em tempo real recebida:", payload);
           
-          // Atualizar apenas o destaque específico que foi modificado
           if (payload.eventType === 'INSERT') {
             const newHighlight = {
               verse_id: payload.new.verse_id,
               highlight_color: payload.new.highlight_color,
             };
-            setHighlights(prev => [...prev, newHighlight]);
+            setHighlights(prev => [...prev.filter(h => h.verse_id !== newHighlight.verse_id), newHighlight]);
           } else if (payload.eventType === 'DELETE') {
             setHighlights(prev => 
               prev.filter(h => h.verse_id !== payload.old.verse_id)
             );
           } else if (payload.eventType === 'UPDATE') {
-            // Buscar o destaque atualizado do servidor
-            const updatedHighlight = await fetchSingleHighlight(payload.new.verse_id);
-            if (updatedHighlight) {
-              setHighlights(prev => 
-                prev.map(h => 
-                  h.verse_id === updatedHighlight.verse_id 
-                    ? updatedHighlight 
-                    : h
-                )
-              );
-            }
+            const updatedHighlight = {
+              verse_id: payload.new.verse_id,
+              highlight_color: payload.new.highlight_color,
+            };
+            setHighlights(prev => 
+              prev.map(h => 
+                h.verse_id === updatedHighlight.verse_id 
+                  ? updatedHighlight 
+                  : h
+              )
+            );
           }
         }
       )

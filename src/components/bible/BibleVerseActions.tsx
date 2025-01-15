@@ -52,6 +52,17 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
   const [selectionMenuPosition, setSelectionMenuPosition] = useState({ x: 0, y: 0 });
   const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUserId(user.id);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -66,9 +77,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleHighlight = async (color: keyof typeof HIGHLIGHT_COLORS) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (!userId) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para destacar versículos.",
@@ -77,15 +86,35 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         return;
       }
 
-      const { error } = await supabase
+      // Primeiro, verificamos se já existe um destaque para este versículo
+      const { data: existingHighlight } = await supabase
         .from('bible_verse_highlights')
-        .insert({
-          verse_id: verseId,
-          highlight_color: color,
-          user_id: user.id
-        });
+        .select('*')
+        .eq('verse_id', verseId)
+        .eq('user_id', userId)
+        .maybeSingle();
 
-      if (error) throw error;
+      let result;
+      
+      if (existingHighlight) {
+        // Se existe, atualizamos a cor
+        result = await supabase
+          .from('bible_verse_highlights')
+          .update({ highlight_color: color })
+          .eq('verse_id', verseId)
+          .eq('user_id', userId);
+      } else {
+        // Se não existe, criamos um novo destaque
+        result = await supabase
+          .from('bible_verse_highlights')
+          .insert({
+            verse_id: verseId,
+            highlight_color: color,
+            user_id: userId
+          });
+      }
+
+      if (result.error) throw result.error;
 
       toast({
         title: "Versículo destacado",
@@ -104,9 +133,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleRemoveHighlight = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (!userId) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para remover destaques.",
@@ -119,7 +146,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         .from('bible_verse_highlights')
         .delete()
         .eq('verse_id', verseId)
-        .eq('user_id', user.id);
+        .eq('user_id', userId);
 
       if (error) throw error;
 
@@ -140,9 +167,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
   const handleSaveNote = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
+      if (!userId) {
         toast({
           title: "Erro",
           description: "Você precisa estar logado para adicionar notas.",
@@ -156,7 +181,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
         .insert({
           verse_id: verseId,
           note_text: noteText,
-          user_id: user.id
+          user_id: userId
         });
 
       if (error) throw error;
