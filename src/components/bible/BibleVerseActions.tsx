@@ -26,12 +26,12 @@ interface BibleVerseActionsProps {
 }
 
 const HIGHLIGHT_COLORS = {
-  yellow: "bg-[#FFD700]", // Ouro vivo
-  blue: "bg-[#0EA5E9]", // Azul oceano vivo
-  red: "bg-[#EF4444]", // Vermelho vivo
-  purple: "bg-[#8B5CF6]", // Roxo vivo
-  green: "bg-[#10B981]", // Verde esmeralda
-  orange: "bg-[#F97316]", // Laranja vivo
+  yellow: "bg-[#FEF7CD]", // Soft yellow
+  blue: "bg-[#D3E4FD]",   // Soft blue
+  red: "bg-[#FFDEE2]",    // Soft pink/red
+  purple: "bg-[#E5DEFF]", // Soft purple
+  green: "bg-[#F2FCE2]",  // Soft green
+  orange: "bg-[#FDE1D3]", // Soft peach/orange
 };
 
 export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActionsProps) => {
