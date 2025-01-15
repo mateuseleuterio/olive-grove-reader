@@ -18,7 +18,16 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session?.user);
+    };
+    checkAuth();
+  }, []);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -104,6 +113,15 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   }, [error, toast]);
 
   const handleVerseSelect = (verseId: number) => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Ação não permitida",
+        description: "Você precisa fazer login para destacar versículos.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     const newSelectedVerses = localSelectedVerses.includes(verseId)
       ? localSelectedVerses.filter(id => id !== verseId)
       : [...localSelectedVerses, verseId];
@@ -115,6 +133,8 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   };
 
   const handleRemoveHighlights = async () => {
+    if (!isAuthenticated) return;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -148,6 +168,8 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   };
 
   const handleHighlight = async (color: string) => {
+    if (!isAuthenticated) return;
+
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
@@ -182,6 +204,8 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
 
   useEffect(() => {
     const checkHighlights = async () => {
+      if (!isAuthenticated) return;
+
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -211,7 +235,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [localSelectedVerses]);
+  }, [localSelectedVerses, isAuthenticated]);
 
   if (isLoading) {
     return (
@@ -228,18 +252,20 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
 
   return (
     <div className="space-y-2">
-      <BibleHighlightToolbar
-        selectedVerses={selectedVerses || localSelectedVerses}
-        hasHighlightedVerses={hasHighlightedVerses}
-        onRemoveHighlights={handleRemoveHighlights}
-        onHighlight={handleHighlight}
-        onClose={() => {
-          setLocalSelectedVerses([]);
-          if (onVerseSelect) {
-            onVerseSelect([]);
-          }
-        }}
-      />
+      {isAuthenticated && (
+        <BibleHighlightToolbar
+          selectedVerses={selectedVerses || localSelectedVerses}
+          hasHighlightedVerses={hasHighlightedVerses}
+          onRemoveHighlights={handleRemoveHighlights}
+          onHighlight={handleHighlight}
+          onClose={() => {
+            setLocalSelectedVerses([]);
+            if (onVerseSelect) {
+              onVerseSelect([]);
+            }
+          }}
+        />
+      )}
       <BibleVerseList
         verses={data?.versesData || []}
         selectedVerses={selectedVerses || localSelectedVerses}
