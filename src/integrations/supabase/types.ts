@@ -104,6 +104,73 @@ export type Database = {
           },
         ]
       }
+      bible_verse_highlights: {
+        Row: {
+          created_at: string
+          highlight_color: string
+          id: string
+          user_id: string | null
+          verse_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          highlight_color?: string
+          id?: string
+          user_id?: string | null
+          verse_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          highlight_color?: string
+          id?: string
+          user_id?: string | null
+          verse_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_verse_highlights_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bible_verse_notes: {
+        Row: {
+          created_at: string
+          id: string
+          note_text: string
+          updated_at: string
+          user_id: string | null
+          verse_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          note_text: string
+          updated_at?: string
+          user_id?: string | null
+          verse_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          note_text?: string
+          updated_at?: string
+          user_id?: string | null
+          verse_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bible_verse_notes_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bible_verses: {
         Row: {
           chapter_id: number | null

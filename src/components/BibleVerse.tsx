@@ -4,6 +4,7 @@ import WordDetails from "./WordDetails";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BibleVerseActions } from "./bible/BibleVerseActions";
 
 interface BibleVerseProps {
   bookId: number;
@@ -150,10 +151,14 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {verses.map((verse) => (
-        <p key={verse.id} className="break-words">
+        <div key={verse.id} className="break-words">
           <span className="verse-number">{verse.verse_number}</span>
-          {renderVerse(verse.text)}
-        </p>
+          <BibleVerseActions
+            verseId={verse.id}
+            verseNumber={verse.verse_number}
+            text={verse.text}
+          />
+        </div>
       ))}
     </div>
   );
