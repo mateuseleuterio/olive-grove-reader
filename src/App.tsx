@@ -78,7 +78,7 @@ function App() {
         queryClient.clear();
       } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setCurrentUser(session?.user?.id || null);
-      } else if (event === 'USER_DELETED' || event === 'USER_UPDATED') {
+      } else if (event === 'USER_UPDATED') {
         await checkUser();
       }
     });
