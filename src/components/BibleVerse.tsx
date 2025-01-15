@@ -151,13 +151,17 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   return (
     <div className="space-y-4">
       {verses.map((verse) => (
-        <div key={verse.id} className="break-words">
-          <span className="verse-number">{verse.verse_number}</span>
-          <BibleVerseActions
-            verseId={verse.id}
-            verseNumber={verse.verse_number}
-            text={verse.text}
-          />
+        <div key={verse.id} className="flex items-start gap-2">
+          <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
+            {verse.verse_number}
+          </span>
+          <div className="flex-1">
+            <BibleVerseActions
+              verseId={verse.id}
+              verseNumber={verse.verse_number}
+              text={verse.text}
+            />
+          </div>
         </div>
       ))}
     </div>
