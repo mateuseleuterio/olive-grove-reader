@@ -33,6 +33,7 @@ const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) 
   const [loading, setLoading] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [wordGroup, setWordGroup] = useState<WordGroup | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
   const { toast } = useToast();
 
   const formatResponse = (text: string) => {
@@ -215,7 +216,7 @@ const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) 
   }, []);
 
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -273,7 +274,9 @@ const WordDetails = ({ word, book, chapter, verse, version }: WordDetailsProps) 
         ) : (
           <Button
             className="w-full"
-            onClick={fetchWordDetails}
+            onClick={() => {
+              fetchWordDetails();
+            }}
           >
             Analisar Palavra
           </Button>
