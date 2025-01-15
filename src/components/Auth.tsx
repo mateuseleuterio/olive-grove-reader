@@ -17,19 +17,34 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
 
+  // Clear any invalid tokens on mount
+  useEffect(() => {
+    const checkAndClearTokens = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.log('No valid session found, clearing storage');
+        localStorage.removeItem('supabase.auth.token');
+        setError(null);
+      }
+    };
+    
+    checkAndClearTokens();
+  }, []);
+
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
       if (event === 'SIGNED_IN') {
-        // Limpa qualquer erro quando o usuário faz login com sucesso
         setError(null);
         onClose();
         navigate('/');
       } else if (event === 'SIGNED_OUT') {
-        // Limpa o localStorage quando o usuário faz logout
         localStorage.removeItem('supabase.auth.token');
         setError(null);
       } else if (event === 'TOKEN_REFRESHED') {
-        // Limpa erros quando o token é atualizado com sucesso
+        setError(null);
+      } else if (event === 'USER_UPDATED') {
         setError(null);
       }
     });
@@ -41,7 +56,9 @@ const AuthModal = ({ isOpen, onClose }: AuthModalProps) => {
     console.error('Auth error:', error);
     if (error.message.includes('refresh_token_not_found')) {
       setError('Sessão expirada. Por favor, faça login novamente.');
-      // Limpa tokens antigos
+      localStorage.removeItem('supabase.auth.token');
+    } else if (error.message.includes('Invalid Refresh Token')) {
+      setError('Sessão inválida. Por favor, faça login novamente.');
       localStorage.removeItem('supabase.auth.token');
     } else {
       setError(error.message);
