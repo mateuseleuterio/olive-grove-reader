@@ -6,7 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import AuthModal from "@/components/Auth";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 
 interface BibleNotesProps {
   bookId: number;
@@ -193,6 +193,37 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
     }
   };
 
+  const handleDeleteNote = async (noteId: string) => {
+    if (!session?.user) {
+      setIsAuthModalOpen(true);
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('bible_verse_notes')
+        .delete()
+        .eq('id', noteId)
+        .eq('user_id', session.user.id);
+
+      if (error) throw error;
+
+      setChapterNotes(prevNotes => prevNotes.filter(note => note.id !== noteId));
+
+      toast({
+        title: "Sucesso",
+        description: "Anotação excluída com sucesso!",
+      });
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a anotação.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <Sheet open={true} onOpenChange={onClose}>
       <SheetContent side="bottom" className="h-[40vh] flex flex-col" onPointerDownOutside={onClose} onInteractOutside={onClose}>
@@ -219,8 +250,7 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
                   {chapterNotes.map((note) => (
                     <div 
                       key={note.id} 
-                      className="border rounded-lg p-4 cursor-move hover:shadow-md transition-shadow"
-                      draggable="true"
+                      className="border rounded-lg p-4 cursor-move hover:shadow-md transition-shadow relative group"
                     >
                       {note.bible_verses && (
                         <div className="text-sm text-gray-600 mb-2">
@@ -235,6 +265,14 @@ export const BibleNotes = ({ bookId, chapter, selectedVerses, onClose }: BibleNo
                       <div className="text-sm">
                         {note.note_text}
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => handleDeleteNote(note.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
                   ))}
                 </div>
