@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { MessageSquare, Share, Eraser } from "lucide-react";
+import { MessageSquare, Share } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -17,126 +17,12 @@ interface BibleVerseActionsProps {
   onNoteClick?: () => void;
 }
 
-const HIGHLIGHT_COLORS = {
-  yellow: {
-    label: "Amarelo",
-    class: "bg-yellow-200 hover:bg-yellow-300",
-    border: "border-yellow-400"
-  },
-  red: {
-    label: "Vermelho",
-    class: "bg-red-200 hover:bg-red-300",
-    border: "border-red-400"
-  },
-  blue: {
-    label: "Azul",
-    class: "bg-blue-200 hover:bg-blue-300",
-    border: "border-blue-400"
-  },
-  green: {
-    label: "Verde",
-    class: "bg-green-200 hover:bg-green-300",
-    border: "border-green-400"
-  },
-  purple: {
-    label: "Roxo",
-    class: "bg-purple-200 hover:bg-purple-300",
-    border: "border-purple-400"
-  }
-};
-
 export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: BibleVerseActionsProps) => {
   const { toast } = useToast();
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [selectionMenuPosition, setSelectionMenuPosition] = useState({ x: 0, y: 0 });
   const [isSelectionMenuOpen, setIsSelectionMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setIsSelectionMenuOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  const handleHighlight = async (color: keyof typeof HIGHLIGHT_COLORS) => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para destacar versículos.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('bible_verse_highlights')
-        .insert({
-          verse_id: verseId,
-          highlight_color: color,
-          user_id: user.id
-        });
-
-      if (error) throw error;
-
-      toast({
-        title: "Versículo destacado",
-        description: `Versículo ${verseNumber} destacado em ${HIGHLIGHT_COLORS[color].label.toLowerCase()}.`,
-      });
-    } catch (error) {
-      console.error('Erro ao destacar versículo:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível destacar o versículo.",
-        variant: "destructive",
-      });
-    }
-    setIsSelectionMenuOpen(false);
-  };
-
-  const handleRemoveHighlight = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        toast({
-          title: "Erro",
-          description: "Você precisa estar logado para remover destaques.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      const { error } = await supabase
-        .from('bible_verse_highlights')
-        .delete()
-        .eq('verse_id', verseId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
-
-      toast({
-        title: "Destaque removido",
-        description: `Destaque removido do versículo ${verseNumber}.`,
-      });
-    } catch (error) {
-      console.error('Erro ao remover destaque:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível remover o destaque.",
-        variant: "destructive",
-      });
-    }
-    setIsSelectionMenuOpen(false);
-  };
 
   const handleSaveNote = async () => {
     try {
@@ -226,7 +112,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
 
       {isSelectionMenuOpen && (
         <div
-          ref={menuRef}
           className="fixed z-50 bg-white rounded-lg shadow-lg border border-gray-200 p-2 min-w-[200px]"
           style={{
             left: `${selectionMenuPosition.x}px`,
@@ -235,19 +120,7 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
           }}
         >
           <div className="flex flex-col gap-2">
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(HIGHLIGHT_COLORS).map(([color, { label, class: className, border }]) => (
-                <Button
-                  key={color}
-                  variant="outline"
-                  className={`h-8 w-full ${className} ${border} transition-colors`}
-                  onClick={() => handleHighlight(color as keyof typeof HIGHLIGHT_COLORS)}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
-            <div className="flex gap-2 mt-2 border-t pt-2">
+            <div className="flex gap-2">
               <Button
                 variant="outline"
                 className="w-full"
@@ -265,14 +138,6 @@ export const BibleVerseActions = ({ verseId, verseNumber, text, onNoteClick }: B
                 Compartilhar
               </Button>
             </div>
-            <Button
-              variant="outline"
-              className="w-full text-red-600 hover:text-red-700 hover:bg-red-50"
-              onClick={handleRemoveHighlight}
-            >
-              <Eraser className="h-4 w-4 mr-2" />
-              Remover destaque
-            </Button>
           </div>
         </div>
       )}

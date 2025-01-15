@@ -18,112 +18,8 @@ interface Verse {
   text: string;
 }
 
-interface VerseHighlight {
-  verse_id: number;
-  highlight_color: string;
-}
-
 const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
   const { toast } = useToast();
-  const [highlights, setHighlights] = useState<VerseHighlight[]>([]);
-  const [userId, setUserId] = useState<string | null>(null);
-
-  // Fetch user ID once
-  useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserId(user.id);
-      }
-    };
-    fetchUser();
-  }, []);
-
-  // Fetch initial highlights
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchHighlights = async () => {
-      const { data: highlightsData } = await supabase
-        .from('bible_verse_highlights')
-        .select('verse_id, highlight_color')
-        .eq('user_id', userId);
-      
-      if (highlightsData) {
-        console.log("Destaques carregados:", highlightsData);
-        setHighlights(highlightsData);
-      }
-    };
-
-    fetchHighlights();
-  }, [userId]);
-
-  // Função para buscar um destaque específico
-  const fetchSingleHighlight = async (verseId: number) => {
-    if (!userId) return null;
-
-    const { data } = await supabase
-      .from('bible_verse_highlights')
-      .select('verse_id, highlight_color')
-      .eq('user_id', userId)
-      .eq('verse_id', verseId)
-      .maybeSingle();
-
-    return data;
-  };
-
-  // Subscribe to realtime updates
-  useEffect(() => {
-    if (!userId) return;
-
-    console.log("Configurando inscrição em tempo real para o usuário:", userId);
-
-    const channel = supabase
-      .channel('highlights-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'bible_verse_highlights',
-          filter: `user_id=eq.${userId}`,
-        },
-        async (payload) => {
-          console.log("Mudança em tempo real recebida:", payload);
-          
-          if (payload.eventType === 'INSERT') {
-            const newHighlight = {
-              verse_id: payload.new.verse_id,
-              highlight_color: payload.new.highlight_color,
-            };
-            setHighlights(prev => [...prev, newHighlight]);
-          } else if (payload.eventType === 'DELETE') {
-            setHighlights(prev => 
-              prev.filter(h => h.verse_id !== payload.old.verse_id)
-            );
-          } else if (payload.eventType === 'UPDATE') {
-            const updatedHighlight = await fetchSingleHighlight(payload.new.verse_id);
-            if (updatedHighlight) {
-              setHighlights(prev => 
-                prev.map(h => 
-                  h.verse_id === updatedHighlight.verse_id 
-                    ? updatedHighlight 
-                    : h
-                )
-              );
-            }
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log("Status da inscrição:", status);
-      });
-
-    return () => {
-      console.log("Limpando inscrição em tempo real");
-      supabase.removeChannel(channel);
-    };
-  }, [userId]);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -219,29 +115,6 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
     gcTime: 1000 * 60 * 60 * 24,
   });
 
-  const getHighlightClass = (verseId: number) => {
-    const highlight = highlights.find(h => h.verse_id === verseId);
-    if (!highlight) return '';
-
-    console.log("Cor do destaque encontrada:", highlight.highlight_color, "para o versículo:", verseId);
-
-    switch (highlight.highlight_color) {
-      case 'yellow':
-        return 'bg-yellow-200';
-      case 'red':
-        return 'bg-red-200';
-      case 'blue':
-        return 'bg-blue-200';
-      case 'green':
-        return 'bg-green-200';
-      case 'purple':
-        return 'bg-purple-200';
-      default:
-        console.log("Cor não mapeada:", highlight.highlight_color);
-        return '';
-    }
-  };
-
   useEffect(() => {
     if (error) {
       toast({
@@ -272,7 +145,7 @@ const BibleVerse = ({ bookId, chapter, version }: BibleVerseProps) => {
           <span className="verse-number font-semibold text-bible-verse min-w-[1.5rem]">
             {verse.verse_number}
           </span>
-          <div className={`flex-1 rounded p-1 ${getHighlightClass(verse.id)}`}>
+          <div className="flex-1 rounded p-1">
             <BibleVerseActions
               verseId={verse.id}
               verseNumber={verse.verse_number}
