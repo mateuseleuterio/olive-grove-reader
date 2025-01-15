@@ -6,7 +6,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Eye, Share, StickyNote, Palette } from "lucide-react";
+import { Eye, Share, StickyNote, Palette, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -187,6 +187,32 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
     }
   };
 
+  const handleRemoveHighlight = async () => {
+    if (!highlight || !session?.user?.id) return;
+
+    try {
+      const { error } = await supabase
+        .from('bible_verse_highlights')
+        .delete()
+        .eq('id', highlight.id);
+
+      if (error) throw error;
+
+      queryClient.invalidateQueries({ queryKey: ['verse-highlight', verseId] });
+      toast({
+        title: "Destaque removido",
+        description: "O destaque foi removido do versículo.",
+      });
+    } catch (error) {
+      console.error('Erro ao remover destaque:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível remover o destaque.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleVerseClick = () => {
     setIsSelected(!isSelected);
   };
@@ -241,6 +267,17 @@ export const BibleVerseActions = ({ verseId, text, onNoteClick }: BibleVerseActi
               >
                 <Eye className="h-4 w-4" />
               </Button>
+
+              {highlight && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveHighlight}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
         </PopoverTrigger>
