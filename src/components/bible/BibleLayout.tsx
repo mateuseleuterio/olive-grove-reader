@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { BibleVersion } from "@/hooks/useBibleReader";
 import BibleVersionPanel from "./BibleVersionPanel";

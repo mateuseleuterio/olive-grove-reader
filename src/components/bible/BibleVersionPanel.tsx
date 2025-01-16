@@ -17,6 +17,7 @@ interface BibleVersionPanelProps {
   hasPreviousChapter: boolean;
   onVerseSelect: (verses: number[]) => void;
   selectedVerses: number[];
+  fontSize: number;
 }
 
 const BibleVersionPanel = ({
@@ -32,6 +33,7 @@ const BibleVersionPanel = ({
   hasPreviousChapter,
   onVerseSelect,
   selectedVerses,
+  fontSize,
 }: BibleVersionPanelProps) => {
   return (
     <div className="flex flex-col h-full">
@@ -89,6 +91,7 @@ const BibleVersionPanel = ({
           version={version.id}
           onVerseSelect={onVerseSelect}
           selectedVerses={selectedVerses}
+          fontSize={fontSize}
         />
       </div>
       <div className="flex justify-center gap-4 py-4 bg-white border-t">
