@@ -20,7 +20,6 @@ const ArticleEditor = () => {
   const [headerImage, setHeaderImage] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
-  const [theme, setTheme] = useState("");
   const [idea, setIdea] = useState("");
 
   const categories = [
@@ -71,10 +70,10 @@ const ArticleEditor = () => {
   };
 
   const generateContent = async () => {
-    if (!theme || !idea) {
+    if (!idea) {
       toast({
         title: "Erro",
-        description: "Por favor, insira um tema e uma ideia para gerar o conteúdo.",
+        description: "Por favor, insira uma ideia para gerar o artigo.",
         variant: "destructive",
       });
       return;
@@ -83,10 +82,8 @@ const ArticleEditor = () => {
     setIsGenerating(true);
 
     try {
-      const prompt = `Tema: ${theme}\n\nIdeia: ${idea}`;
-      
       const { data, error } = await supabase.functions.invoke('generate-article', {
-        body: { prompt }
+        body: { prompt: idea }
       });
 
       if (error) throw error;
@@ -95,11 +92,12 @@ const ArticleEditor = () => {
         setTitle(data.content.title || title);
         setDescription(data.content.description || description);
         setContent(data.content.content || content);
+        setCategory(data.content.category || category);
       }
 
       toast({
         title: "Sucesso!",
-        description: "Conteúdo gerado com sucesso.",
+        description: "Artigo gerado com sucesso.",
       });
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
@@ -164,24 +162,14 @@ const ArticleEditor = () => {
       <h1 className="text-3xl font-serif font-bold text-bible-navy mb-8">Criar Novo Artigo</h1>
       
       <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
-        <h2 className="text-xl font-semibold mb-4">Gerador de Conteúdo AI</h2>
+        <h2 className="text-xl font-semibold mb-4">Gerador de Artigo com IA</h2>
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-bible-text mb-2">
-              Tema do Artigo
-            </label>
-            <Input
-              placeholder="Digite o tema principal do artigo..."
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-bible-text mb-2">
-              Ideia ou Conceito
+              Sua Ideia
             </label>
             <Textarea
-              placeholder="Descreva a ideia ou conceito que você quer desenvolver no artigo..."
+              placeholder="Descreva sua ideia para o artigo..."
               value={idea}
               onChange={(e) => setIdea(e.target.value)}
               className="min-h-[100px]"
@@ -195,10 +183,10 @@ const ArticleEditor = () => {
             {isGenerating ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando conteúdo...
+                Gerando artigo...
               </>
             ) : (
-              "Gerar Conteúdo com AI"
+              "Gerar Artigo com IA"
             )}
           </Button>
         </div>

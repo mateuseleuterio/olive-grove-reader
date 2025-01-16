@@ -37,12 +37,13 @@ Retorne o artigo no seguinte formato JSON:
 {
   "title": "Título do artigo",
   "description": "Breve descrição do artigo",
-  "content": "Conteúdo completo do artigo"
+  "content": "Conteúdo completo do artigo",
+  "category": "Categoria do artigo (escolha uma entre: Vida Cristã, Estudos Bíblicos, Comunidade, Adoração, Evangelismo, Família, Teologia, Devocional)"
 }`
           },
           { 
             role: 'user', 
-            content: `Abaixo vou informar uma ideia e gostaria que você fizesse algo com essa ideia:\n\n${prompt}` 
+            content: `Crie um artigo completo e envolvente baseado na seguinte ideia:\n\n${prompt}` 
           }
         ],
         temperature: 0.7,
@@ -65,7 +66,8 @@ Retorne o artigo no seguinte formato JSON:
       content = {
         title: "",
         description: "",
-        content: data.choices[0].message.content
+        content: data.choices[0].message.content,
+        category: "Vida Cristã"
       };
     }
 
