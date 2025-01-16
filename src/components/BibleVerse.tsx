@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleHighlightToolbar } from "./bible/BibleHighlightToolbar";
 import { BibleVerseList } from "./bible/BibleVerseList";
+import BibleReadingConfig from "./bible/BibleReadingConfig";
 
 interface BibleVerseProps {
   bookId: number;
@@ -19,10 +20,10 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
   const [anonymousId, setAnonymousId] = useState<string | null>(null);
+  const [fontSize, setFontSize] = useState(16);
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    // Get the IP from Cloudflare headers
     const getAnonymousId = async () => {
       try {
         const response = await fetch('https://cloudflare.com/cdn-cgi/trace');
@@ -33,7 +34,6 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
         }
       } catch (error) {
         console.error('Error getting anonymous ID:', error);
-        // Fallback to a random ID if we can't get the IP
         setAnonymousId(crypto.randomUUID());
       }
     };
@@ -280,6 +280,18 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     }
   }, [localSelectedVerses, anonymousId]);
 
+  useEffect(() => {
+    const savedFontSize = localStorage.getItem('bibleFontSize');
+    if (savedFontSize) {
+      setFontSize(parseInt(savedFontSize));
+    }
+  }, []);
+
+  const handleFontSizeChange = (newSize: number) => {
+    setFontSize(newSize);
+    localStorage.setItem('bibleFontSize', newSize.toString());
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -294,7 +306,13 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-4">
+      <div className="flex justify-end">
+        <BibleReadingConfig
+          onFontSizeChange={handleFontSizeChange}
+          currentFontSize={fontSize}
+        />
+      </div>
       <BibleHighlightToolbar
         selectedVerses={selectedVerses || localSelectedVerses}
         hasHighlightedVerses={hasHighlightedVerses}
@@ -307,13 +325,15 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
           }
         }}
       />
-      <BibleVerseList
-        verses={data?.versesData || []}
-        selectedVerses={selectedVerses || localSelectedVerses}
-        onVerseSelect={handleVerseSelect}
-        bookName={data?.bookName}
-        chapter={chapter}
-      />
+      <div style={{ fontSize: `${fontSize}px` }}>
+        <BibleVerseList
+          verses={data?.versesData || []}
+          selectedVerses={selectedVerses || localSelectedVerses}
+          onVerseSelect={handleVerseSelect}
+          bookName={data?.bookName}
+          chapter={chapter}
+        />
+      </div>
     </div>
   );
 };

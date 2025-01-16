@@ -27,20 +27,42 @@
     --ring: 180 25% 40%;
     --radius: 0.75rem;
   }
+
+  .dark {
+    --background: 180 25% 10%;
+    --foreground: 180 25% 98%;
+    --card: 180 25% 15%;
+    --card-foreground: 180 25% 98%;
+    --popover: 180 25% 15%;
+    --popover-foreground: 180 25% 98%;
+    --primary: 180 25% 60%;
+    --primary-foreground: 180 25% 10%;
+    --secondary: 180 20% 20%;
+    --secondary-foreground: 180 25% 98%;
+    --muted: 180 20% 20%;
+    --muted-foreground: 180 20% 60%;
+    --accent: 180 25% 60%;
+    --accent-foreground: 180 25% 98%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 180 25% 98%;
+    --border: 180 20% 25%;
+    --input: 180 20% 25%;
+    --ring: 180 25% 60%;
+  }
  
   * {
     @apply border-border;
   }
 
   body {
-    @apply bg-bible-gray text-bible-text font-sans;
+    @apply bg-bible-gray text-bible-text font-sans dark:bg-bible-navy dark:text-white;
   }
 
   .bible-text {
-    @apply font-serif text-lg leading-relaxed;
+    @apply font-serif text-lg leading-relaxed dark:text-white;
   }
 
   .verse-number {
-    @apply text-bible-verse font-sans text-sm align-super mr-1;
+    @apply text-bible-verse font-sans text-sm align-super mr-1 dark:text-bible-gray;
   }
 }
