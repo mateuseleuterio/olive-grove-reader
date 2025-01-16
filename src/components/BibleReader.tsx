@@ -5,7 +5,6 @@ import BibleControls from "./bible/BibleControls";
 import BibleLayout from "./bible/BibleLayout";
 import { useBibleReader } from "@/hooks/useBibleReader";
 import { BibleNotes } from "./bible/BibleNotes";
-import BibleReadingConfig from "./bible/BibleReadingConfig";
 
 const BibleReader = () => {
   const {
@@ -24,7 +23,6 @@ const BibleReader = () => {
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
-  const [fontSize, setFontSize] = useState(16);
 
   const handleNextChapter = () => {
     const currentChapter = parseInt(chapter);
@@ -76,10 +74,6 @@ const BibleReader = () => {
           onNotesOpen={() => setIsNotesOpen(true)}
           versionsCount={versions.length}
         />
-        <BibleReadingConfig
-          onFontSizeChange={setFontSize}
-          currentFontSize={fontSize}
-        />
       </div>
       
       <BibleLayout
@@ -94,7 +88,6 @@ const BibleReader = () => {
         hasPreviousChapter={hasPreviousChapter}
         onVerseSelect={setSelectedVerses}
         selectedVerses={selectedVerses}
-        fontSize={fontSize}
       />
 
       {isNotesOpen && (
