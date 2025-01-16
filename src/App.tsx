@@ -1,170 +1,106 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import NavigationBar from "./components/NavigationBar";
-import Home from "./pages/Home";
-import BibleReader from "./components/BibleReader";
-import SermonBuilder from "./pages/SermonBuilder";
-import SermonEditor from "./pages/SermonEditor";
-import PreachingMode from "./pages/PreachingMode";
-import BibleChallenge from "./pages/BibleChallenge";
-import ArticleView from "./pages/ArticleView";
-import ArticleEditor from "./pages/ArticleEditor";
-import Study from "./pages/Study";
-import StudyCategory from "./pages/StudyCategory";
-import ReadingPlans from "./pages/ReadingPlans";
-import MentalMaps from "./pages/MentalMaps";
-import CreateMentalMap from "./pages/CreateMentalMap";
-import Settings from "./pages/Settings";
-import Login from "./pages/Login";
-import ComingSoon from "./pages/ComingSoon";
+import { Toaster } from "@/components/ui/toaster";
+import { ThemeProvider } from "@/components/theme-provider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { SupabaseProvider } from "@/contexts/SupabaseContext";
+import { BibleProvider } from "@/contexts/BibleContext";
+import { HighlightProvider } from "@/contexts/HighlightContext";
+import { NotesProvider } from "@/contexts/NotesContext";
+import { OriginalTextProvider } from "@/contexts/OriginalTextContext";
+import { WordGroupProvider } from "@/contexts/WordGroupContext";
+import { StrongsProvider } from "@/contexts/StrongsContext";
+import { ReadingPlanProvider } from "@/contexts/ReadingPlanContext";
+import { VerseSelectionProvider } from "@/contexts/VerseSelectionContext";
+import { LayoutProvider } from "@/contexts/LayoutContext";
+import { SettingsProvider } from "@/contexts/SettingsContext";
+import { ChallengeProvider } from "@/contexts/ChallengeContext";
+import { MentalMapProvider } from "@/contexts/MentalMapContext";
+import { HistoricalEventsProvider } from "@/contexts/HistoricalEventsContext";
+import { ArticleProvider } from "@/contexts/ArticleContext";
+import Layout from "@/components/layout";
+import Home from "@/pages/Home";
+import Bible from "@/pages/Bible";
+import BibleChapter from "@/pages/BibleChapter";
+import ReadingPlan from "@/pages/ReadingPlan";
+import ReadingPlanDetails from "@/pages/ReadingPlanDetails";
+import ReadingPlanBuilder from "@/pages/ReadingPlanBuilder";
+import SermonBuilder from "@/pages/SermonBuilder";
+import SermonView from "@/pages/SermonView";
+import DailyChallenge from "@/pages/DailyChallenge";
+import GroupChallenge from "@/pages/GroupChallenge";
+import MentalMap from "@/pages/MentalMap";
+import MentalMapView from "@/pages/MentalMapView";
+import HistoricalEvents from "@/pages/HistoricalEvents";
+import Blog from "@/pages/Blog";
+import ArticleEditor from "@/pages/ArticleEditor";
+import ArticleView from "@/pages/ArticleView";
+import ArticleEditPage from "@/pages/ArticleEditPage";
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error: any) => {
-        // Don't retry on 403 errors (unauthorized)
-        if (error?.status === 403) return false;
-        return failureCount < 3;
-      },
-      staleTime: 1000 * 60 * 5, // 5 minutes
-    },
-  },
-});
-
-const ADMIN_UID = '5e475092-3de0-47b8-8543-c62450e07bbd';
+const queryClient = new QueryClient();
 
 function App() {
-  const [currentUser, setCurrentUser] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const checkUser = async () => {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) {
-          console.error('Erro ao verificar sessão:', error);
-          if (error.message.includes('session_not_found')) {
-            await supabase.auth.signOut();
-            localStorage.removeItem('supabase.auth.token');
-            localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
-          }
-          return;
-        }
-
-        setCurrentUser(session?.user?.id || null);
-      } catch (error) {
-        console.error('Erro ao verificar usuário:', error);
-        toast({
-          title: "Erro de autenticação",
-          description: "Houve um problema ao verificar sua sessão. Por favor, faça login novamente.",
-          variant: "destructive",
-        });
-      }
-    };
-
-    checkUser();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event);
-      if (event === 'SIGNED_OUT') {
-        setCurrentUser(null);
-        localStorage.removeItem('supabase.auth.token');
-        localStorage.removeItem('sb-rxhxhztskozxgiylygye-auth-token');
-        queryClient.clear();
-      } else if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
-        setCurrentUser(session?.user?.id || null);
-      } else if (event === 'USER_UPDATED') {
-        await checkUser();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [toast]);
-
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (currentUser !== ADMIN_UID) {
-      return <ComingSoon />;
-    }
-    return <>{children}</>;
-  };
-
   return (
-    <Router>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <div className="min-h-screen bg-bible-gray">
-            <NavigationBar />
-            <div className="pt-24 px-4 md:px-6 lg:px-8">
-              <Routes>
-                <Route path="/" element={<Navigate to="/bible" replace />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/blog" element={<Home />} />
-                <Route path="/bible" element={<BibleReader />} />
-                <Route path="/sermon-builder" element={<SermonBuilder />} />
-                <Route path="/sermon-editor" element={<SermonEditor />} />
-                <Route path="/preaching-mode/:id" element={<PreachingMode />} />
-                <Route 
-                  path="/bible-challenge" 
-                  element={
-                    <ProtectedRoute>
-                      <BibleChallenge />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/article/:id" element={<ArticleView />} />
-                <Route path="/new-article" element={<ArticleEditor />} />
-                <Route 
-                  path="/study" 
-                  element={
-                    <ProtectedRoute>
-                      <Study />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/study/:category" 
-                  element={
-                    <ProtectedRoute>
-                      <StudyCategory />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/reading-plans" 
-                  element={
-                    <ProtectedRoute>
-                      <ReadingPlans />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/mental-maps" 
-                  element={
-                    <ProtectedRoute>
-                      <MentalMaps />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/mental-maps/new" 
-                  element={
-                    <ProtectedRoute>
-                      <CreateMentalMap />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/settings" element={<Settings />} />
-              </Routes>
-            </div>
-          </div>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </Router>
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
+        <SupabaseProvider>
+          <AuthProvider>
+            <BibleProvider>
+              <HighlightProvider>
+                <NotesProvider>
+                  <OriginalTextProvider>
+                    <WordGroupProvider>
+                      <StrongsProvider>
+                        <ReadingPlanProvider>
+                          <VerseSelectionProvider>
+                            <LayoutProvider>
+                              <SettingsProvider>
+                                <ChallengeProvider>
+                                  <MentalMapProvider>
+                                    <HistoricalEventsProvider>
+                                      <ArticleProvider>
+                                        <Router>
+                                          <Layout>
+                                            <Routes>
+                                              <Route path="/" element={<Home />} />
+                                              <Route path="/bible" element={<Bible />} />
+                                              <Route path="/bible/:book/:chapter" element={<BibleChapter />} />
+                                              <Route path="/reading-plan" element={<ReadingPlan />} />
+                                              <Route path="/reading-plan/:id" element={<ReadingPlanDetails />} />
+                                              <Route path="/reading-plan-builder" element={<ReadingPlanBuilder />} />
+                                              <Route path="/sermon-builder" element={<SermonBuilder />} />
+                                              <Route path="/sermon/:id" element={<SermonView />} />
+                                              <Route path="/daily-challenge" element={<DailyChallenge />} />
+                                              <Route path="/group-challenge" element={<GroupChallenge />} />
+                                              <Route path="/mental-map" element={<MentalMap />} />
+                                              <Route path="/mental-map/:id" element={<MentalMapView />} />
+                                              <Route path="/historical-events" element={<HistoricalEvents />} />
+                                              <Route path="/blog" element={<Blog />} />
+                                              <Route path="/article/new" element={<ArticleEditor />} />
+                                              <Route path="/article/:id" element={<ArticleView />} />
+                                              <Route path="/article/:id/edit" element={<ArticleEditPage />} />
+                                            </Routes>
+                                          </Layout>
+                                        </Router>
+                                      </ArticleProvider>
+                                    </HistoricalEventsProvider>
+                                  </MentalMapProvider>
+                                </ChallengeProvider>
+                              </SettingsProvider>
+                            </LayoutProvider>
+                          </VerseSelectionProvider>
+                        </ReadingPlanProvider>
+                      </StrongsProvider>
+                    </WordGroupProvider>
+                  </OriginalTextProvider>
+                </NotesProvider>
+              </HighlightProvider>
+            </BibleProvider>
+          </AuthProvider>
+        </SupabaseProvider>
+        <Toaster />
+      </ThemeProvider>
+    </QueryClientProvider>
   );
 }
 
