@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { BibleVerseActions } from "./BibleVerseActions";
 import WordDetails from "../WordDetails";
 import { supabase } from "@/integrations/supabase/client";
-import { HIGHLIGHT_COLORS } from "./BibleHighlightToolbar";
 
 interface Verse {
   id: number;
@@ -17,6 +16,15 @@ interface BibleVerseListProps {
   bookName?: string;
   chapter?: string;
 }
+
+export const HIGHLIGHT_COLORS = {
+  yellow: "bg-yellow-100",
+  blue: "bg-blue-100",
+  red: "bg-red-100",
+  purple: "bg-purple-100",
+  green: "bg-green-100",
+  orange: "bg-orange-100",
+} as const;
 
 export const BibleVerseList = ({ 
   verses, 
