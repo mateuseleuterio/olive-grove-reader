@@ -103,7 +103,7 @@ const ArticleEditor = () => {
       console.error('Erro ao gerar conteúdo:', error);
       toast({
         title: "Erro",
-        description: "Erro ao gerar o conteúdo do artigo.",
+        description: "Erro ao gerar o artigo. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -116,40 +116,45 @@ const ArticleEditor = () => {
     setIsLoading(true);
 
     try {
-      const session = await supabase.auth.getSession();
-      const user_id = session.data.session?.user.id;
-
-      if (!user_id) {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData.user) {
         toast({
           title: "Erro",
-          description: "Você precisa estar logado para criar um artigo.",
+          description: "Você precisa estar logado para publicar um artigo.",
           variant: "destructive",
         });
         return;
       }
 
-      const { error } = await supabase.from("articles").insert({
+      // Prepare article data
+      const articleData = {
         title,
         description,
         content,
         category,
-        user_id,
         image_url: headerImageUrl || previewImageUrl,
-      });
+        user_id: userData.user.id
+      };
 
-      if (error) throw error;
+      // Insert article into database
+      const { error: insertError } = await supabase
+        .from('articles')
+        .insert([articleData]);
+
+      if (insertError) throw insertError;
 
       toast({
         title: "Sucesso!",
-        description: "Artigo criado com sucesso.",
+        description: "Artigo publicado com sucesso.",
       });
-      
+
+      // Navigate to blog page
       navigate("/blog");
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      console.error('Erro ao publicar:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar o artigo.",
+        description: "Erro ao publicar o artigo. Por favor, tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -327,7 +332,7 @@ const ArticleEditor = () => {
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Salvando...
+                Publicando...
               </>
             ) : (
               "Publicar Artigo"
