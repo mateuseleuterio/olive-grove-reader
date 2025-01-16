@@ -39,7 +39,8 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
 
   const increaseFontSize = () => {
     if (currentFontSize < 24) {
-      onFontSizeChange(currentFontSize + 1);
+      const newSize = currentFontSize + 1;
+      onFontSizeChange(newSize);
       toast({
         title: "Fonte aumentada",
         duration: 1500,
@@ -49,7 +50,8 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
 
   const decreaseFontSize = () => {
     if (currentFontSize > 14) {
-      onFontSizeChange(currentFontSize - 1);
+      const newSize = currentFontSize - 1;
+      onFontSizeChange(newSize);
       toast({
         title: "Fonte diminuída",
         duration: 1500,
