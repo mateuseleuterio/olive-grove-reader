@@ -21,6 +21,7 @@ import CreateMentalMap from "./pages/CreateMentalMap";
 import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import ComingSoon from "./pages/ComingSoon";
+import ArticleEditPage from "./pages/ArticleEditPage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -159,6 +160,7 @@ function App() {
                   } 
                 />
                 <Route path="/settings" element={<Settings />} />
+                <Route path="/article/:id/edit" element={<ArticleEditPage />} />
               </Routes>
             </div>
           </div>
