@@ -27,6 +27,11 @@ export const BibleHighlightToolbar = ({
 }: BibleHighlightToolbarProps) => {
   if (selectedVerses.length === 0) return null;
 
+  const handleHighlight = async (color: string) => {
+    await onHighlight(color);
+    onClose(); // Close the toolbar after highlighting
+  };
+
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[360px] overflow-hidden">
       <div className="p-2.5 border-b flex items-center justify-between">
@@ -59,7 +64,7 @@ export const BibleHighlightToolbar = ({
             <button
               key={color}
               className={`w-10 h-10 rounded-md ${className} hover:opacity-80 transition-opacity`}
-              onClick={() => onHighlight(color)}
+              onClick={() => handleHighlight(color)}
             />
           ))}
         </div>
