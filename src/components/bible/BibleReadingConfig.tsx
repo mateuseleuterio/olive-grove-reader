@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, ArrowDown, Sun, Moon } from "lucide-react";
+import { TextQuote, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BibleReadingConfigProps {
@@ -65,8 +65,9 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
         onClick={decreaseFontSize}
         disabled={currentFontSize <= 14}
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
+        title="Diminuir tamanho da fonte"
       >
-        <ArrowDown className="h-4 w-4" />
+        <TextQuote className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
@@ -74,8 +75,9 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
         onClick={increaseFontSize}
         disabled={currentFontSize >= 24}
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
+        title="Aumentar tamanho da fonte"
       >
-        <ArrowUp className="h-4 w-4" />
+        <TextQuote className="h-5 w-5" />
       </Button>
       <div className="w-px h-6 bg-bible-gray dark:bg-bible-accent mx-1" />
       <Button
@@ -83,6 +85,7 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
         size="icon"
         onClick={toggleDarkMode}
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
+        title={isDarkMode ? "Modo claro" : "Modo noturno"}
       >
         {isDarkMode ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
       </Button>

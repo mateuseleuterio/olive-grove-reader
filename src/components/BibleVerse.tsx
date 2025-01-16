@@ -307,32 +307,34 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex justify-end mb-4">
         <BibleReadingConfig
           onFontSizeChange={handleFontSizeChange}
           currentFontSize={fontSize}
         />
       </div>
-      <BibleHighlightToolbar
-        selectedVerses={selectedVerses || localSelectedVerses}
-        hasHighlightedVerses={hasHighlightedVerses}
-        onRemoveHighlights={handleRemoveHighlights}
-        onHighlight={handleHighlight}
-        onClose={() => {
-          setLocalSelectedVerses([]);
-          if (onVerseSelect) {
-            onVerseSelect([]);
-          }
-        }}
-      />
-      <div style={{ fontSize: `${fontSize}px` }}>
-        <BibleVerseList
-          verses={data?.versesData || []}
+      <div className="bg-white dark:bg-bible-navy rounded-lg p-4">
+        <BibleHighlightToolbar
           selectedVerses={selectedVerses || localSelectedVerses}
-          onVerseSelect={handleVerseSelect}
-          bookName={data?.bookName}
-          chapter={chapter}
+          hasHighlightedVerses={hasHighlightedVerses}
+          onRemoveHighlights={handleRemoveHighlights}
+          onHighlight={handleHighlight}
+          onClose={() => {
+            setLocalSelectedVerses([]);
+            if (onVerseSelect) {
+              onVerseSelect([]);
+            }
+          }}
         />
+        <div style={{ fontSize: `${fontSize}px` }}>
+          <BibleVerseList
+            verses={data?.versesData || []}
+            selectedVerses={selectedVerses || localSelectedVerses}
+            onVerseSelect={handleVerseSelect}
+            bookName={data?.bookName}
+            chapter={chapter}
+          />
+        </div>
       </div>
     </div>
   );
