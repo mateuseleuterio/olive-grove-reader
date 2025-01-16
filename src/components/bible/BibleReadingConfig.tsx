@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { TextQuote, Sun, Moon } from "lucide-react";
+import { Plus, Minus, Sun, Moon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface BibleReadingConfigProps {
@@ -67,7 +67,7 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
         title="Diminuir tamanho da fonte"
       >
-        <TextQuote className="h-4 w-4" />
+        <Minus className="h-4 w-4" />
       </Button>
       <Button
         variant="ghost"
@@ -77,7 +77,7 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
         title="Aumentar tamanho da fonte"
       >
-        <TextQuote className="h-5 w-5" />
+        <Plus className="h-4 w-4" />
       </Button>
       <div className="w-px h-6 bg-bible-gray dark:bg-bible-accent mx-1" />
       <Button
