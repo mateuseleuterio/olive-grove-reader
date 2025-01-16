@@ -62,22 +62,22 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
       <Button
         variant="ghost"
         size="icon"
-        onClick={decreaseFontSize}
-        disabled={currentFontSize <= 14}
-        className="hover:bg-bible-gray dark:hover:bg-bible-accent"
-        title="Diminuir tamanho da fonte"
-      >
-        <Minus className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
         onClick={increaseFontSize}
         disabled={currentFontSize >= 24}
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
         title="Aumentar tamanho da fonte"
       >
         <Plus className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={decreaseFontSize}
+        disabled={currentFontSize <= 14}
+        className="hover:bg-bible-gray dark:hover:bg-bible-accent"
+        title="Diminuir tamanho da fonte"
+      >
+        <Minus className="h-4 w-4" />
       </Button>
       <div className="w-px h-6 bg-bible-gray dark:bg-bible-accent mx-1" />
       <Button
