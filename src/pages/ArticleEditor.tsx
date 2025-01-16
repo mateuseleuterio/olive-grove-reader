@@ -12,6 +12,7 @@ const ArticleEditor = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
@@ -69,6 +70,39 @@ const ArticleEditor = () => {
     }
   };
 
+  const generateImage = async (prompt: string) => {
+    setIsGeneratingImage(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-article-image', {
+        body: { prompt },
+      });
+
+      if (error) throw error;
+
+      if (data.imageUrl) {
+        const response = await fetch(data.imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], 'generated-image.png', { type: 'image/png' });
+        
+        await handleImageUpload(file, 'header');
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Imagem gerada com sucesso.",
+      });
+    } catch (error) {
+      console.error('Erro ao gerar imagem:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao gerar a imagem. Por favor, tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImage(false);
+    }
+  };
+
   const generateContent = async () => {
     if (!idea) {
       toast({
@@ -93,11 +127,13 @@ const ArticleEditor = () => {
         setDescription(data.content.description || description);
         setContent(data.content.content || content);
         setCategory(data.content.category || category);
+        
+        await generateImage(data.content.title || idea);
       }
 
       toast({
         title: "Sucesso!",
-        description: "Artigo gerado com sucesso.",
+        description: "Artigo e imagem gerados com sucesso.",
       });
     } catch (error) {
       console.error('Erro ao gerar conteúdo:', error);
@@ -126,7 +162,6 @@ const ArticleEditor = () => {
         return;
       }
 
-      // Prepare article data
       const articleData = {
         title,
         description,
@@ -136,7 +171,6 @@ const ArticleEditor = () => {
         user_id: userData.user.id
       };
 
-      // Insert article into database
       const { error: insertError } = await supabase
         .from('articles')
         .insert([articleData]);
@@ -148,7 +182,6 @@ const ArticleEditor = () => {
         description: "Artigo publicado com sucesso.",
       });
 
-      // Navigate to blog page
       navigate("/blog");
     } catch (error) {
       console.error('Erro ao publicar:', error);
@@ -182,16 +215,16 @@ const ArticleEditor = () => {
           </div>
           <Button
             onClick={generateContent}
-            disabled={isGenerating}
+            disabled={isGenerating || isGeneratingImage}
             className="w-full bg-bible-navy hover:bg-bible-accent"
           >
-            {isGenerating ? (
+            {(isGenerating || isGeneratingImage) ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Gerando artigo...
+                {isGeneratingImage ? "Gerando imagem..." : "Gerando artigo..."}
               </>
             ) : (
-              "Gerar Artigo com IA"
+              "Gerar Artigo e Imagem com IA"
             )}
           </Button>
         </div>
