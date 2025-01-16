@@ -20,7 +20,8 @@ const ArticleEditor = () => {
   const [headerImage, setHeaderImage] = useState<File | null>(null);
   const [previewImageUrl, setPreviewImageUrl] = useState("");
   const [headerImageUrl, setHeaderImageUrl] = useState("");
-  const [prompt, setPrompt] = useState("");
+  const [theme, setTheme] = useState("");
+  const [idea, setIdea] = useState("");
 
   const categories = [
     "Vida Cristã",
@@ -70,10 +71,10 @@ const ArticleEditor = () => {
   };
 
   const generateContent = async () => {
-    if (!prompt) {
+    if (!theme || !idea) {
       toast({
         title: "Erro",
-        description: "Por favor, insira um prompt para gerar o conteúdo.",
+        description: "Por favor, insira um tema e uma ideia para gerar o conteúdo.",
         variant: "destructive",
       });
       return;
@@ -82,6 +83,8 @@ const ArticleEditor = () => {
     setIsGenerating(true);
 
     try {
+      const prompt = `Tema: ${theme}\n\nIdeia: ${idea}`;
+      
       const { data, error } = await supabase.functions.invoke('generate-article', {
         body: { prompt }
       });
@@ -163,12 +166,27 @@ const ArticleEditor = () => {
       <div className="mb-8 p-6 bg-white rounded-lg shadow-md">
         <h2 className="text-xl font-semibold mb-4">Gerador de Conteúdo AI</h2>
         <div className="space-y-4">
-          <Textarea
-            placeholder="Descreva o artigo que você quer gerar..."
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            className="min-h-[100px]"
-          />
+          <div>
+            <label className="block text-sm font-medium text-bible-text mb-2">
+              Tema do Artigo
+            </label>
+            <Input
+              placeholder="Digite o tema principal do artigo..."
+              value={theme}
+              onChange={(e) => setTheme(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-bible-text mb-2">
+              Ideia ou Conceito
+            </label>
+            <Textarea
+              placeholder="Descreva a ideia ou conceito que você quer desenvolver no artigo..."
+              value={idea}
+              onChange={(e) => setIdea(e.target.value)}
+              className="min-h-[100px]"
+            />
+          </div>
           <Button
             onClick={generateContent}
             disabled={isGenerating}

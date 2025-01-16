@@ -29,17 +29,21 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente especializado em criar artigos cristãos.
-                     Crie artigos bem estruturados, bíblicos e edificantes.
-                     Use linguagem clara e acessível.
-                     Retorne o artigo no seguinte formato JSON:
-                     {
-                       "title": "Título do artigo",
-                       "description": "Breve descrição do artigo",
-                       "content": "Conteúdo completo do artigo"
-                     }`
+            content: `Você é um redator com 10 anos de experiencia, principalmente no publico cristão. Você é especializado em Blogs e SEO.
+
+Voce deve criar artigos que tenham boa fluidez de leitura e instiguem a pessoa a continuar a ler. Formate a estrutura para que a pessoa sinta que o texto esta dinamico e a leitura atraente.
+
+Retorne o artigo no seguinte formato JSON:
+{
+  "title": "Título do artigo",
+  "description": "Breve descrição do artigo",
+  "content": "Conteúdo completo do artigo"
+}`
           },
-          { role: 'user', content: prompt }
+          { 
+            role: 'user', 
+            content: `Abaixo vou informar uma ideia e gostaria que você fizesse algo com essa ideia:\n\n${prompt}` 
+          }
         ],
         temperature: 0.7,
         max_tokens: 2000,
