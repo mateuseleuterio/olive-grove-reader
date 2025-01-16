@@ -114,7 +114,7 @@ export const BibleVerseList = ({
   };
 
   return (
-    <div className="space-y-0">
+    <div className="space-y-0 text-lg">
       {verses?.map((verse) => (
         <div key={verse.id} className="flex items-start">
           <div className="flex-1 hover:bg-bible-gray/50 rounded transition-colors">
@@ -129,7 +129,7 @@ export const BibleVerseList = ({
                   highlights[verse.id] ? HIGHLIGHT_COLORS[highlights[verse.id] as keyof typeof HIGHLIGHT_COLORS] : ''
                 }`}
               >
-                <span className="text-[10px] opacity-40 font-medium mt-1 mr-1">
+                <span className="text-[10px] opacity-40 font-medium mt-1.5 mr-1">
                   {verse.verse_number}
                 </span>
                 <div className="flex-1 flex flex-wrap">
