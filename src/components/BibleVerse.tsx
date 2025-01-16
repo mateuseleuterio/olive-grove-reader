@@ -14,7 +14,7 @@ interface BibleVerseProps {
   selectedVerses?: number[];
 }
 
-const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [] }: BibleVerseProps) => {
+const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses }: BibleVerseProps) => {
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
@@ -122,15 +122,29 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     }
   }, [error, toast]);
 
+  // Reset local selection when selectedVerses prop changes
+  useEffect(() => {
+    if (selectedVerses !== undefined) {
+      setLocalSelectedVerses([]);
+    }
+  }, [selectedVerses]);
+
   const handleVerseSelect = (verseId: number) => {
+    // If selectedVerses prop is provided, use it through the callback
+    if (selectedVerses !== undefined && onVerseSelect) {
+      const newSelectedVerses = selectedVerses.includes(verseId)
+        ? selectedVerses.filter(id => id !== verseId)
+        : [...selectedVerses, verseId];
+      onVerseSelect(newSelectedVerses);
+      return;
+    }
+
+    // Otherwise, manage selection locally
     const newSelectedVerses = localSelectedVerses.includes(verseId)
       ? localSelectedVerses.filter(id => id !== verseId)
       : [...localSelectedVerses, verseId];
     
     setLocalSelectedVerses(newSelectedVerses);
-    if (onVerseSelect) {
-      onVerseSelect(newSelectedVerses);
-    }
   };
 
   const handleRemoveHighlights = async () => {
@@ -232,10 +246,11 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
       try {
         const { data: { user } } = await supabase.auth.getUser();
         let hasHighlights = false;
+        const versesToCheck = selectedVerses || localSelectedVerses;
 
         if (user) {
           // Check authenticated user highlights
-          for (const verseId of localSelectedVerses) {
+          for (const verseId of versesToCheck) {
             const { data } = await supabase
               .from('bible_verse_highlights')
               .select('id')
@@ -250,7 +265,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
           }
         } else if (anonymousId) {
           // Check anonymous user highlights
-          for (const verseId of localSelectedVerses) {
+          for (const verseId of versesToCheck) {
             const { data } = await supabase
               .from('anonymous_bible_verse_highlights')
               .select('id')
@@ -271,12 +286,13 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
       }
     };
     
-    if (localSelectedVerses.length > 0) {
+    const versesToCheck = selectedVerses || localSelectedVerses;
+    if (versesToCheck.length > 0) {
       checkHighlights();
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [localSelectedVerses, anonymousId]);
+  }, [localSelectedVerses, selectedVerses, anonymousId]);
 
   if (isLoading) {
     return (
@@ -291,25 +307,28 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     );
   }
 
+  const activeSelectedVerses = selectedVerses !== undefined ? selectedVerses : localSelectedVerses;
+
   return (
     <div className="space-y-4">
       <div className="bg-white dark:bg-bible-navy rounded-lg p-4">
         <BibleHighlightToolbar
-          selectedVerses={selectedVerses || localSelectedVerses}
+          selectedVerses={activeSelectedVerses}
           hasHighlightedVerses={hasHighlightedVerses}
           onRemoveHighlights={handleRemoveHighlights}
           onHighlight={handleHighlight}
           onClose={() => {
-            setLocalSelectedVerses([]);
-            if (onVerseSelect) {
+            if (selectedVerses !== undefined && onVerseSelect) {
               onVerseSelect([]);
+            } else {
+              setLocalSelectedVerses([]);
             }
           }}
         />
         <div className="text-lg">
           <BibleVerseList
             verses={data?.versesData || []}
-            selectedVerses={selectedVerses || localSelectedVerses}
+            selectedVerses={activeSelectedVerses}
             onVerseSelect={handleVerseSelect}
             bookName={data?.bookName}
             chapter={chapter}
