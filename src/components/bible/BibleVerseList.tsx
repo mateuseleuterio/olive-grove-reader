@@ -15,7 +15,6 @@ interface BibleVerseListProps {
   onVerseSelect: (verseId: number) => void;
   bookName?: string;
   chapter?: string;
-  fontSize?: number;
 }
 
 export const HIGHLIGHT_COLORS = {
@@ -32,8 +31,7 @@ export const BibleVerseList = ({
   selectedVerses, 
   onVerseSelect,
   bookName = "",
-  chapter = "",
-  fontSize = 18
+  chapter = ""
 }: BibleVerseListProps) => {
   const [highlights, setHighlights] = useState<Record<number, string>>({});
   const [anonymousId, setAnonymousId] = useState<string | null>(null);
@@ -119,26 +117,27 @@ export const BibleVerseList = ({
     <div className="space-y-0 text-lg">
       {verses?.map((verse) => (
         <div key={verse.id} className="flex items-start">
-          <BibleVerseActions
-            verseId={verse.id}
-            text={verse.text}
-            isSelected={selectedVerses.includes(verse.id)}
-            onSelect={onVerseSelect}
-          >
-            <div 
-              className={`flex items-start gap-1 rounded ${
-                highlights[verse.id] ? HIGHLIGHT_COLORS[highlights[verse.id] as keyof typeof HIGHLIGHT_COLORS] : ''
-              }`}
-              style={{ fontSize: `${fontSize}px` }}
+          <div className="flex-1 hover:bg-bible-gray/50 rounded transition-colors">
+            <BibleVerseActions
+              verseId={verse.id}
+              text={verse.text}
+              isSelected={selectedVerses.includes(verse.id)}
+              onSelect={onVerseSelect}
             >
-              <span className="text-[10px] opacity-40 font-medium mt-1.5 mr-1">
-                {verse.verse_number}
-              </span>
-              <div className="flex-1 flex flex-wrap">
-                {renderText(verse.text, verse.verse_number)}
+              <div 
+                className={`flex items-start gap-1 rounded ${
+                  highlights[verse.id] ? HIGHLIGHT_COLORS[highlights[verse.id] as keyof typeof HIGHLIGHT_COLORS] : ''
+                }`}
+              >
+                <span className="text-[10px] opacity-40 font-medium mt-1.5 mr-1">
+                  {verse.verse_number}
+                </span>
+                <div className="flex-1 flex flex-wrap">
+                  {renderText(verse.text, verse.verse_number)}
+                </div>
               </div>
-            </div>
-          </BibleVerseActions>
+            </BibleVerseActions>
+          </div>
         </div>
       ))}
     </div>

@@ -39,8 +39,7 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
 
   const increaseFontSize = () => {
     if (currentFontSize < 24) {
-      const newSize = currentFontSize + 1;
-      onFontSizeChange(newSize);
+      onFontSizeChange(currentFontSize + 1);
       toast({
         title: "Fonte aumentada",
         duration: 1500,
@@ -50,8 +49,7 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
 
   const decreaseFontSize = () => {
     if (currentFontSize > 14) {
-      const newSize = currentFontSize - 1;
-      onFontSizeChange(newSize);
+      onFontSizeChange(currentFontSize - 1);
       toast({
         title: "Fonte diminuída",
         duration: 1500,
@@ -64,22 +62,22 @@ const BibleReadingConfig = ({ onFontSizeChange, currentFontSize }: BibleReadingC
       <Button
         variant="ghost"
         size="icon"
-        onClick={decreaseFontSize}
-        disabled={currentFontSize <= 14}
-        className="hover:bg-bible-gray dark:hover:bg-bible-accent"
-        title="Diminuir tamanho da fonte"
-      >
-        <Minus className="h-4 w-4" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="icon"
         onClick={increaseFontSize}
         disabled={currentFontSize >= 24}
         className="hover:bg-bible-gray dark:hover:bg-bible-accent"
         title="Aumentar tamanho da fonte"
       >
         <Plus className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={decreaseFontSize}
+        disabled={currentFontSize <= 14}
+        className="hover:bg-bible-gray dark:hover:bg-bible-accent"
+        title="Diminuir tamanho da fonte"
+      >
+        <Minus className="h-4 w-4" />
       </Button>
       <div className="w-px h-6 bg-bible-gray dark:bg-bible-accent mx-1" />
       <Button
