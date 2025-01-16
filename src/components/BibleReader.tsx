@@ -5,6 +5,7 @@ import BibleControls from "./bible/BibleControls";
 import BibleLayout from "./bible/BibleLayout";
 import { useBibleReader } from "@/hooks/useBibleReader";
 import { BibleNotes } from "./bible/BibleNotes";
+import BibleReadingConfig from "./bible/BibleReadingConfig";
 
 const BibleReader = () => {
   const {
@@ -21,9 +22,9 @@ const BibleReader = () => {
   } = useBibleReader();
   
   const [isCommentaryOpen, setIsCommentaryOpen] = useState(false);
-
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const [selectedVerses, setSelectedVerses] = useState<number[]>([]);
+  const [fontSize, setFontSize] = useState(16);
 
   const handleNextChapter = () => {
     const currentChapter = parseInt(chapter);
@@ -62,18 +63,24 @@ const BibleReader = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <BibleControls
-        books={books}
-        selectedBook={selectedBook}
-        chapter={chapter}
-        maxChapters={maxChapters}
-        onBookChange={setSelectedBook}
-        onChapterChange={setChapter}
-        onAddVersion={addVersion}
-        onCommentaryOpen={() => setIsCommentaryOpen(true)}
-        onNotesOpen={() => setIsNotesOpen(true)}
-        versionsCount={versions.length}
-      />
+      <div className="flex items-center justify-between mb-6">
+        <BibleControls
+          books={books}
+          selectedBook={selectedBook}
+          chapter={chapter}
+          maxChapters={maxChapters}
+          onBookChange={setSelectedBook}
+          onChapterChange={setChapter}
+          onAddVersion={addVersion}
+          onCommentaryOpen={() => setIsCommentaryOpen(true)}
+          onNotesOpen={() => setIsNotesOpen(true)}
+          versionsCount={versions.length}
+        />
+        <BibleReadingConfig
+          onFontSizeChange={setFontSize}
+          currentFontSize={fontSize}
+        />
+      </div>
       
       <BibleLayout
         versions={versions}
@@ -87,6 +94,7 @@ const BibleReader = () => {
         hasPreviousChapter={hasPreviousChapter}
         onVerseSelect={setSelectedVerses}
         selectedVerses={selectedVerses}
+        fontSize={fontSize}
       />
 
       {isNotesOpen && (

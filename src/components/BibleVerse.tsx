@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BibleHighlightToolbar } from "./bible/BibleHighlightToolbar";
 import { BibleVerseList } from "./bible/BibleVerseList";
-import BibleReadingConfig from "./bible/BibleReadingConfig";
 
 interface BibleVerseProps {
   bookId: number;
@@ -13,14 +12,14 @@ interface BibleVerseProps {
   version: string;
   onVerseSelect?: (verses: number[]) => void;
   selectedVerses?: number[];
+  fontSize: number;
 }
 
-const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [] }: BibleVerseProps) => {
+const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [], fontSize }: BibleVerseProps) => {
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
   const [anonymousId, setAnonymousId] = useState<string | null>(null);
-  const [fontSize, setFontSize] = useState(16);
   const queryClient = useQueryClient();
 
   useEffect(() => {
@@ -280,18 +279,6 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     }
   }, [localSelectedVerses, anonymousId]);
 
-  useEffect(() => {
-    const savedFontSize = localStorage.getItem('bibleFontSize');
-    if (savedFontSize) {
-      setFontSize(parseInt(savedFontSize));
-    }
-  }, []);
-
-  const handleFontSizeChange = (newSize: number) => {
-    setFontSize(newSize);
-    localStorage.setItem('bibleFontSize', newSize.toString());
-  };
-
   if (isLoading) {
     return (
       <div className="space-y-2">
@@ -307,12 +294,6 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end mb-4">
-        <BibleReadingConfig
-          onFontSizeChange={handleFontSizeChange}
-          currentFontSize={fontSize}
-        />
-      </div>
       <div className="bg-white dark:bg-bible-navy rounded-lg p-4">
         <BibleHighlightToolbar
           selectedVerses={selectedVerses || localSelectedVerses}
