@@ -12,10 +12,9 @@ interface BibleVerseProps {
   version: string;
   onVerseSelect?: (verses: number[]) => void;
   selectedVerses?: number[];
-  fontSize: number;
 }
 
-const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [], fontSize }: BibleVerseProps) => {
+const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = [] }: BibleVerseProps) => {
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
@@ -307,7 +306,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
             }
           }}
         />
-        <div style={{ fontSize: `${fontSize}px` }}>
+        <div className="text-lg">
           <BibleVerseList
             verses={data?.versesData || []}
             selectedVerses={selectedVerses || localSelectedVerses}
