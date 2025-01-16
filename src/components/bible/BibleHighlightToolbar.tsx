@@ -32,6 +32,11 @@ export const BibleHighlightToolbar = ({
     onClose(); // Close the toolbar after highlighting
   };
 
+  const handleRemoveHighlights = async () => {
+    await onRemoveHighlights();
+    onClose(); // Close the toolbar after removing highlights
+  };
+
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-lg shadow-lg z-50 w-[95%] max-w-[360px] overflow-hidden">
       <div className="p-2.5 border-b flex items-center justify-between">
@@ -39,7 +44,7 @@ export const BibleHighlightToolbar = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onRemoveHighlights}
+            onClick={handleRemoveHighlights}
             className="text-sm text-red-500 hover:text-red-700"
           >
             <X className="h-3.5 w-3.5 mr-1.5" />
