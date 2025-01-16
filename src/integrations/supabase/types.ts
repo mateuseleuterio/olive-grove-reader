@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      anonymous_bible_verse_highlights: {
+        Row: {
+          anonymous_id: string
+          color: string
+          created_at: string
+          id: string
+          verse_id: number | null
+        }
+        Insert: {
+          anonymous_id: string
+          color: string
+          created_at?: string
+          id?: string
+          verse_id?: number | null
+        }
+        Update: {
+          anonymous_id?: string
+          color?: string
+          created_at?: string
+          id?: string
+          verse_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anonymous_bible_verse_highlights_verse_id_fkey"
+            columns: ["verse_id"]
+            isOneToOne: false
+            referencedRelation: "bible_verses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       articles: {
         Row: {
           category: string

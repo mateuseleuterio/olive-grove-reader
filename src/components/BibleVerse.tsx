@@ -18,7 +18,28 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const { toast } = useToast();
   const [localSelectedVerses, setLocalSelectedVerses] = useState<number[]>([]);
   const [hasHighlightedVerses, setHasHighlightedVerses] = useState(false);
+  const [anonymousId, setAnonymousId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    // Get the IP from Cloudflare headers
+    const getAnonymousId = async () => {
+      try {
+        const response = await fetch('https://cloudflare.com/cdn-cgi/trace');
+        const data = await response.text();
+        const ipMatch = data.match(/ip=(.+)/);
+        if (ipMatch && ipMatch[1]) {
+          setAnonymousId(ipMatch[1]);
+        }
+      } catch (error) {
+        console.error('Error getting anonymous ID:', error);
+        // Fallback to a random ID if we can't get the IP
+        setAnonymousId(crypto.randomUUID());
+      }
+    };
+
+    getAnonymousId();
+  }, []);
 
   const fetchVerses = async () => {
     console.log("Iniciando busca de versículos:", { bookId, chapter, version });
@@ -117,16 +138,29 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const handleRemoveHighlights = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      
+      if (user) {
+        // Remove authenticated user highlights
+        for (const verseId of localSelectedVerses) {
+          const { error } = await supabase
+            .from('bible_verse_highlights')
+            .delete()
+            .eq('verse_id', verseId)
+            .eq('user_id', user.id);
 
-      for (const verseId of localSelectedVerses) {
-        const { error } = await supabase
-          .from('bible_verse_highlights')
-          .delete()
-          .eq('verse_id', verseId)
-          .eq('user_id', user.id);
+          if (error) throw error;
+        }
+      } else if (anonymousId) {
+        // Remove anonymous user highlights
+        for (const verseId of localSelectedVerses) {
+          const { error } = await supabase
+            .from('anonymous_bible_verse_highlights')
+            .delete()
+            .eq('verse_id', verseId)
+            .eq('anonymous_id', anonymousId);
 
-        if (error) throw error;
+          if (error) throw error;
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
@@ -150,22 +184,37 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
   const handleHighlight = async (color: string) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
 
       if (hasHighlightedVerses) {
         await handleRemoveHighlights();
       }
 
-      for (const verseId of localSelectedVerses) {
-        const { error } = await supabase
-          .from('bible_verse_highlights')
-          .insert({
-            verse_id: verseId,
-            color,
-            user_id: user.id
-          });
-        
-        if (error) throw error;
+      if (user) {
+        // Create highlights for authenticated user
+        for (const verseId of localSelectedVerses) {
+          const { error } = await supabase
+            .from('bible_verse_highlights')
+            .insert({
+              verse_id: verseId,
+              color,
+              user_id: user.id
+            });
+          
+          if (error) throw error;
+        }
+      } else if (anonymousId) {
+        // Create highlights for anonymous user
+        for (const verseId of localSelectedVerses) {
+          const { error } = await supabase
+            .from('anonymous_bible_verse_highlights')
+            .insert({
+              verse_id: verseId,
+              color,
+              anonymous_id: anonymousId
+            });
+          
+          if (error) throw error;
+        }
       }
 
       queryClient.invalidateQueries({ queryKey: ['verse-highlight'] });
@@ -184,22 +233,40 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     const checkHighlights = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
-
         let hasHighlights = false;
-        for (const verseId of localSelectedVerses) {
-          const { data } = await supabase
-            .from('bible_verse_highlights')
-            .select('id')
-            .eq('verse_id', verseId)
-            .eq('user_id', user.id)
-            .maybeSingle();
-          
-          if (data) {
-            hasHighlights = true;
-            break;
+
+        if (user) {
+          // Check authenticated user highlights
+          for (const verseId of localSelectedVerses) {
+            const { data } = await supabase
+              .from('bible_verse_highlights')
+              .select('id')
+              .eq('verse_id', verseId)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (data) {
+              hasHighlights = true;
+              break;
+            }
+          }
+        } else if (anonymousId) {
+          // Check anonymous user highlights
+          for (const verseId of localSelectedVerses) {
+            const { data } = await supabase
+              .from('anonymous_bible_verse_highlights')
+              .select('id')
+              .eq('verse_id', verseId)
+              .eq('anonymous_id', anonymousId)
+              .maybeSingle();
+            
+            if (data) {
+              hasHighlights = true;
+              break;
+            }
           }
         }
+        
         setHasHighlightedVerses(hasHighlights);
       } catch (error) {
         console.error('Error checking highlights:', error);
@@ -211,7 +278,7 @@ const BibleVerse = ({ bookId, chapter, version, onVerseSelect, selectedVerses = 
     } else {
       setHasHighlightedVerses(false);
     }
-  }, [localSelectedVerses]);
+  }, [localSelectedVerses, anonymousId]);
 
   if (isLoading) {
     return (

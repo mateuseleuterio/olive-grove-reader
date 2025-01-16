@@ -1,5 +1,8 @@
+import { useEffect, useState } from "react";
 import { BibleVerseActions } from "./BibleVerseActions";
 import WordDetails from "../WordDetails";
+import { supabase } from "@/integrations/supabase/client";
+import { HIGHLIGHT_COLORS } from "./BibleHighlightToolbar";
 
 interface Verse {
   id: number;
@@ -22,6 +25,73 @@ export const BibleVerseList = ({
   bookName = "",
   chapter = ""
 }: BibleVerseListProps) => {
+  const [highlights, setHighlights] = useState<Record<number, string>>({});
+  const [anonymousId, setAnonymousId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const getAnonymousId = async () => {
+      try {
+        const response = await fetch('https://cloudflare.com/cdn-cgi/trace');
+        const data = await response.text();
+        const ipMatch = data.match(/ip=(.+)/);
+        if (ipMatch && ipMatch[1]) {
+          setAnonymousId(ipMatch[1]);
+        }
+      } catch (error) {
+        console.error('Error getting anonymous ID:', error);
+        setAnonymousId(crypto.randomUUID());
+      }
+    };
+
+    getAnonymousId();
+  }, []);
+
+  useEffect(() => {
+    const fetchHighlights = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        const verseIds = verses.map(v => v.id);
+        const highlightMap: Record<number, string> = {};
+
+        if (user) {
+          // Fetch authenticated user highlights
+          const { data: authHighlights } = await supabase
+            .from('bible_verse_highlights')
+            .select('verse_id, color')
+            .eq('user_id', user.id)
+            .in('verse_id', verseIds);
+
+          if (authHighlights) {
+            authHighlights.forEach(h => {
+              highlightMap[h.verse_id] = h.color;
+            });
+          }
+        } else if (anonymousId) {
+          // Fetch anonymous user highlights
+          const { data: anonHighlights } = await supabase
+            .from('anonymous_bible_verse_highlights')
+            .select('verse_id, color')
+            .eq('anonymous_id', anonymousId)
+            .in('verse_id', verseIds);
+
+          if (anonHighlights) {
+            anonHighlights.forEach(h => {
+              highlightMap[h.verse_id] = h.color;
+            });
+          }
+        }
+
+        setHighlights(highlightMap);
+      } catch (error) {
+        console.error('Error fetching highlights:', error);
+      }
+    };
+
+    if (verses.length > 0) {
+      fetchHighlights();
+    }
+  }, [verses, anonymousId]);
+
   const renderText = (text: string, verseNumber: number) => {
     const words = text.split(' ');
     return words.map((word, index) => (
@@ -46,7 +116,11 @@ export const BibleVerseList = ({
               isSelected={selectedVerses.includes(verse.id)}
               onSelect={onVerseSelect}
             >
-              <div className="flex items-start gap-1.5">
+              <div 
+                className={`flex items-start gap-1.5 rounded p-2 ${
+                  highlights[verse.id] ? HIGHLIGHT_COLORS[highlights[verse.id] as keyof typeof HIGHLIGHT_COLORS] : ''
+                }`}
+              >
                 <span className="text-[10px] opacity-40 font-medium mt-1">
                   {verse.verse_number}
                 </span>
