@@ -3,11 +3,14 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type BetaSignup = Database['public']['Tables']['beta_signups']['Insert'];
 
 export default function BetaSignup() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<BetaSignup>({
     name: "",
     email: "",
     phone: "",
@@ -19,8 +22,8 @@ export default function BetaSignup() {
 
     try {
       const { error } = await supabase
-        .from("beta_signups")
-        .insert([formData]);
+        .from('beta_signups')
+        .insert(formData);
 
       if (error) throw error;
 

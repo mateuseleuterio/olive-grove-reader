@@ -77,6 +77,30 @@ export type Database = {
         }
         Relationships: []
       }
+      beta_signups: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string
+          phone: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name: string
+          phone: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string
+          phone?: string
+        }
+        Relationships: []
+      }
       bible_books: {
         Row: {
           abbreviation: string | null
