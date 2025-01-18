@@ -99,73 +99,79 @@ function App() {
     <Router>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
-          <div className="min-h-screen bg-bible-gray">
-            <NavigationBar />
-            <div className="pt-24 px-4 md:px-6 lg:px-8">
-              <Routes>
-                <Route path="/" element={<Navigate to="/bible" replace />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/blog" element={<Home />} />
-                <Route path="/bible" element={<BibleReader />} />
-                <Route path="/sermon-builder" element={<SermonBuilder />} />
-                <Route path="/sermon-editor" element={<SermonEditor />} />
-                <Route path="/preaching-mode/:id" element={<PreachingMode />} />
-                <Route 
-                  path="/bible-challenge" 
-                  element={
-                    <ProtectedRoute>
-                      <BibleChallenge />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/article/:id" element={<ArticleView />} />
-                <Route path="/new-article" element={<ArticleEditor />} />
-                <Route 
-                  path="/study" 
-                  element={
-                    <ProtectedRoute>
-                      <Study />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/study/:category" 
-                  element={
-                    <ProtectedRoute>
-                      <StudyCategory />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/reading-plans" 
-                  element={
-                    <ProtectedRoute>
-                      <ReadingPlans />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/mental-maps" 
-                  element={
-                    <ProtectedRoute>
-                      <MentalMaps />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/mental-maps/new" 
-                  element={
-                    <ProtectedRoute>
-                      <CreateMentalMap />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/settings" element={<Settings />} />
-                <Route path="/article/:id/edit" element={<ArticleEditPage />} />
-                <Route path="/beta-signup" element={<BetaSignup />} />
-              </Routes>
-            </div>
-          </div>
+          <Routes>
+            <Route path="/beta-signup" element={<BetaSignup />} />
+            <Route
+              element={
+                <div className="min-h-screen bg-bible-gray">
+                  <NavigationBar />
+                  <div className="pt-24 px-4 md:px-6 lg:px-8">
+                    <Routes>
+                      <Route path="/" element={<Navigate to="/bible" replace />} />
+                      <Route path="/login" element={<Login />} />
+                      <Route path="/blog" element={<Home />} />
+                      <Route path="/bible" element={<BibleReader />} />
+                      <Route path="/sermon-builder" element={<SermonBuilder />} />
+                      <Route path="/sermon-editor" element={<SermonEditor />} />
+                      <Route path="/preaching-mode/:id" element={<PreachingMode />} />
+                      <Route 
+                        path="/bible-challenge" 
+                        element={
+                          <ProtectedRoute>
+                            <BibleChallenge />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route path="/article/:id" element={<ArticleView />} />
+                      <Route path="/new-article" element={<ArticleEditor />} />
+                      <Route 
+                        path="/study" 
+                        element={
+                          <ProtectedRoute>
+                            <Study />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/study/:category" 
+                        element={
+                          <ProtectedRoute>
+                            <StudyCategory />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/reading-plans" 
+                        element={
+                          <ProtectedRoute>
+                            <ReadingPlans />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/mental-maps" 
+                        element={
+                          <ProtectedRoute>
+                            <MentalMaps />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route 
+                        path="/mental-maps/new" 
+                        element={
+                          <ProtectedRoute>
+                            <CreateMentalMap />
+                          </ProtectedRoute>
+                        } 
+                      />
+                      <Route path="/settings" element={<Settings />} />
+                      <Route path="/article/:id/edit" element={<ArticleEditPage />} />
+                    </Routes>
+                  </div>
+                </div>
+              }
+            />
+          </Routes>
         </TooltipProvider>
       </QueryClientProvider>
     </Router>
