@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Login from "./pages/Login";
 import ComingSoon from "./pages/ComingSoon";
 import ArticleEditPage from "./pages/ArticleEditPage";
+import BetaSignup from "./pages/BetaSignup";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -161,6 +162,7 @@ function App() {
                 />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="/article/:id/edit" element={<ArticleEditPage />} />
+                <Route path="/beta-signup" element={<BetaSignup />} />
               </Routes>
             </div>
           </div>

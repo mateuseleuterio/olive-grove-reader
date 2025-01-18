@@ -70,6 +70,11 @@ const NavigationBar = () => {
           Blog
         </Button>
       </Link>
+      <Link to="/beta-signup" className="w-full" onClick={handleMenuItemClick}>
+        <Button variant="ghost" className="w-full justify-start text-white hover:bg-bible-accent">
+          Acesso Beta
+        </Button>
+      </Link>
     </>
   );
 
